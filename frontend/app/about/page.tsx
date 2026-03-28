@@ -10,7 +10,7 @@ export default function AboutPage() {
         {/* Header */}
         <section className="bg-white shadow-md py-8">
           <div className="container-max">
-            <h1 className="text-4xl font-bold mb-2">About ServiceHub</h1>
+            <h1 className="text-4xl font-bold mb-2">About Digital Point</h1>
             <p className="text-gray-600">Your trusted platform for finding services</p>
           </div>
         </section>
@@ -21,7 +21,7 @@ export default function AboutPage() {
             <div>
               <h2 className="text-3xl font-bold mb-4">Who We Are</h2>
               <p className="text-gray-700 mb-4 leading-relaxed">
-                ServiceHub is Pakistan's leading service marketplace that connects customers with trusted service providers. We've been serving thousands of customers since our inception, helping them find reliable services for all their needs.
+                Digital Point is Pakistan's leading service marketplace that connects customers with trusted service providers. We've been serving thousands of customers since our inception, helping them find reliable services for all their needs.
               </p>
               <p className="text-gray-700 mb-4 leading-relaxed">
                 Our mission is to make finding and booking services simple, transparent, and trustworthy for everyone.

@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "ServiceHub - Find & Book Services",
+  title: "Digital Point - Find & Book Services",
   description: "Discover trusted service providers and book services instantly",
   viewport: "width=device-width, initial-scale=1",
 }

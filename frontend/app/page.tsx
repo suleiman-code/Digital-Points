@@ -15,7 +15,7 @@ export default function Home() {
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Discover trusted service providers in your area. Compare prices, read reviews, and book services instantly.
             </p>
-            <Link href="/services" className="btn-primary bg-white text-blue-600 hover:bg-gray-100">
+            <Link href="/services" className="btn-light">
               Browse Services Now
             </Link>
           </div>
@@ -82,7 +82,7 @@ export default function Home() {
           <div className="container-max text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-lg mb-8">Browse thousands of services available right now</p>
-            <Link href="/services" className="btn-primary bg-white text-blue-600 hover:bg-gray-100">
+            <Link href="/services" className="btn-light">
               Start Browsing
             </Link>
           </div>

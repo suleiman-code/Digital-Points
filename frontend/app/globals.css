@@ -22,6 +22,10 @@ body {
   color: #333;
 }
 
+a {
+  color: inherit;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
@@ -36,6 +40,10 @@ code {
   @apply px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition;
 }
 
+.btn-light {
+  @apply px-6 py-2 bg-white text-blue-700 rounded-lg hover:bg-blue-50 hover:text-blue-800 font-semibold transition;
+}
+
 .btn-secondary {
   @apply px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition;
 }
@@ -45,7 +53,7 @@ code {
 }
 
 .card {
-  @apply bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow;
+  @apply bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow text-gray-900;
 }
 
 .btn-outline {

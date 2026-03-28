@@ -12,7 +12,7 @@ export default function Header() {
     <header className="bg-white shadow-md sticky top-0 z-40">
       <nav className="container-max flex justify-between items-center py-4">
         <Link href="/" className="text-2xl font-bold text-blue-600">
-          ServiceHub
+          Digital Point
         </Link>
 
         {/* Desktop Menu */}

@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-600 to-blue-800 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">ServiceHub Admin</h1>
+        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Digital Point Admin</h1>
         <p className="text-center text-gray-600 mb-8">Login to your admin panel</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

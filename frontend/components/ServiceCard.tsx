@@ -21,7 +21,7 @@ export default function ServiceCard({
   category,
 }: ServiceCardProps) {
   return (
-    <div className="card h-full flex flex-col">
+    <div className="card h-full flex flex-col border border-transparent hover:border-blue-100">
       {/* Image */}
       {image && (
         <div className="relative w-full h-48 mb-4 bg-gray-200 rounded-lg overflow-hidden">
@@ -43,7 +43,7 @@ export default function ServiceCard({
       )}
 
       {/* Title */}
-      <h3 className="text-xl font-bold mb-2 line-clamp-2">{title}</h3>
+      <h3 className="text-xl font-bold mb-2 line-clamp-2 text-gray-900">{title}</h3>
 
       {/* Rating */}
       {rating && (
@@ -59,10 +59,10 @@ export default function ServiceCard({
 
       {/* Price and Button */}
       <div className="flex justify-between items-center mt-auto">
-        <span className="text-2xl font-bold text-blue-600">
+        <span className="text-2xl font-bold text-blue-700">
           Rs. {price.toLocaleString()}
         </span>
-        <Link href={`/services/${id}`} className="btn-primary text-sm">
+        <Link href={`/services/${id}`} className="btn-primary text-sm whitespace-nowrap">
           View Details
         </Link>
       </div>
