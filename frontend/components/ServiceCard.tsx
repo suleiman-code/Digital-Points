@@ -1,11 +1,10 @@
 import Link from 'next/link';
-import Image from 'next/image';
 
 interface ServiceCardProps {
   id: string;
   title: string;
   description: string;
-  price: number;
+  price: number | string;
   image?: string;
   rating?: number;
   category?: string;
@@ -17,54 +16,51 @@ export default function ServiceCard({
   description,
   price,
   image,
-  rating,
+  rating = 4.8,
   category,
 }: ServiceCardProps) {
+  const displayPrice = typeof price === 'number' ? `$${price}` : price;
+
   return (
-    <div className="card h-full flex flex-col border border-transparent hover:border-blue-100">
-      {/* Image */}
-      {image && (
-        <div className="relative w-full h-48 mb-4 bg-gray-200 rounded-lg overflow-hidden">
-          <Image
-            src={image}
+    <div className="group overflow-hidden rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+      <div className="relative h-48 w-full overflow-hidden">
+        {image ? (
+          <img 
+            src={image} 
             alt={title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
+        ) : (
+          <div className="h-full w-full bg-slate-100 flex items-center justify-center text-slate-400">
+            No Image
+          </div>
+        )}
+        <div className="absolute top-4 left-4">
+          <span className="bg-blue-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-lg">
+            {category || 'Service'}
+          </span>
         </div>
-      )}
-
-      {/* Category Badge */}
-      {category && (
-        <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full mb-2 w-fit">
-          {category}
-        </span>
-      )}
-
-      {/* Title */}
-      <h3 className="text-xl font-bold mb-2 line-clamp-2 text-gray-900">{title}</h3>
-
-      {/* Rating */}
-      {rating && (
-        <div className="flex items-center mb-2">
-          <span className="text-yellow-400">★ {rating.toFixed(1)}</span>
+      </div>
+      
+      <div className="p-6 flex flex-col flex-grow">
+        <div className="flex justify-between items-start mb-2">
+          <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest">{category}</span>
+          <div className="flex items-center text-yellow-500">
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+            <span className="text-sm font-bold text-slate-700 ml-1">{rating}</span>
+          </div>
         </div>
-      )}
-
-      {/* Description */}
-      <p className="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">
-        {description}
-      </p>
-
-      {/* Price and Button */}
-      <div className="flex justify-between items-center mt-auto">
-        <span className="text-2xl font-bold text-blue-700">
-          Rs. {price.toLocaleString()}
-        </span>
-        <Link href={`/services/${id}`} className="btn-primary text-sm whitespace-nowrap">
-          View Details
-        </Link>
+        
+        <h3 className="text-xl font-bold text-[#0f2340] mb-2 group-hover:text-blue-600 transition-colors line-clamp-1">{title}</h3>
+        <p className="text-slate-500 text-sm line-clamp-2 mb-4 flex-grow">{description}</p>
+        
+        <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-50">
+          <p className="text-lg font-bold text-slate-900">{displayPrice}</p>
+          <Link href={`/services/${id}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+            Details
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
+          </Link>
+        </div>
       </div>
     </div>
   );
