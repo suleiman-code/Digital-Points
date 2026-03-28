@@ -49,6 +49,28 @@ const DEFAULT_SERVICES = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  {
+    _id: 'svc-4',
+    title: 'Electrician On Demand',
+    description: 'Certified electricians for wiring, fixtures, and urgent repairs.',
+    category: 'Electrical',
+    price: 5500,
+    image: '',
+    serviceDetails: 'Fault diagnostics\nSwitchboard repair\nHome safety inspection',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: 'svc-5',
+    title: 'Plumbing Repair Service',
+    description: 'Quick leak fixing, pipeline checks, and bathroom fitting support.',
+    category: 'Plumbing',
+    price: 5000,
+    image: '',
+    serviceDetails: 'Leak detection\nPipe replacement\nWater pressure adjustment',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 const api = isBackendEnabled
@@ -103,11 +125,23 @@ const writeStorage = (key: string, value: any) => {
 const uid = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 
 const getServices = () => {
-  const services = readStorage<any[]>(STORAGE_KEYS.services, DEFAULT_SERVICES);
-  if (!readStorage(STORAGE_KEYS.services, null)) {
-    writeStorage(STORAGE_KEYS.services, services);
+  const stored = readStorage<any[] | null>(STORAGE_KEYS.services, null);
+
+  if (!stored || stored.length === 0) {
+    writeStorage(STORAGE_KEYS.services, DEFAULT_SERVICES);
+    return DEFAULT_SERVICES;
   }
-  return services;
+
+  const existingIds = new Set(stored.map((service: any) => service._id));
+  const missingDefaults = DEFAULT_SERVICES.filter((service) => !existingIds.has(service._id));
+
+  if (missingDefaults.length > 0) {
+    const merged = [...stored, ...missingDefaults];
+    writeStorage(STORAGE_KEYS.services, merged);
+    return merged;
+  }
+
+  return stored;
 };
 
 const setServices = (services: any[]) => writeStorage(STORAGE_KEYS.services, services);

@@ -54,11 +54,6 @@ export default function Home() {
 
           <div className="container-max relative section-fade-in">
             <div className="max-w-3xl">
-              <p className="inline-flex items-center gap-2 bg-white/20 border border-white/35 rounded-full px-4 py-1.5 text-sm mb-6 text-white">
-                <span className="w-2 h-2 rounded-full bg-amber-300" />
-                Booking support active all week
-              </p>
-
               <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-5">
                 Book Skilled Services Without the Usual Hassle.
               </h1>
