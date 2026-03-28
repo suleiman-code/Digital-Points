@@ -10,9 +10,10 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 className="text-2xl font-bold mb-4">Digital Point</h3>
-            <p className="text-gray-400">
+            <p className="text-gray-400 mb-4">
               Find and book trusted services near you.
             </p>
+            <p className="text-sm text-gray-500">Support: Mon-Sat, 9:00 AM to 9:00 PM</p>
           </div>
 
           {/* Quick Links */}
@@ -47,9 +48,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white">
+                <Link href="/contact" className="hover:text-white">
                   Partner With Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -59,12 +60,12 @@ export default function Footer() {
             <h4 className="font-bold mb-4">Legal</h4>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/privacy" className="hover:text-white">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-white">
+                <Link href="/terms" className="hover:text-white">
                   Terms & Conditions
                 </Link>
               </li>
@@ -77,14 +78,14 @@ export default function Footer() {
             © {currentYear} Digital Point. All rights reserved.
           </p>
           <div className="flex gap-4 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-white">
-              Facebook
+            <a href="mailto:support@digitalpoint.com" className="text-gray-400 hover:text-white">
+              Email Us
             </a>
-            <a href="#" className="text-gray-400 hover:text-white">
-              Twitter
+            <a href="tel:+921234567890" className="text-gray-400 hover:text-white">
+              Call Support
             </a>
-            <a href="#" className="text-gray-400 hover:text-white">
-              LinkedIn
+            <a href="https://wa.me/921234567890" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+              WhatsApp
             </a>
           </div>
         </div>

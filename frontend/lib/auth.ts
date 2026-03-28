@@ -1,5 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { authAPI } from './api';
 
 export const useAuth = () => {
   const router = useRouter();
@@ -14,22 +15,10 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('authToken', data.token);
-        setIsAuthenticated(true);
-        router.push('/admin/dashboard');
-      } else {
-        throw new Error('Login failed');
-      }
+      const response = await authAPI.login({ email, password });
+      localStorage.setItem('authToken', response.data.token);
+      setIsAuthenticated(true);
+      router.push('/admin/dashboard');
     } catch (error) {
       throw error;
     }
