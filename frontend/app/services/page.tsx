@@ -288,7 +288,7 @@ export default function ServicesPage() {
                         title={service.title}
                         description={service.description}
                         price={service.price}
-                        image={service.image}
+                        image={service.image_url || service.image}
                         category={service.category}
                         index={index}
                       />

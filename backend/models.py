@@ -55,6 +55,14 @@ class ServiceBase(BaseModel):
     state: str
     image_url: Optional[str] = None
     service_details: Optional[str] = None
+    # --- New Business Directory Fields ---
+    address: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[EmailStr] = None
+    website_url: Optional[str] = None
+    business_hours: Optional[dict[str, str]] = None # e.g. {"Monday": "9am-6pm", "Tuesday": "Closed"}
+    google_maps_url: Optional[str] = None
+    sub_services: Optional[list[str]] = None # Custom Inner Page links defined by Admin
 
 class ServiceCreate(ServiceBase):
     pass
@@ -68,6 +76,13 @@ class ServiceUpdate(BaseModel):
     state: Optional[str] = None
     image_url: Optional[str] = None
     service_details: Optional[str] = None
+    address: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[EmailStr] = None
+    website_url: Optional[str] = None
+    business_hours: Optional[dict[str, str]] = None
+    google_maps_url: Optional[str] = None
+    sub_services: Optional[list[str]] = None
 
 class ServiceResponse(ServiceBase):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
@@ -94,4 +109,21 @@ class BookingResponse(BookingBase):
     
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     status: str = "pending" # pending, contacted, completed
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# --- Review Models ---
+class ReviewBase(BaseModel):
+    service_id: str
+    user_name: str
+    user_email: EmailStr
+    rating: float = Field(..., ge=1, le=5)
+    comment: str
+
+class ReviewCreate(ReviewBase):
+    pass
+
+class ReviewResponse(ReviewBase):
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

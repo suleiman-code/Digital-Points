@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
-from models import ServiceCreate, ServiceUpdate, ServiceResponse
+from models import ServiceCreate, ServiceUpdate, ServiceResponse, ReviewCreate, ReviewResponse
 from database import db
 from auth import get_admin_user
 from bson import ObjectId
@@ -87,3 +87,31 @@ async def get_dashboard_stats(admin: dict = Depends(get_admin_user)):
         "total_bookings": total_bookings,
         "pending_bookings": pending_bookings
     }
+
+# 7. ADD REVIEW TO SERVICE (Public)
+@router.post("/{id}/reviews", response_model=ReviewResponse, status_code=status.HTTP_201_CREATED)
+async def create_review(id: str, review: ReviewCreate):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid Service ID")
+        
+    # Check if service exists
+    service = await db.db["services"].find_one({"_id": ObjectId(id)})
+    if not service:
+        raise HTTPException(status_code=404, detail="Service not found. Cannot add review.")
+
+    review_dict = review.model_dump()
+    review_dict["service_id"] = id # Force the ID from URL
+    review_dict["created_at"] = datetime.now(timezone.utc)
+    
+    new_review = await db.db["reviews"].insert_one(review_dict)
+    created_review = await db.db["reviews"].find_one({"_id": new_review.inserted_id})
+    return created_review
+
+# 8. GET REVIEWS FOR A SERVICE (Public)
+@router.get("/{id}/reviews", response_model=List[ReviewResponse])
+async def get_reviews(id: str):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid Service ID")
+        
+    reviews = await db.db["reviews"].find({"service_id": id}).sort("created_at", -1).to_list(100)
+    return reviews

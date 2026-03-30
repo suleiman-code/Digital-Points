@@ -89,3 +89,16 @@ async def update_booking_status(id: str, new_status: str, admin: dict = Depends(
         
     updated_booking = await db.db["bookings"].find_one({"_id": ObjectId(id)})
     return updated_booking
+
+# 4. DELETE /api/bookings/{id} (Admin Only)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_booking(id: str, admin: dict = Depends(get_admin_user)):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid Booking ID")
+    
+    result = await db.db["bookings"].delete_one({"_id": ObjectId(id)})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    return None

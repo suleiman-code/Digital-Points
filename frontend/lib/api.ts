@@ -85,11 +85,11 @@ const DEFAULT_SERVICES = [
 
 const api = isBackendEnabled
   ? axios.create({
-      baseURL: `${API_URL}/api`,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    baseURL: `${API_URL}/api`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
   : null;
 
 if (api) {
@@ -209,6 +209,24 @@ export const servicesAPI = {
     setServices(next);
     return makeResponse({ success: true });
   },
+  addReview: (id: string, data: any) => {
+    if (api) return api.post(`/services/${id}/reviews`, data);
+    return makeResponse({ ...data, _id: uid('rev'), createdAt: new Date().toISOString() }, 201);
+  },
+  getReviews: (id: string) => {
+    if (api) return api.get(`/services/${id}/reviews`);
+    return makeResponse([
+      {
+        _id: 'mock1',
+        service_id: id,
+        user_name: 'Osman',
+        user_email: 'osman@example.com',
+        rating: 5,
+        comment: "I really hope my career will one day make me prove to United states that I'm going to be a good plumber one day...",
+        created_at: new Date('2019-12-16T15:11:00Z').toISOString()
+      }
+    ]);
+  },
 };
 
 export const bookingsAPI = {
@@ -219,33 +237,44 @@ export const bookingsAPI = {
       ...data,
       _id: uid('bkg'),
       status: 'pending',
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     };
     const bookings = [newBooking, ...getBookings()];
     setBookings(bookings);
     return makeResponse(newBooking, 201);
   },
   getAll: () => (api ? api.get('/bookings') : makeResponse(getBookings())),
-  update: (id: string, data: any) => {
-    if (api) return api.put(`/bookings/${id}`, data);
+
+  // Used by Admin to update booking status.
+  // Backend: PUT /api/bookings/{id}/status?new_status=pending|contacted|completed|cancelled
+  updateStatus: (id: string, newStatus: string) => {
+    if (api) return api.put(`/bookings/${id}/status`, null, { params: { new_status: newStatus } });
 
     const bookings = getBookings();
-    const index = bookings.findIndex((item) => item._id === id);
+    const index = bookings.findIndex((item: any) => item._id === id);
     if (index === -1) makeApiError('Booking not found', 404);
+    bookings[index] = { ...bookings[index], status: newStatus };
+    setBookings(bookings);
+    return makeResponse(bookings[index]);
+  },
 
-    const updated = {
-      ...bookings[index],
-      ...data,
-      updatedAt: new Date().toISOString(),
-    };
+  // Kept as a generic fallback for localStorage mode
+  update: (id: string, data: any) => {
+    if (api) return api.put(`/bookings/${id}/status`, null, { params: { new_status: data.status } });
+
+    const bookings = getBookings();
+    const index = bookings.findIndex((item: any) => item._id === id);
+    if (index === -1) makeApiError('Booking not found', 404);
+    const updated = { ...bookings[index], ...data };
     bookings[index] = updated;
     setBookings(bookings);
     return makeResponse(updated);
   },
+
   delete: (id: string) => {
     if (api) return api.delete(`/bookings/${id}`);
 
-    const next = getBookings().filter((item) => item._id !== id);
+    const next = getBookings().filter((item: any) => item._id !== id);
     setBookings(next);
     return makeResponse({ success: true });
   },

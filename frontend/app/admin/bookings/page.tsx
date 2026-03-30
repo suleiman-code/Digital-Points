@@ -39,9 +39,14 @@ export default function AdminBookingsPage() {
     }
   };
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, newStatus: string) => {
     try {
-      await bookingsAPI.update(id, { status });
+      // Backend: PUT /api/bookings/{id}/status?new_status=...
+      if (typeof (bookingsAPI as any).updateStatus === 'function') {
+        await (bookingsAPI as any).updateStatus(id, newStatus);
+      } else {
+        await bookingsAPI.update(id, { status: newStatus });
+      }
       toast.success('Status updated!');
       fetchBookings();
       setSelectedBooking(null);
@@ -123,10 +128,12 @@ export default function AdminBookingsPage() {
                 </thead>
                 <tbody>
                   {bookings.map((booking: any) => (
-                    <tr key={booking._id} className="border-b hover:bg-gray-50">
-                      <td className="px-6 py-4">{booking.serviceName}</td>
-                      <td className="px-6 py-4">{booking.userName}</td>
-                      <td className="px-6 py-4">{booking.userEmail}</td>
+                    <tr key={booking._id || booking.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-gray-800">{booking.service_name || booking.serviceName || '—'}</td>
+                      <td className="px-6 py-4">{booking.user_name || booking.userName || '—'}</td>
+                      <td className="px-6 py-4 text-blue-600">
+                        <a href={`mailto:${booking.user_email || booking.userEmail}`}>{booking.user_email || booking.userEmail || '—'}</a>
+                      </td>
                       <td className="px-6 py-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -134,13 +141,15 @@ export default function AdminBookingsPage() {
                               ? 'bg-green-100 text-green-800'
                               : booking.status === 'completed'
                               ? 'bg-blue-100 text-blue-800'
+                              : booking.status === 'cancelled'
+                              ? 'bg-red-100 text-red-800'
                               : 'bg-yellow-100 text-yellow-800'
                           }`}
                         >
-                          {booking.status}
+                          {booking.status || 'pending'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">{new Date(booking.createdAt).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 text-gray-500 text-sm">{new Date(booking.created_at || booking.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4 space-x-2">
                         <button
                           onClick={() => setSelectedBooking(booking)}
@@ -149,7 +158,7 @@ export default function AdminBookingsPage() {
                           View
                         </button>
                         <button
-                          onClick={() => handleDelete(booking._id)}
+                          onClick={() => handleDelete(booking._id || booking.id)}
                           className="btn-danger text-xs py-1"
                         >
                           Delete
@@ -169,37 +178,38 @@ export default function AdminBookingsPage() {
                 <h2 className="text-2xl font-bold mb-4">Booking Details</h2>
 
                 <div className="space-y-4 mb-6">
-                  <div>
-                    <p className="text-gray-600 text-sm">Service</p>
-                    <p className="font-semibold">{selectedBooking.serviceName}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Service</p>
+                    <p className="font-semibold text-gray-800 mt-1">{selectedBooking.service_name || selectedBooking.serviceName}</p>
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">Customer</p>
-                    <p className="font-semibold">{selectedBooking.userName}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Customer</p>
+                    <p className="font-semibold text-gray-800 mt-1">{selectedBooking.user_name || selectedBooking.userName}</p>
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">Email</p>
-                    <p className="font-semibold">{selectedBooking.userEmail}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Email</p>
+                    <a href={`mailto:${selectedBooking.user_email || selectedBooking.userEmail}`} className="font-semibold text-blue-600 mt-1 block hover:underline">{selectedBooking.user_email || selectedBooking.userEmail}</a>
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">Phone</p>
-                    <p className="font-semibold">{selectedBooking.userPhone}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Phone</p>
+                    <a href={`tel:${selectedBooking.user_phone || selectedBooking.userPhone}`} className="font-semibold text-green-600 mt-1 block hover:underline">{selectedBooking.user_phone || selectedBooking.userPhone}</a>
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">Message</p>
-                    <p className="font-semibold">{selectedBooking.message}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Message</p>
+                    <p className="font-medium text-gray-700 mt-1 leading-relaxed">{selectedBooking.message}</p>
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-sm">Status</p>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        selectedBooking.status === 'contacted'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {selectedBooking.status}
-                    </span>
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Current Status</p>
+                    <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${
+                        selectedBooking.status === 'contacted' ? 'bg-green-100 text-green-800' :
+                        selectedBooking.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                        selectedBooking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>{selectedBooking.status || 'pending'}</span>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Received On</p>
+                    <p className="font-medium text-gray-700 mt-1">{new Date(selectedBooking.created_at || selectedBooking.createdAt).toLocaleString()}</p>
                   </div>
                 </div>
 
