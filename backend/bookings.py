@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends
+from bson import ObjectId
 from models import BookingCreate, BookingResponse
 from database import db
 from config import settings
@@ -67,3 +68,24 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
 async def get_all_bookings(admin: dict = Depends(get_admin_user)):
     bookings = await db.db["bookings"].find().to_list(100)
     return bookings
+
+# 3. PUT /api/bookings/{id}/status (Admin Only)
+@router.put("/{id}/status", response_model=BookingResponse)
+async def update_booking_status(id: str, new_status: str, admin: dict = Depends(get_admin_user)):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid Booking ID")
+    
+    valid_statuses = ["pending", "contacted", "completed", "cancelled"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Choose from: {valid_statuses}")
+
+    result = await db.db["bookings"].update_one(
+        {"_id": ObjectId(id)},
+        {"$set": {"status": new_status}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Booking not found")
+        
+    updated_booking = await db.db["bookings"].find_one({"_id": ObjectId(id)})
+    return updated_booking
