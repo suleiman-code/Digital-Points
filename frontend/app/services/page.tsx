@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
+import ServiceCardSkeleton from '@/components/ServiceCardSkeleton';
 import { servicesAPI } from '@/lib/api';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ServicesPage() {
   const router = useRouter();
@@ -102,22 +104,38 @@ export default function ServicesPage() {
     <>
       <Header />
 
-      <main className="min-h-screen bg-slate-50">
+      <main className="min-h-screen bg-slate-50 relative pb-20">
+        <div className="absolute top-0 right-0 w-full h-96 bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none" />
+
         {/* Page Header */}
-        <section className="bg-[#0f2340] text-white py-16 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-          <div className="container-max relative">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Explore Our Services</h1>
-            <p className="text-blue-100 text-lg max-w-2xl">Find the best professionals for your home, business, or personal needs. Verified quality at transparent prices.</p>
-          </div>
+        <section className="bg-gradient-to-br from-[#0f2340] via-blue-900 to-indigo-900 text-white py-20 relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 -mt-32 mix-blend-screen transition-all duration-1000 ease-in-out"></div>
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-400/10 rounded-full blur-3xl -ml-20 -mb-20 mix-blend-screen"></div>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="container-max relative z-10"
+          >
+            <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight drop-shadow-md bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">Explore Our Services</h1>
+            <p className="text-blue-100/90 text-lg md:text-xl max-w-2xl font-light leading-relaxed">
+              Find the best professionals for your home, business, or personal needs. Verified quality at transparent prices.
+            </p>
+          </motion.div>
         </section>
 
-        {/* Search Bar Floating */}
-        <div className="container-max -mt-8 relative z-10">
-          <div className="bg-white p-3 rounded-2xl shadow-xl border border-blue-50">
+        {/* Search Bar Floating - Glassmorphism */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="container-max -mt-10 relative z-20"
+        >
+          <div className="bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-white">
             <div className="flex flex-col md:flex-row gap-3">
-               <div className="flex-[3] flex items-center bg-slate-50 rounded-xl px-4 border border-slate-100 focus-within:border-blue-300 transition-all shadow-inner">
-                  <svg className="w-5 h-5 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+               <div className="flex-[3] flex items-center bg-white rounded-xl px-4 border border-slate-100 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-100/50 transition-all shadow-sm hover:shadow-md">
+                  <svg className="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                   <input
                     type="text"
                     placeholder="Search for services (Sweeper, Plumber...)"
@@ -126,8 +144,8 @@ export default function ServicesPage() {
                     className="w-full p-4 bg-transparent outline-none text-slate-700 font-medium placeholder:text-slate-400"
                   />
                </div>
-               <div className="flex-1 flex items-center bg-slate-50 rounded-xl px-4 border border-slate-100 focus-within:border-blue-300 transition-all shadow-inner">
-                  <svg className="w-5 h-5 text-slate-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+               <div className="flex-1 flex items-center bg-white rounded-xl px-4 border border-slate-100 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-100/50 transition-all shadow-sm hover:shadow-md">
+                  <svg className="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                   <input
                     type="text"
                     placeholder="City/State"
@@ -136,58 +154,75 @@ export default function ServicesPage() {
                     className="w-full p-4 bg-transparent outline-none text-slate-700 font-medium text-sm sm:text-base placeholder:text-slate-400"
                   />
                </div>
-               <button 
+               <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => filterServices()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg active:scale-95 whitespace-nowrap"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg shadow-blue-600/30 whitespace-nowrap"
                >
                  Find Services
-               </button>
+               </motion.button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Result Tracking */}
-        <div className="container-max mt-8 flex justify-between items-center px-2">
-           <p className="text-slate-500 font-medium">
-             Showing <span className="text-blue-600 font-bold">{filteredServices.length}</span> services found
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="container-max mt-10 mb-4 flex justify-between items-center px-2"
+        >
+           <p className="text-slate-500 font-medium flex items-center gap-2">
+             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+             Showing <span className="text-blue-700 font-black text-lg bg-blue-50 px-2 py-0.5 rounded-md">{filteredServices.length}</span> services found
            </p>
-        </div>
+        </motion.div>
 
         {/* Filters & Results */}
-        <section className="container-max py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar Filters */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sticky top-24">
-                <h2 className="text-xl font-bold text-[#0f2340] mb-6 flex items-center gap-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        <section className="container-max">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+            {/* Sidebar Filters - Sticky and Glassmorphic */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="lg:col-span-1"
+            >
+              <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 sticky top-28">
+                <h2 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-2 pb-4 border-b border-slate-200/50">
+                  <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
                   Quick Filters
                 </h2>
 
                 {/* Category */}
-                <div className="mb-8">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Service Category</label>
-                  <div className="space-y-2">
+                <div className="mb-10">
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Service Category</label>
+                  <div className="space-y-1.5">
                     {categories.map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat === 'All Categories' ? '' : cat)}
-                        className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative overflow-hidden group ${
                           (selectedCategory === cat || (cat === 'All Categories' && !selectedCategory))
-                            ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                            : 'text-slate-600 hover:bg-blue-50 hover:text-blue-600'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                            : 'text-slate-600 hover:bg-white hover:shadow-sm'
                         }`}
                       >
-                        {cat}
+                         <span className="relative z-10">{cat}</span>
+                         {/* Subtle hover background sweep */}
+                         {!(selectedCategory === cat || (cat === 'All Categories' && !selectedCategory)) && (
+                           <div className="absolute inset-0 bg-blue-50 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300 z-0"></div>
+                         )}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Price Range */}
-                <div className="mb-8">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Pricing Tier</label>
-                  <div className="space-y-2">
+                <div className="mb-10">
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Pricing Tier</label>
+                  <div className="space-y-1.5">
                     {[
                       { label: 'All Prices', value: '' },
                       { label: 'Under $50', value: '0-50' },
@@ -197,10 +232,10 @@ export default function ServicesPage() {
                       <button
                         key={range.label}
                         onClick={() => setPriceRange(range.value)}
-                        className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                           priceRange === range.value
-                            ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                            : 'text-slate-600 hover:bg-blue-50 hover:text-blue-600'
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                            : 'text-slate-600 hover:bg-white hover:shadow-sm'
                         }`}
                       >
                         {range.label}
@@ -209,54 +244,81 @@ export default function ServicesPage() {
                   </div>
                 </div>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setSearchTerm('');
                     setSelectedCategory('');
                     setPriceRange('');
                   }}
-                  className="w-full py-3 rounded-xl border border-slate-200 text-slate-500 font-bold text-sm hover:bg-slate-50 transition-colors"
+                  className="w-full py-3.5 rounded-xl border border-slate-200/60 bg-white/50 text-slate-500 font-bold text-sm hover:text-slate-800 hover:bg-white hover:border-slate-300 transition-all shadow-sm"
                 >
-                  Reset All
-                </button>
+                  Reset All Filters
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Services Grid */}
+            {/* Services Grid & Skeletons */}
             <div className="lg:col-span-3">
-              {loading ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-600">Loading services...</p>
-                </div>
-              ) : filteredServices.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                  {filteredServices.map((service: any) => (
-                    <ServiceCard
-                      key={service._id}
-                      id={service._id}
-                      title={service.title}
-                      description={service.description}
-                      price={service.price}
-                      image={service.image}
-                      category={service.category}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 bg-white rounded-lg">
-                  <p className="text-gray-600 mb-4">No services found matching your criteria.</p>
-                  <button
-                    onClick={() => {
-                      setSearchTerm('');
-                      setSelectedCategory('');
-                      setPriceRange('');
-                    }}
-                    className="btn-primary"
+              <AnimatePresence mode="wait">
+                {loading ? (
+                  <motion.div 
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
                   >
-                    Clear Filters
-                  </button>
-                </div>
-              )}
+                    {[1, 2, 3, 4].map((i) => (
+                      <ServiceCardSkeleton key={`skeleton-${i}`} />
+                    ))}
+                  </motion.div>
+                ) : filteredServices.length > 0 ? (
+                  <motion.div 
+                    key="results"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  >
+                    {filteredServices.map((service: any, index) => (
+                      <ServiceCard
+                        key={service._id}
+                        id={service._id}
+                        title={service.title}
+                        description={service.description}
+                        price={service.price}
+                        image={service.image}
+                        category={service.category}
+                        index={index}
+                      />
+                    ))}
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key="no-results"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-20 px-6 bg-white/60 backdrop-blur-sm rounded-3xl border border-slate-100 shadow-sm"
+                  >
+                    <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <svg className="w-12 h-12 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-800 mb-2">No services found</h3>
+                    <p className="text-slate-500 mb-8 max-w-md mx-auto">We couldn't find any services matching your current filters. Try adjusting your search or category.</p>
+                    <button
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedCategory('');
+                        setPriceRange('');
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30"
+                    >
+                      Clear All Filters
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </section>
