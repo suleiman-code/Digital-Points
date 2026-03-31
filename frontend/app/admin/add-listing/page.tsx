@@ -28,6 +28,9 @@ export default function AddListing() {
     google_maps_url: '',
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   // Sub-services: admin defines the inner page names
   const [subServices, setSubServices] = useState<string[]>([]);
   const [subServiceInput, setSubServiceInput] = useState('');
@@ -62,6 +65,18 @@ export default function AddListing() {
     setHours(prev => ({ ...prev, [day]: value }));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const addSubService = () => {
     const trimmed = subServiceInput.trim();
     if (trimmed && !subServices.includes(trimmed)) {
@@ -89,8 +104,19 @@ export default function AddListing() {
         business_hours: hours,
       };
 
+      // Handle Image Upload if file selected
+      let finalImageUrl = formData.image_url;
+      if (imageFile) {
+        try {
+          const uploadRes = await servicesAPI.uploadImage(imageFile);
+          finalImageUrl = uploadRes.url;
+        } catch (err) {
+          toast.error("Failed to upload image. Using URL if provided.");
+        }
+      }
+
       // Only add optional fields if they have value
-      if (formData.image_url) payload.image_url = formData.image_url;
+      if (finalImageUrl) payload.image_url = finalImageUrl;
       if (formData.address) payload.address = formData.address;
       if (formData.contact_phone) payload.contact_phone = formData.contact_phone;
       if (formData.contact_email) payload.contact_email = formData.contact_email;
@@ -119,7 +145,7 @@ export default function AddListing() {
       <Header />
       
       <main className="flex-grow container-max py-12">
-        <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+        <div className="max-w-6xl mx-auto bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-slate-200">
           <h1 className="text-3xl font-bold text-[#1a2b4c] mb-8">Add New Business Listing</h1>
           
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -151,8 +177,43 @@ export default function AddListing() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                  <input type="url" name="image_url" value={formData.image_url} onChange={handleChange} placeholder="https://..." className="w-full border border-gray-300 rounded-lg p-3" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Business Image</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Option 1: Upload from Computer</label>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleImageChange}
+                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      {imagePreview && (
+                        <div className="mt-4 relative w-full h-40 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                          <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                          <button 
+                            type="button" 
+                            onClick={() => {setImageFile(null); setImagePreview(null);}}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full text-xs shadow-md"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Option 2: Use Image URL</label>
+                      <input 
+                        type="url" 
+                        name="image_url" 
+                        value={formData.image_url} 
+                        onChange={handleChange} 
+                        placeholder="https://images.unsplash.com/..." 
+                        className="w-full border border-gray-300 rounded-lg p-3" 
+                        disabled={!!imageFile}
+                      />
+                      <p className="mt-2 text-xs text-gray-400 italic">URLs are used only if no file is uploaded above.</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">

@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+import shutil
+import os
+import uuid
 from typing import List, Optional
 from models import ServiceCreate, ServiceUpdate, ServiceResponse, ReviewCreate, ReviewResponse
 from database import db
@@ -10,12 +13,28 @@ router = APIRouter(prefix="/api/services", tags=["Services"])
 
 # 1. GET ALL SERVICES (Public)
 @router.get("/", response_model=List[ServiceResponse])
-async def get_all_services(category: Optional[str] = None, city: Optional[str] = None):
+async def get_all_services(
+    category: Optional[str] = None, 
+    city: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    min_rating: Optional[float] = None
+):
     query = {}
     if category:
         query["category"] = category
     if city:
         query["city"] = {"$regex": city, "$options": "i"}
+    
+    if min_price is not None or max_price is not None:
+        query["price"] = {}
+        if min_price is not None:
+            query["price"]["$gte"] = min_price
+        if max_price is not None:
+            query["price"]["$lte"] = max_price
+
+    if min_rating is not None:
+        query["avg_rating"] = {"$gte": min_rating}
         
     services = await db.db["services"].find(query).to_list(100)
     return services
@@ -104,6 +123,17 @@ async def create_review(id: str, review: ReviewCreate):
     review_dict["created_at"] = datetime.now(timezone.utc)
     
     new_review = await db.db["reviews"].insert_one(review_dict)
+    
+    # Update Service Status (Average Rating)
+    all_reviews = await db.db["reviews"].find({"service_id": id}).to_list(1000)
+    count = len(all_reviews)
+    avg = sum([r["rating"] for r in all_reviews]) / count if count > 0 else 0
+    
+    await db.db["services"].update_one(
+        {"_id": ObjectId(id)},
+        {"$set": {"avg_rating": round(avg, 1), "reviews_count": count}}
+    )
+
     created_review = await db.db["reviews"].find_one({"_id": new_review.inserted_id})
     return created_review
 
@@ -115,3 +145,15 @@ async def get_reviews(id: str):
         
     reviews = await db.db["reviews"].find({"service_id": id}).sort("created_at", -1).to_list(100)
     return reviews
+
+# 9. UPLOAD IMAGE (Admin Only)
+@router.post("/upload/", status_code=status.HTTP_201_CREATED)
+async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_admin_user)):
+    file_extension = file.filename.split(".")[-1]
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    file_path = f"static/uploads/{unique_filename}"
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    return {"url": f"http://localhost:8000/static/uploads/{unique_filename}"}

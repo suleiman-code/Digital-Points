@@ -162,7 +162,7 @@ const setBookings = (bookings: any[]) => writeStorage(STORAGE_KEYS.bookings, boo
 const getAdmin = () => readStorage(STORAGE_KEYS.admin, DEFAULT_ADMIN);
 
 export const servicesAPI = {
-  getAll: () => (api ? api.get('/services/') : makeResponse(getServices())),
+  getAll: (filters?: any) => (api ? api.get('/services/', { params: filters }) : makeResponse(getServices())),
   getById: (id: string) => {
     if (api) return api.get(`/services/${id}/`);
     const service = getServices().find((item) => item._id === id);
@@ -226,6 +226,17 @@ export const servicesAPI = {
         created_at: new Date('2019-12-16T15:11:00Z').toISOString()
       }
     ]);
+  },
+  uploadImage: async (file: File) => {
+    if (!api) throw new Error("Backend not enabled for local uploads");
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/services/upload/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   },
 };
 

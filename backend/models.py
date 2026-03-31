@@ -63,6 +63,9 @@ class ServiceBase(BaseModel):
     business_hours: Optional[dict[str, str]] = None # e.g. {"Monday": "9am-6pm", "Tuesday": "Closed"}
     google_maps_url: Optional[str] = None
     sub_services: Optional[list[str]] = None # Custom Inner Page links defined by Admin
+    gallery: Optional[list[str]] = Field(default_factory=list)
+    avg_rating: float = 0.0
+    reviews_count: int = 0
 
 class ServiceCreate(ServiceBase):
     pass
@@ -83,6 +86,9 @@ class ServiceUpdate(BaseModel):
     business_hours: Optional[dict[str, str]] = None
     google_maps_url: Optional[str] = None
     sub_services: Optional[list[str]] = None
+    gallery: Optional[list[str]] = None
+    avg_rating: Optional[float] = None
+    reviews_count: Optional[int] = None
 
 class ServiceResponse(ServiceBase):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
@@ -98,6 +104,7 @@ class BookingBase(BaseModel):
     user_name: str
     user_email: EmailStr
     user_phone: str
+    user_city: str
     message: str
     booking_date: Optional[datetime] = None
 

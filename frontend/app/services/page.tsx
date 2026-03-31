@@ -21,6 +21,7 @@ export default function ServicesPage() {
   const [locationSearch, setLocationSearch] = useState(searchParams.get('l') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [priceRange, setPriceRange] = useState('');
+  const [minRating, setMinRating] = useState(0);
 
   useEffect(() => {
     fetchServices();
@@ -95,6 +96,11 @@ export default function ServicesPage() {
           : Number(service.price);
         return price >= min && (max ? price <= max : true);
       });
+    }
+
+    // 4. Rating Filter
+    if (minRating > 0) {
+      filtered = filtered.filter((service: any) => (service.avg_rating || 0) >= minRating);
     }
 
     setFilteredServices(filtered);
@@ -243,6 +249,25 @@ export default function ServicesPage() {
                     ))}
                   </div>
                 </div>
+                {/* Rating Filter */}
+                <div className="mb-10">
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Rating</label>
+                  <div className="space-x-2">
+                    {[0, 3, 4].map((rating) => (
+                      <button
+                        key={rating}
+                        onClick={() => setMinRating(rating)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          minRating === rating 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300'
+                        }`}
+                      >
+                        {rating === 0 ? 'All' : `${rating}★ & up`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -251,6 +276,7 @@ export default function ServicesPage() {
                     setSearchTerm('');
                     setSelectedCategory('');
                     setPriceRange('');
+                    setMinRating(0);
                   }}
                   className="w-full py-3.5 rounded-xl border border-slate-200/60 bg-white/50 text-slate-500 font-bold text-sm hover:text-slate-800 hover:bg-white hover:border-slate-300 transition-all shadow-sm"
                 >
@@ -290,6 +316,7 @@ export default function ServicesPage() {
                         price={service.price}
                         image={service.image_url || service.image}
                         category={service.category}
+                        rating={service.avg_rating}
                         index={index}
                       />
                     ))}

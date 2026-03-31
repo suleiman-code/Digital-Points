@@ -1,4 +1,7 @@
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+import os
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database import connect_to_mongo, close_mongo_connection
@@ -28,6 +31,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Ensure static directory exists
+if not os.path.exists("./static/uploads"):
+    os.makedirs("./static/uploads")
+
+# Mount Static Files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Register Routers
 app.include_router(auth_router)
 app.include_router(service_router)
@@ -45,9 +55,49 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def read_root():
-    return {"message": "Digital Points Backend is running"}
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Digital Point API</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+        <style>
+            :root { --primary: #3b82f6; --bg: #0f172a; }
+            body { 
+                margin: 0; font-family: 'Outfit', sans-serif; 
+                background: var(--bg); color: white;
+                height: 100vh; display: flex; align-items: center; justify-content: center;
+                background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent), var(--bg);
+            }
+            .card { 
+                background: rgba(255, 255, 255, 0.03); padding: 50px 80px; border-radius: 32px;
+                text-align: center; border: 1px solid rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(20px); box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            }
+            h1 { font-size: 38px; margin: 0; font-weight: 800; letter-spacing: -1px; }
+            p { color: #94a3b8; margin: 15px 0 40px; font-size: 18px; }
+            .btn { 
+                display: inline-block; background: var(--primary); color: white;
+                padding: 16px 40px; border-radius: 12px; text-decoration: none;
+                font-weight: 700; font-size: 16px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+            }
+            .btn:hover { transform: translateY(-3px) scale(1.02); background: #2563eb; box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4); }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>Welcome to Digital Point Fastapi</h1>
+            <p>Your business directory API engine is live and ready.</p>
+            <a href="/docs" class="btn">Explore Swagger UI</a>
+        </div>
+    </body>
+    </html>
+    """
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

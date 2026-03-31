@@ -10,6 +10,7 @@ import { contactAPI } from '@/lib/api';
 type ContactFormData = {
   name: string;
   email: string;
+  city: string;
   subject: string;
   message: string;
 };
@@ -131,6 +132,23 @@ export default function ContactPage() {
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                  )}
+                </div>
+
+                <div className="mb-5">
+                  <label htmlFor="city">Your City *</label>
+                  <input
+                    id="city"
+                    type="text"
+                    placeholder="e.g. Lahore, Karachi"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    {...register('city', {
+                      required: 'City is required',
+                    })}
+                    required
+                  />
+                  {errors.city && (
+                    <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
                   )}
                 </div>
 

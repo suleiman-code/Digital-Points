@@ -116,6 +116,7 @@ export default function ServiceDetail({ params }: { params: { id: string } }) {
   const [reviewComment, setReviewComment] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -254,8 +255,11 @@ export default function ServiceDetail({ params }: { params: { id: string } }) {
               <h1 className="text-3xl font-bold text-[#1a2b4c] mb-2">{service.name}</h1>
               
               <div className="flex items-center gap-3 text-sm mb-6">
-                <span className="text-gray-600">Rating {(reviews.reduce((acc, rev) => acc + rev.rating, 0) / (reviews.length || 1)).toFixed(1)}</span>
-                <span className="text-yellow-400 text-lg">★★★★★</span>
+                <div className="flex items-center bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                  <span className="text-blue-700 font-black mr-2 text-lg">{(service.avg_rating || 5.0).toFixed(1)}</span>
+                  <span className="text-yellow-400 text-lg">{'★'.repeat(Math.round(service.avg_rating || 5))}{'☆'.repeat(5-Math.round(service.avg_rating || 5))}</span>
+                </div>
+                <span className="text-slate-400 font-medium">({service.reviews_count || reviews.length} Reviews)</span>
               </div>
               
               <div className="flex flex-wrap gap-3">
@@ -295,6 +299,33 @@ export default function ServiceDetail({ params }: { params: { id: string } }) {
                 {service.description}
               </p>
             </div>
+
+            {/* Image Gallery */}
+            {service.gallery && service.gallery.length > 0 && (
+              <div className="pt-6 border-t border-gray-100">
+                <h2 className="text-[22px] font-normal text-[#1a2b4c] mb-6">Photo Gallery</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {service.gallery.map((url: string, i: number) => (
+                    <div 
+                      key={i} 
+                      onClick={() => setSelectedImage(url)}
+                      className="group relative aspect-square rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-zoom-in active:scale-95 transition-transform"
+                    >
+                      <img 
+                        src={url} 
+                        alt={`Gallery ${i}`} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                      />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="bg-white/20 backdrop-blur-md p-2 rounded-full border border-white/30 text-white">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Reviews Section */}
             <div>
@@ -499,6 +530,32 @@ export default function ServiceDetail({ params }: { params: { id: string } }) {
           </div>
         </div>
       </main>
+      {/* Lightbox Modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden animate-in fade-in duration-300"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full z-[110]"
+            onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          
+          <div className="relative max-w-5xl max-h-[90vh] flex items-center justify-center shadow-2xl animate-in zoom-in duration-300">
+             <img 
+               src={selectedImage} 
+               alt="Gallery FullView" 
+               className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+               onClick={(e) => e.stopPropagation()}
+             />
+          </div>
+          
+          <div className="absolute bottom-10 left-0 right-0 text-center text-white/50 text-sm font-medium">Click anywhere outside to close</div>
+        </div>
+      )}
+
       <Footer />
     </>
   );

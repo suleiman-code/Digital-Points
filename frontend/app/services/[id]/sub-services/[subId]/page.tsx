@@ -25,9 +25,11 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
     name: '',
     email: '',
     phone: '',
+    city: '',
     message: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchParentService = async () => {
@@ -75,10 +77,11 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
         user_name: form.name,
         user_email: form.email,
         user_phone: form.phone,
+        user_city: form.city,
         message: form.message
       });
       toast.success('Your inquiry has been sent successfully! The business will contact you soon.');
-      setForm({ name: '', email: '', phone: '', message: '' });
+      setForm({ name: '', email: '', phone: '', city: '', message: '' });
     } catch (err) {
       toast.error('Failed to send inquiry. Please try again.');
     } finally {
@@ -203,42 +206,62 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
               </div>
             </div>
             
-            {/* Gallery Images with modern rounded styling depending on Category */}
+            {/* Gallery Images */}
             <div className="grid grid-cols-2 gap-4">
-              {service?.category === 'Plumbing' && (
+              {service?.gallery && service.gallery.length > 0 ? (
+                service.gallery.slice(0, 4).map((url: string, i: number) => (
+                  <div key={i} className={`relative group cursor-zoom-in active:scale-95 transition-all ${i % 2 !== 0 ? 'mt-8' : ''}`}>
+                    <img 
+                      src={url} 
+                      alt={`Work ${i}`} 
+                      onClick={() => setSelectedImage(url)}
+                      className="w-full h-64 object-cover rounded-3xl shadow-md transition-transform duration-500 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl pointer-events-none flex items-center justify-center">
+                       <span className="bg-white/20 backdrop-blur-md p-2 rounded-full border border-white/30 text-white">
+                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                       </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
                 <>
-                  <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80" alt="Plumbing Work" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
-                  <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=600&q=80" alt="Plumbing Pipes" className="w-full h-64 object-cover rounded-3xl shadow-md" />
-                </>
-              )}
-              {service?.category === 'Cleaning' && (
-                <>
-                  <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80" alt="House Cleaning" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
-                  <img src="https://images.unsplash.com/photo-1527515637-1249b6574f26?auto=format&fit=crop&w=600&q=80" alt="Vacuuming" className="w-full h-64 object-cover rounded-3xl shadow-md" />
-                </>
-              )}
-              {service?.category === 'Salon' && (
-                <>
-                  <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80" alt="Salon styling" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
-                  <img src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=600&q=80" alt="Salon tools" className="w-full h-64 object-cover rounded-3xl shadow-md" />
-                </>
-              )}
-              {service?.category === 'Electrical' && (
-                <>
-                  <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80" alt="Electrical Work" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
-                  <img src="https://images.unsplash.com/photo-1558611848-73f7eb4001a1?auto=format&fit=crop&w=600&q=80" alt="Wires" className="w-full h-64 object-cover rounded-3xl shadow-md" />
-                </>
-              )}
-              {service?.category === 'Tutoring' && (
-                <>
-                  <img src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=600&q=80" alt="Studying" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
-                  <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80" alt="Group Study" className="w-full h-64 object-cover rounded-3xl shadow-md" />
-                </>
-              )}
-              {(!['Plumbing', 'Cleaning', 'Salon', 'Electrical', 'Tutoring'].includes(service?.category)) && (
-                <>
-                  <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80" alt="Professional Service" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
-                  <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=600&q=80" alt="Team" className="w-full h-64 object-cover rounded-3xl shadow-md" />
+                  {service?.category === 'Plumbing' && (
+                    <>
+                      <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80" alt="Plumbing Work" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
+                      <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=600&q=80" alt="Plumbing Pipes" className="w-full h-64 object-cover rounded-3xl shadow-md" />
+                    </>
+                  )}
+                  {service?.category === 'Cleaning' && (
+                    <>
+                      <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80" alt="House Cleaning" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
+                      <img src="https://images.unsplash.com/photo-1527515637-1249b6574f26?auto=format&fit=crop&w=600&q=80" alt="Vacuuming" className="w-full h-64 object-cover rounded-3xl shadow-md" />
+                    </>
+                  )}
+                  {service?.category === 'Salon' && (
+                    <>
+                      <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80" alt="Salon styling" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
+                      <img src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=600&q=80" alt="Salon tools" className="w-full h-64 object-cover rounded-3xl shadow-md" />
+                    </>
+                  )}
+                  {service?.category === 'Electrical' && (
+                    <>
+                      <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80" alt="Electrical Work" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
+                      <img src="https://images.unsplash.com/photo-1558611848-73f7eb4001a1?auto=format&fit=crop&w=600&q=80" alt="Wires" className="w-full h-64 object-cover rounded-3xl shadow-md" />
+                    </>
+                  )}
+                  {service?.category === 'Tutoring' && (
+                    <>
+                      <img src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=600&q=80" alt="Studying" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
+                      <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80" alt="Group Study" className="w-full h-64 object-cover rounded-3xl shadow-md" />
+                    </>
+                  )}
+                  {(!['Plumbing', 'Cleaning', 'Salon', 'Electrical', 'Tutoring'].includes(service?.category)) && (
+                    <>
+                      <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80" alt="Professional Service" className="w-full h-64 object-cover rounded-3xl shadow-md mt-8" />
+                      <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=600&q=80" alt="Team" className="w-full h-64 object-cover rounded-3xl shadow-md" />
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -309,13 +332,18 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
                       <input type="text" name="name" value={form.name} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
                       <input type="tel" name="phone" value={form.phone} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                     </div>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Your City *</label>
+                    <input type="text" name="city" value={form.city} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Lahore, Karachi, Rawalpindi" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
                     <input type="email" name="email" value={form.email} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                   </div>
 
@@ -373,6 +401,32 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
               ← View full profile of {service.name}
             </Link>
           </div>
+        </div>
+      )}
+
+      {/* Fullscreen Lightbox */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden animate-in fade-in duration-300"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full z-[110]"
+            onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          
+          <div className="relative max-w-5xl max-h-[90vh] flex items-center justify-center shadow-2xl animate-in zoom-in duration-300">
+             <img 
+               src={selectedImage} 
+               alt="Gallery FullView" 
+               className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+               onClick={(e) => e.stopPropagation()}
+             />
+          </div>
+          
+          <div className="absolute bottom-10 left-0 right-0 text-center text-white/50 text-sm font-medium">Click outside to close</div>
         </div>
       )}
 
