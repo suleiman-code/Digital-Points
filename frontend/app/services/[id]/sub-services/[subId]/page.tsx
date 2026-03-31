@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { servicesAPI, bookingsAPI } from '@/lib/api';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 const DEMO_SERVICES = [
   { id: '1', name: 'Elite Home Cleaning', category: 'Cleaning', city: 'Laguna Niguel', state: 'CA', phone: '(555) 123-4567', email: 'contact@elitecleaning.com', address: '123 Clean Ave, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952' },
@@ -76,10 +77,10 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
         user_phone: form.phone,
         message: form.message
       });
-      alert('Your inquiry has been sent successfully! The business will contact you soon.');
+      toast.success('Your inquiry has been sent successfully! The business will contact you soon.');
       setForm({ name: '', email: '', phone: '', message: '' });
     } catch (err) {
-      alert('Failed to send inquiry.');
+      toast.error('Failed to send inquiry. Please try again.');
     } finally {
       setSubmitting(false);
     }

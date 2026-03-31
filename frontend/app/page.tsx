@@ -1,18 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 import { motion } from 'framer-motion';
-import { div } from 'framer-motion/client';
+import { servicesAPI } from '@/lib/api';
 
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
+  const [featuredServices, setFeaturedServices] = useState<any[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+
+  const FALLBACK_SERVICES = [
+    { id: "1", title: "Elite Home Deep Cleaning", category: "Cleaning", price: "$80/hr", rating: 4.9, image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80", description: "Professional deep cleaning service with eco-friendly products for a spotless home." },
+    { id: "2", title: "Master Sparky Electrical", category: "Electrical", price: "From $95", rating: 4.8, image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80", description: "Licensed electricians available 24/7 for all residential and commercial needs." },
+    { id: "3", title: "Royal Touch Spa & Salon", category: "Salon", price: "From $45", rating: 4.7, image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", description: "Luxury grooming and spa services in the comfort of your own home." },
+    { id: "4", title: "Precision Plumbing Co.", category: "Plumbing", price: "From $75", rating: 4.9, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80", description: "Fast, reliable plumbing repairs and installations with a satisfaction guarantee." }
+  ];
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setServicesLoading(true);
+        const res = await servicesAPI.getAll();
+        const data: any[] = res.data || [];
+        // Normalize backend fields to match ServiceCard props
+        const normalized = data.slice(0, 8).map((s: any) => ({
+          id: s._id || s.id,
+          title: s.title || s.name,
+          category: s.category,
+          price: s.price ? `From $${s.price}` : 'Contact Us',
+          rating: s.rating || 5.0,
+          image: (s.image_url || s.image || '') + (s.image_url ? '?auto=format&fit=crop&w=800&q=80' : ''),
+          description: s.description,
+        }));
+        setFeaturedServices(normalized.length > 0 ? normalized : FALLBACK_SERVICES);
+      } catch (err) {
+        setFeaturedServices(FALLBACK_SERVICES);
+      } finally {
+        setServicesLoading(false);
+      }
+    };
+    fetchServices();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,14 +201,23 @@ export default function Home() {
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { id: "1", title: "Elite Home Deep Cleaning", category: "Cleaning", price: "$80/hr", rating: 4.9, image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80", description: "Professional deep cleaning service with eco-friendly products for a spotless home." },
-                { id: "2", title: "Master Sparky Electrical", category: "Electrical", price: "From $95", rating: 4.8, image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80", description: "Licensed electricians available 24/7 for all residential and commercial needs." },
-                { id: "3", title: "Royal Touch Spa & Salon", category: "Salon", price: "From $45", rating: 4.7, image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", description: "Luxury grooming and spa services in the comfort of your own home." },
-                { id: "4", title: "Precision Plumbing Co.", category: "Plumbing", price: "From $75", rating: 4.9, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80", description: "Fast, reliable plumbing repairs and installations with a satisfaction guarantee." }
-              ].map((service, index) => (
-                <ServiceCard key={service.id} {...service} index={index} />
-              ))}
+              {servicesLoading ? (
+                // Loading skeletons
+                [...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-pulse">
+                    <div className="h-48 bg-slate-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-4 bg-slate-200 rounded w-3/4" />
+                      <div className="h-3 bg-slate-200 rounded w-1/2" />
+                      <div className="h-3 bg-slate-200 rounded w-full" />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                featuredServices.map((service, index) => (
+                  <ServiceCard key={service.id} {...service} index={index} />
+                ))
+              )}
             </div>
           </div>
         </section>

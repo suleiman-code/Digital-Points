@@ -44,19 +44,35 @@ export default function AdminServicesPage() {
 
   const onSubmit = async (data: any) => {
     try {
+      // Build a clean payload — only include optional fields if they have a value
+      const payload: any = {
+        title: data.title,
+        description: data.description || '',
+        category: data.category || 'Other',
+        price: parseFloat(data.price) || 0,
+        city: data.city || '',
+        state: data.state || '',
+      };
+      if (data.image_url) payload.image_url = data.image_url;
+      if (data.service_details) payload.service_details = data.service_details;
+
       if (editingId) {
-        await servicesAPI.update(editingId, data);
+        await servicesAPI.update(editingId, payload);
         toast.success('Service updated successfully!');
       } else {
-        await servicesAPI.create(data);
+        await servicesAPI.create(payload);
         toast.success('Service created successfully!');
       }
       reset();
       setShowForm(false);
       setEditingId(null);
       fetchServices();
-    } catch (error) {
-      toast.error('Error saving service');
+    } catch (error: any) {
+      const detail = error.response?.data?.detail;
+      const msg = Array.isArray(detail)
+        ? detail.map((d: any) => `${d.loc?.slice(-1)[0]}: ${d.msg}`).join(', ')
+        : detail || error.message || 'Error saving service';
+      toast.error(msg);
     }
   };
 
@@ -181,27 +197,42 @@ export default function AdminServicesPage() {
                 </h2>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  <input
-                    placeholder="Service Title"
-                    {...register('title', { required: true })}
-                  />
-                  <textarea
-                    placeholder="Description"
-                    {...register('description')}
-                    rows={3}
-                  />
-                  <input placeholder="Category" {...register('category')} />
-                  <input
-                    placeholder="Price"
-                    type="number"
-                    {...register('price', { required: true })}
-                  />
-                  <input placeholder="Image URL" {...register('image')} />
-                  <textarea
-                    placeholder="Service Details (one per line)"
-                    {...register('serviceDetails')}
-                    rows={3}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input placeholder="Service Title" {...register('title', { required: true })} className="w-full border rounded-lg p-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea placeholder="Description" {...register('description')} rows={3} className="w-full border rounded-lg p-2" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                      <input placeholder="e.g. Plumbing" {...register('category', { required: true })} className="w-full border rounded-lg p-2" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Price ($) *</label>
+                      <input placeholder="Price" type="number" min="1" {...register('price', { required: true })} className="w-full border rounded-lg p-2" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                      <input placeholder="City" {...register('city', { required: true })} className="w-full border rounded-lg p-2" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                      <input placeholder="State" {...register('state', { required: true })} className="w-full border rounded-lg p-2" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                    <input placeholder="https://..." {...register('image_url')} className="w-full border rounded-lg p-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Service Details</label>
+                    <textarea placeholder="Service Details (one per line)" {...register('service_details')} rows={3} className="w-full border rounded-lg p-2" />
+                  </div>
 
                   <div className="flex gap-2">
                     <button type="submit" className="btn-primary flex-1">

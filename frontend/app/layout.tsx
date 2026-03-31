@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, Sora } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 const headingFont = Sora({
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${bodyFont.variable} ${headingFont.variable} bg-white`}>
         {children}
+        <Toaster position="top-center" />
       </body>
     </html>
   );

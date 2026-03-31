@@ -5,6 +5,7 @@ from database import connect_to_mongo, close_mongo_connection
 from services import router as service_router
 from bookings import router as booking_router
 from auth import router as auth_router
+from contact import router as contact_router
 from contextlib import asynccontextmanager
 import logging
 import uvicorn
@@ -31,6 +32,7 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(service_router)
 app.include_router(booking_router)
+app.include_router(contact_router)
 
 # CORS Settings
 origins = ["*"] # Broad for testing

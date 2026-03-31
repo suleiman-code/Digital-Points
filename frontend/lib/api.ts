@@ -162,15 +162,15 @@ const setBookings = (bookings: any[]) => writeStorage(STORAGE_KEYS.bookings, boo
 const getAdmin = () => readStorage(STORAGE_KEYS.admin, DEFAULT_ADMIN);
 
 export const servicesAPI = {
-  getAll: () => (api ? api.get('/services') : makeResponse(getServices())),
+  getAll: () => (api ? api.get('/services/') : makeResponse(getServices())),
   getById: (id: string) => {
-    if (api) return api.get(`/services/${id}`);
+    if (api) return api.get(`/services/${id}/`);
     const service = getServices().find((item) => item._id === id);
     if (!service) makeApiError('Service not found', 404);
     return makeResponse(service);
   },
   create: (data: any) => {
-    if (api) return api.post('/services', data);
+    if (api) return api.post('/services/', data);
 
     const now = new Date().toISOString();
     const newService = {
@@ -185,7 +185,7 @@ export const servicesAPI = {
     return makeResponse(newService, 201);
   },
   update: (id: string, data: any) => {
-    if (api) return api.put(`/services/${id}`, data);
+    if (api) return api.put(`/services/${id}/`, data);
 
     const services = getServices();
     const index = services.findIndex((item) => item._id === id);
@@ -202,7 +202,7 @@ export const servicesAPI = {
     return makeResponse(updated);
   },
   delete: (id: string) => {
-    if (api) return api.delete(`/services/${id}`);
+    if (api) return api.delete(`/services/${id}/`);
 
     const services = getServices();
     const next = services.filter((item) => item._id !== id);
@@ -210,11 +210,11 @@ export const servicesAPI = {
     return makeResponse({ success: true });
   },
   addReview: (id: string, data: any) => {
-    if (api) return api.post(`/services/${id}/reviews`, data);
+    if (api) return api.post(`/services/${id}/reviews/`, data);
     return makeResponse({ ...data, _id: uid('rev'), createdAt: new Date().toISOString() }, 201);
   },
   getReviews: (id: string) => {
-    if (api) return api.get(`/services/${id}/reviews`);
+    if (api) return api.get(`/services/${id}/reviews/`);
     return makeResponse([
       {
         _id: 'mock1',
@@ -231,7 +231,7 @@ export const servicesAPI = {
 
 export const bookingsAPI = {
   create: (data: any) => {
-    if (api) return api.post('/bookings', data);
+    if (api) return api.post('/bookings/', data);
 
     const newBooking = {
       ...data,
@@ -243,12 +243,12 @@ export const bookingsAPI = {
     setBookings(bookings);
     return makeResponse(newBooking, 201);
   },
-  getAll: () => (api ? api.get('/bookings') : makeResponse(getBookings())),
+  getAll: () => (api ? api.get('/bookings/') : makeResponse(getBookings())),
 
   // Used by Admin to update booking status.
   // Backend: PUT /api/bookings/{id}/status?new_status=pending|contacted|completed|cancelled
   updateStatus: (id: string, newStatus: string) => {
-    if (api) return api.put(`/bookings/${id}/status`, null, { params: { new_status: newStatus } });
+    if (api) return api.put(`/bookings/${id}/status/`, null, { params: { new_status: newStatus } });
 
     const bookings = getBookings();
     const index = bookings.findIndex((item: any) => item._id === id);
@@ -260,7 +260,7 @@ export const bookingsAPI = {
 
   // Kept as a generic fallback for localStorage mode
   update: (id: string, data: any) => {
-    if (api) return api.put(`/bookings/${id}/status`, null, { params: { new_status: data.status } });
+    if (api) return api.put(`/bookings/${id}/status/`, null, { params: { new_status: data.status } });
 
     const bookings = getBookings();
     const index = bookings.findIndex((item: any) => item._id === id);
@@ -272,7 +272,7 @@ export const bookingsAPI = {
   },
 
   delete: (id: string) => {
-    if (api) return api.delete(`/bookings/${id}`);
+    if (api) return api.delete(`/bookings/${id}/`);
 
     const next = getBookings().filter((item: any) => item._id !== id);
     setBookings(next);
@@ -282,7 +282,7 @@ export const bookingsAPI = {
 
 export const contactAPI = {
   send: (data: any) => {
-    if (api) return api.post('/contact', data);
+    if (api) return api.post('/contact/', data);
 
     const messages = readStorage<any[]>(STORAGE_KEYS.contact, []);
     messages.unshift({ ...data, _id: uid('msg'), createdAt: new Date().toISOString() });
@@ -293,7 +293,7 @@ export const contactAPI = {
 
 export const authAPI = {
   register: (data: any) => {
-    if (api) return api.post('/auth/register', data);
+    if (api) return api.post('/auth/signup/', data);
 
     const admin = {
       email: data.email || DEFAULT_ADMIN.email,
@@ -303,7 +303,15 @@ export const authAPI = {
     return makeResponse({ token: uid('token') }, 201);
   },
   login: (data: any) => {
-    if (api) return api.post('/auth/login', data);
+    if (api) {
+      // FastAPI OAuth2PasswordRequestForm expects form-data with 'username' field
+      const formData = new URLSearchParams();
+      formData.append('username', data.email);
+      formData.append('password', data.password);
+      return api.post('/auth/login/', formData, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
+    }
 
     const admin = getAdmin();
     const isValid = data.email === admin.email && data.password === admin.password;
@@ -312,7 +320,7 @@ export const authAPI = {
       makeApiError('Invalid credentials. Use admin@example.com / admin123', 401);
     }
 
-    return makeResponse({ token: uid('token') });
+    return makeResponse({ access_token: uid('token'), token_type: 'bearer' });
   },
 };
 

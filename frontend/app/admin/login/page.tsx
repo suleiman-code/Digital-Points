@@ -14,11 +14,13 @@ export default function AdminLoginPage() {
   const onSubmit = async (data: any) => {
     try {
       const response = await authAPI.login(data);
-      localStorage.setItem('authToken', response.data.token);
+      const token = response.data.access_token || response.data.token;
+      if (!token) throw new Error('No token received');
+      localStorage.setItem('authToken', token);
       toast.success('Login successful!');
       router.push('/admin/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      toast.error(error.response?.data?.detail || error.response?.data?.message || 'Login failed. Check your credentials.');
     }
   };
 

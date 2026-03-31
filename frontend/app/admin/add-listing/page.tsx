@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { servicesAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function AddListing() {
   const router = useRouter();
@@ -78,19 +79,34 @@ export default function AddListing() {
     setLoading(true);
 
     try {
-      const payload = {
-        ...formData,
+      const payload: any = {
+        title: formData.title,
+        category: formData.category,
         price: parseFloat(formData.price) || 0,
+        city: formData.city,
+        state: formData.state,
+        description: formData.description,
         business_hours: hours,
-        sub_services: subServices.length > 0 ? subServices : null,
       };
 
+      // Only add optional fields if they have value
+      if (formData.image_url) payload.image_url = formData.image_url;
+      if (formData.address) payload.address = formData.address;
+      if (formData.contact_phone) payload.contact_phone = formData.contact_phone;
+      if (formData.contact_email) payload.contact_email = formData.contact_email;
+      if (formData.website_url) payload.website_url = formData.website_url;
+      if (formData.google_maps_url) payload.google_maps_url = formData.google_maps_url;
+      
+      if (subServices.length > 0) {
+        payload.sub_services = subServices;
+      }
+
       await servicesAPI.create(payload);
-      alert('Business Listing created successfully!');
+      toast.success('Business Listing created successfully!');
       router.push('/services');
     } catch (error: any) {
       console.error(error);
-      alert('Failed to create listing: ' + (error.response?.data?.detail || error.message));
+      toast.error('Failed to create listing: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
     }

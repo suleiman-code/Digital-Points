@@ -26,19 +26,24 @@ conf = ConnectionConfig(
 
 async def send_notification_email(booking_data: dict):
     message = MessageSchema(
-        subject="New Business Booking Received!",
-        recipients=[settings.MAIL_FROM], # Send to Admin
+        subject=f"NEW INQUIRY: {booking_data['user_name']} is interested in '{booking_data['service_name']}'",
+        recipients=[settings.MAIL_FROM],
+        reply_to=[booking_data['user_email']],
         body=f"""
         Hello Admin,
         
-        A new booking inquiry has been received:
-        - Customer Name: {booking_data['user_name']}
-        - Email: {booking_data['user_email']}
-        - Phone: {booking_data['user_phone']}
-        - Service: {booking_data['service_name']}
-        - Message: {booking_data['message']}
+        A client has sent an inquiry regarding a listing on Digital Point:
+        -------------------------------------------------------------
+        BUSINESS/SERVICE: {booking_data['service_name']}
+        CLIENT NAME: {booking_data['user_name']}
+        CLIENT EMAIL: {booking_data['user_email']}
+        CLIENT PHONE: {booking_data['user_phone']}
+        -------------------------------------------------------------
         
-        Please log into the dashboard to review.
+        MESSAGE BODY:
+        {booking_data['message']}
+        
+        Note: You can reply directly to this email to contact the client.
         """,
         subtype=MessageType.plain
     )
