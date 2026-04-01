@@ -8,7 +8,7 @@ from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from datetime import datetime, timezone
 from typing import List
 
-router = APIRouter(prefix="/api/bookings", tags=["Bookings"])
+router = APIRouter(prefix="/api/bookings", tags=["Inquiries"])
 
 # Mail Configuration
 conf = ConnectionConfig(
@@ -24,13 +24,13 @@ conf = ConnectionConfig(
     VALIDATE_CERTS=settings.VALIDATE_CERTS
 )
 
-async def send_notification_email(booking_data: dict):
+async def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: str):
     message = MessageSchema(
         subject=f"NEW INQUIRY: {booking_data['user_name']} is interested in '{booking_data['service_name']}'",
-        recipients=[settings.MAIL_FROM],
+        recipients=[recipient_email],
         reply_to=[booking_data['user_email']],
         body=f"""
-        Hello Admin,
+        Hello,
         
         A client has sent an inquiry regarding a listing on Digital Point:
         -------------------------------------------------------------
@@ -51,11 +51,25 @@ async def send_notification_email(booking_data: dict):
     try:
         await fm.send_message(message)
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send listing inquiry email: {e}")
 
 # 1. POST /api/bookings (Public - User submits a booking/inquiry)
 @router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
 async def create_booking(booking: BookingCreate, background_tasks: BackgroundTasks):
+    if not ObjectId.is_valid(booking.service_id):
+        raise HTTPException(status_code=400, detail="Invalid Service ID")
+
+    service_doc = await db.db["services"].find_one({"_id": ObjectId(booking.service_id)})
+    if not service_doc:
+        raise HTTPException(status_code=404, detail="Service not found")
+
+    recipient_email = service_doc.get("contact_email")
+    if not recipient_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Listing owner email is missing. Please update service contact email first."
+        )
+
     booking_dict = booking.model_dump()
     booking_dict["created_at"] = datetime.now(timezone.utc)
     booking_dict["status"] = "pending"
@@ -64,7 +78,7 @@ async def create_booking(booking: BookingCreate, background_tasks: BackgroundTas
     created_booking = await db.db["bookings"].find_one({"_id": new_booking.inserted_id})
     
     # Send email in background so user doesn't wait
-    background_tasks.add_task(send_notification_email, booking_dict)
+    background_tasks.add_task(send_listing_owner_inquiry_email, booking_dict, recipient_email)
     
     return created_booking
 

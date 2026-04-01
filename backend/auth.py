@@ -57,8 +57,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 async def get_admin_user(current_user: dict = Depends(get_current_user)):
-    # In this app, all users in the 'users' collection are considered admins for now.
-    return current_user
+    if current_user.get("is_admin") is True:
+        return current_user
+
+    # Backward compatibility: for legacy records without is_admin,
+    # treat the oldest account as admin until roles are explicitly set.
+    if "is_admin" not in current_user:
+        oldest_user = await db.db["users"].find_one(sort=[("created_at", 1)])
+        if oldest_user and oldest_user.get("_id") == current_user.get("_id"):
+            return current_user
+
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
 # 1. SIGNUP (Initial admin creation)
 @router.post("/signup", response_model=UserResponse)
@@ -71,6 +80,11 @@ async def signup(user: UserCreate):
     user_dict = user.model_dump()
     user_dict["password"] = get_password_hash(user.password)
     user_dict["created_at"] = datetime.now(timezone.utc)
+
+    # First registered user is admin by default.
+    if user_dict.get("is_admin") is None:
+        users_count = await db.db["users"].count_documents({})
+        user_dict["is_admin"] = users_count == 0
     
     new_user = await db.db["users"].insert_one(user_dict)
     created_user = await db.db["users"].find_one({"_id": new_user.inserted_id})

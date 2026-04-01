@@ -28,9 +28,11 @@ class ContactForm(BaseModel):
     message: str
 
 async def send_admin_contact_email(form_data: dict):
+    admin_recipient = settings.MAIL_FROM or settings.MAIL_USERNAME
+
     message = MessageSchema(
         subject=f"URGENT: New Inquiry from {form_data['name']} - Digital Point",
-        recipients=[settings.MAIL_FROM],
+        recipients=[admin_recipient],
         reply_to=[form_data['email']],
         body=f"""
         Hello Admin,

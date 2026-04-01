@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { bookingsAPI } from '@/lib/api';
+import { inquiriesAPI } from '@/lib/api';
 
 interface BookingFormProps {
   serviceName: string;
@@ -17,14 +17,15 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
   const onSubmit = async (data: any) => {
     try {
       setLoading(true);
-      await bookingsAPI.create({
-        serviceId,
-        serviceName,
-        userName: data.name,
-        userEmail: data.email,
-        userPhone: data.phone,
+      await inquiriesAPI.create({
+        service_id: serviceId,
+        service_name: serviceName,
+        user_name: data.name,
+        user_email: data.email,
+        user_phone: data.phone,
+        user_city: data.city,
         message: data.message,
-        date: data.date,
+        booking_date: data.date,
       });
       
       toast.success('Booking submitted successfully! We will contact you soon.');
@@ -70,6 +71,17 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
             type="tel"
             placeholder="Your phone number"
             {...register('phone', { required: 'Phone is required' })}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="city">City</label>
+          <input
+            id="city"
+            type="text"
+            placeholder="Your city"
+            {...register('city', { required: 'City is required' })}
             required
           />
         </div>

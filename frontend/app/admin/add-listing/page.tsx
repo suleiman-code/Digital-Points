@@ -1,16 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { servicesAPI } from '@/lib/api';
+import { authAPI, servicesAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 export default function AddListing() {
   const router = useRouter();
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditLoading, setIsEditLoading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -26,14 +29,18 @@ export default function AddListing() {
     contact_email: '',
     website_url: '',
     google_maps_url: '',
+    country: 'USA',
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [mainImage, setMainImage] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
 
-  // Sub-services: admin defines the inner page names
-  const [subServices, setSubServices] = useState<string[]>([]);
-  const [subServiceInput, setSubServiceInput] = useState('');
+  // Multiple Gallery Photos
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+
+  // Service Details (One per line strings)
+  const [serviceDetailsInput, setServiceDetailsInput] = useState('');
 
   const [hours, setHours] = useState({
     Monday: '9am to 6pm',
@@ -41,52 +48,111 @@ export default function AddListing() {
     Wednesday: '9am to 6pm',
     Thursday: '9am to 6pm',
     Friday: '9am to 6pm',
-    Saturday: 'Closed',
+    Saturday: '10am to 4pm',
     Sunday: 'Closed',
   });
 
   useEffect(() => {
-    // Basic protection
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      alert("Admin access required.");
-      router.push('/login');
-    } else {
-      setIsAdmin(true);
-    }
+    const params = new URLSearchParams(window.location.search);
+    setEditingId(params.get('edit'));
+
+    const checkAdmin = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        toast.error('Admin access required.');
+        router.push('/admin/login');
+        return;
+      }
+
+      try {
+        await authAPI.me();
+        setIsAdmin(true);
+      } catch {
+        localStorage.removeItem('authToken');
+        toast.error('Session expired. Please login again.');
+        router.push('/admin/login');
+      }
+    };
+
+    checkAdmin();
   }, [router]);
+
+  useEffect(() => {
+    const loadServiceForEdit = async () => {
+      if (!editingId || !isAdmin) return;
+
+      try {
+        setIsEditLoading(true);
+        const res = await servicesAPI.getById(editingId);
+        const svc = res.data;
+
+        setFormData({
+          title: svc.title || '',
+          category: svc.category || 'Plumbing',
+          price: String(svc.price ?? ''),
+          city: svc.city || '',
+          state: svc.state || '',
+          description: svc.description || '',
+          image_url: svc.image_url || svc.image || '',
+          address: svc.address || '',
+          contact_phone: svc.contact_phone || '',
+          contact_email: svc.contact_email || '',
+          website_url: svc.website_url || '',
+          google_maps_url: svc.google_maps_url || '',
+          country: svc.country || 'USA',
+        });
+
+        setMainImagePreview(svc.image_url || svc.image || null);
+        setGalleryPreviews(Array.isArray(svc.gallery) ? svc.gallery : []);
+        setServiceDetailsInput(svc.service_details || '');
+
+        if (svc.business_hours && typeof svc.business_hours === 'object') {
+          setHours(prev => ({ ...prev, ...svc.business_hours }));
+        }
+      } catch {
+        toast.error('Failed to load service for editing.');
+        router.push('/admin/services');
+      } finally {
+        setIsEditLoading(false);
+      }
+    };
+
+    loadServiceForEdit();
+  }, [editingId, isAdmin, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleHourChange = (day: string, value: string) => {
-    setHours(prev => ({ ...prev, [day]: value }));
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
+      setMainImage(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setMainImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const addSubService = () => {
-    const trimmed = subServiceInput.trim();
-    if (trimmed && !subServices.includes(trimmed)) {
-      setSubServices(prev => [...prev, trimmed]);
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + galleryFiles.length > 8) {
+      toast.error("Max 8 gallery photos allowed.");
+      return;
     }
-    setSubServiceInput('');
+    setGalleryFiles(prev => [...prev, ...files]);
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => setGalleryPreviews(prev => [...prev, reader.result as string]);
+      reader.readAsDataURL(file);
+    });
   };
 
-  const removeSubService = (name: string) => {
-    setSubServices(prev => prev.filter(s => s !== name));
+  const removeGalleryPhoto = (index: number) => {
+    setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+    setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,241 +160,288 @@ export default function AddListing() {
     setLoading(true);
 
     try {
-      const payload: any = {
-        title: formData.title,
-        category: formData.category,
+      // 1. Upload Main Image if exists
+      let finalImageUrl = formData.image_url;
+      if (mainImage) {
+        const res = await servicesAPI.uploadImage(mainImage);
+        finalImageUrl = res.url;
+      }
+
+      // 2. Upload Gallery Images
+      const uploadedGalleryUrls = [];
+      for (const file of galleryFiles) {
+        const res = await servicesAPI.uploadImage(file);
+        uploadedGalleryUrls.push(res.url);
+      }
+
+      const payload = {
+        ...formData,
         price: parseFloat(formData.price) || 0,
-        city: formData.city,
-        state: formData.state,
-        description: formData.description,
+        image_url: finalImageUrl,
+        gallery: [...galleryPreviews.filter((url) => url.startsWith('http')), ...uploadedGalleryUrls],
         business_hours: hours,
+        service_details: serviceDetailsInput
       };
 
-      // Handle Image Upload if file selected
-      let finalImageUrl = formData.image_url;
-      if (imageFile) {
-        try {
-          const uploadRes = await servicesAPI.uploadImage(imageFile);
-          finalImageUrl = uploadRes.url;
-        } catch (err) {
-          toast.error("Failed to upload image. Using URL if provided.");
-        }
+      if (editingId) {
+        await servicesAPI.update(editingId, payload);
+        toast.success('Service Updated Successfully!');
+      } else {
+        await servicesAPI.create(payload);
+        toast.success('Service Listed Successfully!');
       }
-
-      // Only add optional fields if they have value
-      if (finalImageUrl) payload.image_url = finalImageUrl;
-      if (formData.address) payload.address = formData.address;
-      if (formData.contact_phone) payload.contact_phone = formData.contact_phone;
-      if (formData.contact_email) payload.contact_email = formData.contact_email;
-      if (formData.website_url) payload.website_url = formData.website_url;
-      if (formData.google_maps_url) payload.google_maps_url = formData.google_maps_url;
-      
-      if (subServices.length > 0) {
-        payload.sub_services = subServices;
-      }
-
-      await servicesAPI.create(payload);
-      toast.success('Business Listing created successfully!');
-      router.push('/services');
+      router.push('/admin/services');
     } catch (error: any) {
-      console.error(error);
-      toast.error('Failed to create listing: ' + (error.response?.data?.detail || error.message));
+      toast.error('Error: ' + (error.response?.data?.detail || 'Failed to list service'));
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isAdmin) return null;
+  if (!isAdmin || isEditLoading) return null;
 
   return (
-    <div className="bg-slate-50 min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-grow container-max py-12">
-        <div className="max-w-6xl mx-auto bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-slate-200">
-          <h1 className="text-3xl font-bold text-[#1a2b4c] mb-8">Add New Business Listing</h1>
-          
-          <form onSubmit={handleSubmit} className="space-y-8">
+    <div className="flex min-h-screen bg-gray-50">
+      <div
+        className={`${sidebarOpen ? 'w-64' : 'w-20'
+          } bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40`}
+      >
+        <div className="p-4 border-b border-gray-700">
+          <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
+            {sidebarOpen ? 'SH Admin' : 'SA'}
+          </Link>
+        </div>
+
+        <nav className="mt-8 space-y-2 p-4">
+          <SidebarItem href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
+          <SidebarItem href="/admin/services" icon="🛠️" label="Services" open={sidebarOpen} active />
+          <SidebarItem href="/admin/bookings" icon="📅" label="Bookings" open={sidebarOpen} />
+        </nav>
+
+        <div className="absolute bottom-4 left-4 right-4">
+          <button
+            onClick={() => {
+              localStorage.removeItem('authToken');
+              toast.success('Logged out');
+              router.push('/admin/login');
+            }}
+            className="w-full btn-danger text-sm py-2"
+          >
+            {sidebarOpen ? 'Logout' : '🚪'}
+          </button>
+        </div>
+      </div>
+
+      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} w-full transition-all duration-300`}>
+        <div className="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700">
+            ☰
+          </button>
+          <h1 className="text-xl font-bold">{editingId ? 'Edit Service' : 'Add New Service'}</h1>
+        </div>
+
+        <main className="p-8">
+          <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100">
+          <div className="bg-gradient-to-r from-[#0f2340] to-indigo-900 p-8 text-white">
+            <h1 className="text-3xl font-extrabold tracking-tight">{editingId ? 'Edit Service' : 'Add New Service'}</h1>
+            <p className="text-blue-200 mt-2">{editingId ? 'Update all service details from one complete form.' : 'Fill in the professional details to list a new business.'}</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-10">
             
-            {/* Core Details */}
-            <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-4">Core Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Name / Title *</label>
-                  <input type="text" name="title" value={formData.title} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg p-3" />
+            {/* --- BASIC INFO --- */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">1</span>
+                <h2 className="text-xl font-bold text-slate-800">Basic Information</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* --- MAIN BUSINESS IMAGE --- */}
+                <div className="md:col-span-2 bg-blue-50/30 p-6 rounded-2xl border border-blue-100/50">
+                  <label className="block text-sm font-black text-blue-900 mb-4 uppercase tracking-widest">Business Main Image (Card Image) *</label>
+                  <div className="flex flex-col md:flex-row gap-6 items-center">
+                    <div className="w-full md:w-64 aspect-video rounded-xl bg-white border-2 border-dashed border-blue-200 flex items-center justify-center overflow-hidden shadow-inner cursor-pointer hover:bg-blue-50 transition-all relative group" onClick={() => document.getElementById('mainImageInput')?.click()}>
+                      {mainImagePreview ? (
+                        <img src={mainImagePreview} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center">
+                          <svg className="w-10 h-10 text-blue-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                          <span className="text-[10px] font-bold text-blue-400 mt-1 block">Click to Upload</span>
+                        </div>
+                      )}
+                      <input id="mainImageInput" type="file" accept="image/*" onChange={handleMainImageChange} className="hidden" />
+                      <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-xs font-bold bg-blue-600 px-3 py-1 rounded-full">Change Image</span>
+                      </div>
+                    </div>
+                    <div className="flex-1 w-full">
+                      <p className="text-xs text-slate-500 font-medium mb-3 italic">This image will be shown on the main search results and the cover of the service page.</p>
+                      <input 
+                        name="image_url" 
+                        value={formData.image_url} 
+                        onChange={handleChange} 
+                        placeholder="Or paste external image URL here..." 
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+                      />
+                    </div>
+                  </div>
                 </div>
-                
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Title *</label>
+                  <input name="title" value={formData.title} onChange={handleChange} required placeholder="e.g. Master Plumber Services" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                  <select name="category" value={formData.category} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg p-3">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Category *</label>
+                  <select name="category" value={formData.category} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none">
                     <option value="Plumbing">Plumbing</option>
                     <option value="Electrical">Electrical</option>
                     <option value="Cleaning">Cleaning</option>
                     <option value="Salon">Salon</option>
                     <option value="Tutoring">Tutoring</option>
-                    <option value="Other">Other</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Starting Price ($) *</label>
-                  <input type="number" name="price" value={formData.price} onChange={handleChange} required min="1" className="w-full border border-gray-300 rounded-lg p-3" />
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Starting Price ($) *</label>
+                  <input type="number" name="price" value={formData.price} onChange={handleChange} min="0" required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Business Image</label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Option 1: Upload from Computer</label>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleImageChange}
-                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      />
-                      {imagePreview && (
-                        <div className="mt-4 relative w-full h-40 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                          <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                          <button 
-                            type="button" 
-                            onClick={() => {setImageFile(null); setImagePreview(null);}}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full text-xs shadow-md"
-                          >
-                            &times;
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Option 2: Use Image URL</label>
-                      <input 
-                        type="url" 
-                        name="image_url" 
-                        value={formData.image_url} 
-                        onChange={handleChange} 
-                        placeholder="https://images.unsplash.com/..." 
-                        className="w-full border border-gray-300 rounded-lg p-3" 
-                        disabled={!!imageFile}
-                      />
-                      <p className="mt-2 text-xs text-gray-400 italic">URLs are used only if no file is uploaded above.</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                  <textarea name="description" value={formData.description} onChange={handleChange} required rows={4} className="w-full border border-gray-300 rounded-lg p-3"></textarea>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Service Description *</label>
+                  <textarea name="description" value={formData.description} onChange={handleChange} required rows={4} placeholder="Briefly describe the service..." className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Location & Contact */}
-            <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-4">Location & Contact</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Street Address</label>
-                  <input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-3" />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
-                  <input type="text" name="city" value={formData.city} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg p-3" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">State / Province *</label>
-                  <input type="text" name="state" value={formData.state} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg p-3" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
-                  <input type="text" name="contact_phone" value={formData.contact_phone} onChange={handleChange} placeholder="(555) 123-4567" className="w-full border border-gray-300 rounded-lg p-3" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
-                  <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-3" />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
-                  <input type="url" name="website_url" value={formData.website_url} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-3" />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Google Maps Embed URL (src link)</label>
-                  <input type="url" name="google_maps_url" value={formData.google_maps_url} onChange={handleChange} placeholder="https://www.google.com/maps/embed?pb=..." className="w-full border border-gray-300 rounded-lg p-3" />
-                </div>
+            {/* --- LOCATION & CONTACT --- */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">2</span>
+                <h2 className="text-xl font-bold text-slate-800">Location & Contact</h2>
               </div>
-            </div>
-
-            {/* Business Hours */}
-            <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-4">Business Hours</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {Object.keys(hours).map((day) => (
-                  <div key={day}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{day}</label>
-                    <input 
-                      type="text" 
-                      value={hours[day as keyof typeof hours]} 
-                      onChange={(e) => handleHourChange(day, e.target.value)} 
-                      placeholder="e.g. 9am - 5pm or Closed"
-                      className="w-full border border-gray-300 rounded-lg p-2 text-sm" 
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Sub-Services / Inner Pages */}
-            <div>
-              <h2 className="text-xl font-semibold border-b pb-2 mb-4">Inner Service Pages <span className="text-sm font-normal text-gray-400">(optional – leave blank to auto-generate from category)</span></h2>
-              <p className="text-sm text-gray-500 mb-3">Add the names of specific service pages for this business (e.g. "Deep Home Cleaning", "Emergency 24/7"). These will appear as clickable links on the business profile.</p>
               
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={subServiceInput}
-                  onChange={e => setSubServiceInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSubService(); } }}
-                  placeholder="e.g. Deep Home Cleaning"
-                  className="flex-1 border border-gray-300 rounded-lg p-3 text-sm"
-                />
-                <button type="button" onClick={addSubService} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">
-                  + Add
-                </button>
-              </div>
-
-              {subServices.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {subServices.map((s, i) => (
-                    <span key={i} className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-full text-sm font-medium">
-                      {s}
-                      <button type="button" onClick={() => removeSubService(s)} className="text-blue-400 hover:text-red-500 font-bold leading-none">&times;</button>
-                    </span>
-                  ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Business Address *</label>
+                  <input name="address" value={formData.address} onChange={handleChange} required placeholder="Street address, Suite, etc." className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none" />
                 </div>
-              )}
-            </div>
 
-            <div className="pt-6 border-t border-gray-200">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">City *</label>
+                  <input name="city" value={formData.city} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">State *</label>
+                  <input name="state" value={formData.state} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Contact Number *</label>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    name="contact_phone"
+                    value={formData.contact_phone}
+                    onChange={handleChange}
+                    required
+                    minLength={7}
+                    placeholder="+1 555 123 4567"
+                    className="w-full bg-white border-2 border-blue-100 rounded-xl p-4 shadow-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Business Email *</label>
+                  <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Google Maps URL (Optional)</label>
+                  <input name="google_maps_url" value={formData.google_maps_url} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
+                </div>
+              </div>
+            </section>
+
+            {/* --- MEDIA & GALLERY --- */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">3</span>
+                <h2 className="text-xl font-bold text-slate-800">Service Media (Gallery)</h2>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                  <label className="block text-sm font-bold text-slate-700 mb-4 text-center">Upload Work Gallery (Max 6 Photos)</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <AnimatePresence>
+                      {galleryPreviews.map((preview, i) => (
+                        <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative aspect-square rounded-xl overflow-hidden shadow-md">
+                          <img src={preview} className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => removeGalleryPhoto(i)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full text-xs">&times;</button>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    {galleryPreviews.length < 6 && (
+                      <label className="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-all">
+                        <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+                        <span className="text-[10px] font-bold text-slate-500 mt-1 uppercase">Add Photo</span>
+                        <input type="file" multiple accept="image/*" onChange={handleGalleryChange} className="hidden" />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+             {/* --- SERVICE DETAILS --- */}
+             <section className="space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">4</span>
+                <h2 className="text-xl font-bold text-slate-800">Additional Service Details</h2>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Bullet Points (One per line)</label>
+                <textarea 
+                  value={serviceDetailsInput} 
+                  onChange={(e) => setServiceDetailsInput(e.target.value)} 
+                  rows={6} 
+                  placeholder="e.g. 24/7 Emergency Support&#10;Licensed & Insured Professionals&#10;Residential & Commercial"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+            </section>
+
+            <div className="pt-10 flex justify-end">
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full md:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+                className="w-full md:w-auto px-12 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-lg rounded-2xl shadow-xl hover:shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
               >
-                {loading ? 'Creating Listing...' : 'Submit Business Listing'}
+                {loading ? 'Saving Service...' : editingId ? 'Update Service Listing' : 'Publish Service Listing'}
               </button>
             </div>
 
           </form>
-        </div>
-      </main>
-      
-      <Footer />
+          </div>
+        </main>
+      </div>
     </div>
+  );
+}
+
+function SidebarItem({ href, icon, label, open, active = false }: any) {
+  return (
+    <Link
+      href={href}
+      className={`block px-4 py-3 rounded-lg transition flex items-center gap-3 ${active ? 'bg-gray-800' : 'hover:bg-gray-800'
+        }`}
+    >
+      <span className="text-xl">{icon}</span>
+      {open && <span>{label}</span>}
+    </Link>
   );
 }

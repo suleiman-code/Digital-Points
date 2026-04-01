@@ -38,11 +38,13 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    is_admin: Optional[bool] = None
 
 class UserResponse(UserBase):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
     
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    is_admin: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # --- Service (Listings) Models ---
@@ -62,7 +64,9 @@ class ServiceBase(BaseModel):
     website_url: Optional[str] = None
     business_hours: Optional[dict[str, str]] = None # e.g. {"Monday": "9am-6pm", "Tuesday": "Closed"}
     google_maps_url: Optional[str] = None
+    country: str = "USA" # Added default USA
     sub_services: Optional[list[str]] = None # Custom Inner Page links defined by Admin
+    reviews: Optional[list[dict]] = [] # User feedback: [{user, rating, comment, date}]
     gallery: Optional[list[str]] = Field(default_factory=list)
     avg_rating: float = 0.0
     reviews_count: int = 0
@@ -120,9 +124,8 @@ class BookingResponse(BookingBase):
 
 # --- Review Models ---
 class ReviewBase(BaseModel):
-    service_id: str
     user_name: str
-    user_email: EmailStr
+    user_email: Optional[str] = None
     rating: float = Field(..., ge=1, le=5)
     comment: str
 

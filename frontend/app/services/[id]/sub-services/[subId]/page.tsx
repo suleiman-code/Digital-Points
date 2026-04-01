@@ -3,16 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { servicesAPI, bookingsAPI } from '@/lib/api';
+import { servicesAPI, inquiriesAPI } from '@/lib/api';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const DEMO_SERVICES = [
-  { id: '1', name: 'Elite Home Cleaning', category: 'Cleaning', city: 'Laguna Niguel', state: 'CA', phone: '(555) 123-4567', email: 'contact@elitecleaning.com', address: '123 Clean Ave, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952' },
-  { id: '2', name: 'Master Sparky Electrical', category: 'Electrical', city: 'Laguna Niguel', state: 'CA', phone: '(555) 987-6543', email: 'info@mastersparky.com', address: '456 Spark St, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e' },
-  { id: '3', name: 'Royal Touch Salon', category: 'Salon', city: 'Laguna Niguel', state: 'CA', phone: '(555) 321-0987', email: 'appointments@royaltouch.com', address: '789 Beauty Blvd, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035' },
-  { id: '4', name: 'Precision Plumbing Co.', category: 'Plumbing', city: 'Laguna Niguel', state: 'CA', phone: '(555) 444-5555', email: 'help@precisionplumbing.com', address: 'Laguna Niguel, California, United States', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a' },
-  { id: '5', name: 'A+ Academic Tutors', category: 'Tutoring', city: 'Laguna Niguel', state: 'CA', phone: '(555) 222-3333', email: 'learn@aplustutors.com', address: '101 Education Way, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644' },
+  { id: '1', name: 'Elite Home Cleaning', category: 'Cleaning', city: 'Laguna Niguel', state: 'CA', phone: '+1 555 123 4567', email: 'contact@elitecleaning.com', address: '123 Clean Ave, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952' },
+  { id: '2', name: 'Master Sparky Electrical', category: 'Electrical', city: 'Laguna Niguel', state: 'CA', phone: '+1 555 987 6543', email: 'info@mastersparky.com', address: '456 Spark St, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e' },
+  { id: '3', name: 'Royal Touch Salon', category: 'Salon', city: 'Laguna Niguel', state: 'CA', phone: '+1 555 321 0987', email: 'appointments@royaltouch.com', address: '789 Beauty Blvd, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035' },
+  { id: '4', name: 'Precision Plumbing Co.', category: 'Plumbing', city: 'Laguna Niguel', state: 'CA', phone: '+1 555 444 5555', email: 'help@precisionplumbing.com', address: 'Laguna Niguel, California, United States', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a' },
+  { id: '5', name: 'A+ Academic Tutors', category: 'Tutoring', city: 'Laguna Niguel', state: 'CA', phone: '+1 555 222 3333', email: 'learn@aplustutors.com', address: '101 Education Way, Laguna Niguel, CA', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644' },
 ];
 
 export default function SubServiceLanding({ params }: { params: { id: string, subId: string } }) {
@@ -54,7 +54,7 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
         } else {
           setService({
             name: "Premium Services Co.",
-            phone: "1-800-123-4567",
+            phone: "+1 555 123 4567",
             email: "info@example.com",
             address: "City, State",
             category: "Professional Services"
@@ -71,7 +71,7 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
     e.preventDefault();
     setSubmitting(true);
     try {
-      await bookingsAPI.create({
+      await inquiriesAPI.create({
         service_id: params.id,
         service_name: `${service?.name || 'Service'} - ${subServiceName}`,
         user_name: form.name,
@@ -104,8 +104,45 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
     );
   }
 
+  const rawPhone = String(service?.phone || '').trim();
+  const normalizedPhone = rawPhone.startsWith('+')
+    ? `+${rawPhone.slice(1).replace(/\D/g, '')}`
+    : rawPhone.replace(/\D/g, '');
+
+  // --- SEO Dynamic Content for USA Listings ---
+  const seoTitle = `${subServiceName} | ${service?.name} in ${service?.address} | Digital Points`;
+  const seoDesc = `Expert ${subServiceName} services provided by ${service?.name} in ${service?.address}. High quality, certified professionals, and economical rates for USA clients.`;
+  
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": subServiceName,
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": service?.name,
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": service?.address,
+        "addressCountry": "US"
+      }
+    },
+    "description": seoDesc,
+    "areaServed": service?.address
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col">
+      <head>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
+        <meta property="og:type" content="article" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+        />
+      </head>
       <Header />
       
       {/* Top Contact Bar */}
@@ -145,10 +182,10 @@ export default function SubServiceLanding({ params }: { params: { id: string, su
                   Request a Quote
                 </button>
                 <a 
-                  href={`tel:${service?.phone}`} 
+                  href={normalizedPhone ? `tel:${normalizedPhone}` : '#'} 
                   className="px-8 py-3.5 bg-white text-[#1a2b4c] hover:bg-gray-100 hover:text-blue-700 font-bold rounded-lg transition-transform transform hover:-translate-y-0.5 shadow-lg"
                 >
-                  {service?.phone}
+                  {rawPhone || 'Call Unavailable'}
                 </a>
               </div>
             </div>

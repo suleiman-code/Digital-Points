@@ -13,6 +13,7 @@ class Settings:
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-super-secret-key-for-jwt")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    BACKEND_PUBLIC_URL: str = os.getenv("BACKEND_PUBLIC_URL", "http://localhost:8000")
     
     # --- Email Settings ---
     MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")

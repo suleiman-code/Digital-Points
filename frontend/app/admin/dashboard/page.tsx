@@ -66,7 +66,7 @@ export default function AdminDashboard() {
 
         <nav className="mt-8 space-y-2 p-4">
           <SidebarLink href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
-          <SidebarLink href="/admin/services" icon="🛠️" label="Services" open={sidebarOpen} />
+          <SidebarLink href="/admin/services" icon="🛠️" label="All Services" open={sidebarOpen} />
           <SidebarLink href="/admin/bookings" icon="📅" label="Bookings" open={sidebarOpen} />
         </nav>
 
@@ -110,10 +110,13 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-lg shadow-md p-8">
               <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
               <div className="space-y-3">
-                <Link href="/admin/services" className="block btn-primary">
-                  Manage Services
+                <Link href="/admin/add-listing" className="block btn-success text-center">
+                   + Add New Service
                 </Link>
-                <Link href="/admin/bookings" className="block btn-secondary">
+                <Link href="/admin/services" className="block btn-primary text-center">
+                  Manage Existing Services
+                </Link>
+                <Link href="/admin/bookings" className="block btn-secondary text-center">
                   View Bookings
                 </Link>
               </div>

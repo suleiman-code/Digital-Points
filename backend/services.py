@@ -6,16 +6,30 @@ from typing import List, Optional
 from models import ServiceCreate, ServiceUpdate, ServiceResponse, ReviewCreate, ReviewResponse
 from database import db
 from auth import get_admin_user
+from config import settings
 from bson import ObjectId
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/services", tags=["Services"])
+
+def normalize_phone_number(phone: str) -> str:
+    phone = (phone or "").strip()
+    if phone.startswith("+"):
+        return "+" + "".join(ch for ch in phone[1:] if ch.isdigit())
+    return "".join(ch for ch in phone if ch.isdigit())
+
+def is_valid_phone_number(phone: str) -> bool:
+    if not phone:
+        return False
+    digits_count = sum(ch.isdigit() for ch in phone)
+    return 7 <= digits_count <= 15
 
 # 1. GET ALL SERVICES (Public)
 @router.get("/", response_model=List[ServiceResponse])
 async def get_all_services(
     category: Optional[str] = None, 
     city: Optional[str] = None,
+    state: Optional[str] = None,
     min_price: Optional[float] = None,
     max_price: Optional[float] = None,
     min_rating: Optional[float] = None
@@ -25,6 +39,8 @@ async def get_all_services(
         query["category"] = category
     if city:
         query["city"] = {"$regex": city, "$options": "i"}
+    if state:
+        query["state"] = {"$regex": state, "$options": "i"}
     
     if min_price is not None or max_price is not None:
         query["price"] = {}
@@ -54,7 +70,14 @@ async def get_service(id: str):
 # 3. CREATE SERVICE (Admin Only)
 @router.post("/", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
 async def create_service(service: ServiceCreate, admin: dict = Depends(get_admin_user)):
+    if not service.contact_email:
+        raise HTTPException(status_code=400, detail="Business email is required for inquiry routing")
+
+    if not service.contact_phone or not is_valid_phone_number(service.contact_phone):
+        raise HTTPException(status_code=400, detail="Valid business contact number is required")
+
     service_dict = service.model_dump()
+    service_dict["contact_phone"] = normalize_phone_number(service.contact_phone)
     service_dict["created_at"] = datetime.now(timezone.utc)
     service_dict["updated_at"] = datetime.now(timezone.utc)
     
@@ -69,6 +92,15 @@ async def update_service(id: str, service_data: ServiceUpdate, admin: dict = Dep
         raise HTTPException(status_code=400, detail="Invalid Service ID")
         
     update_data = {k: v for k, v in service_data.model_dump().items() if v is not None}
+
+    if "contact_email" in update_data and not update_data["contact_email"]:
+        raise HTTPException(status_code=400, detail="Business email is required for inquiry routing")
+
+    if "contact_phone" in update_data:
+        if not update_data["contact_phone"] or not is_valid_phone_number(update_data["contact_phone"]):
+            raise HTTPException(status_code=400, detail="Valid business contact number is required")
+        update_data["contact_phone"] = normalize_phone_number(update_data["contact_phone"])
+
     update_data["updated_at"] = datetime.now(timezone.utc)
     
     result = await db.db["services"].update_one(
@@ -116,15 +148,15 @@ async def create_review(id: str, review: ReviewCreate):
     # Check if service exists
     service = await db.db["services"].find_one({"_id": ObjectId(id)})
     if not service:
-        raise HTTPException(status_code=404, detail="Service not found. Cannot add review.")
+        raise HTTPException(status_code=404, detail="Service not found")
 
     review_dict = review.model_dump()
-    review_dict["service_id"] = id # Force the ID from URL
+    review_dict["service_id"] = id
     review_dict["created_at"] = datetime.now(timezone.utc)
     
     new_review = await db.db["reviews"].insert_one(review_dict)
     
-    # Update Service Status (Average Rating)
+    # Update Service Average Rating
     all_reviews = await db.db["reviews"].find({"service_id": id}).to_list(1000)
     count = len(all_reviews)
     avg = sum([r["rating"] for r in all_reviews]) / count if count > 0 else 0
@@ -151,9 +183,12 @@ async def get_reviews(id: str):
 async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_admin_user)):
     file_extension = file.filename.split(".")[-1]
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
-    file_path = f"static/uploads/{unique_filename}"
+    upload_dir = os.path.join("static", "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, unique_filename)
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
-    return {"url": f"http://localhost:8000/static/uploads/{unique_filename}"}
+    base_url = settings.BACKEND_PUBLIC_URL.rstrip("/")
+    return {"url": f"{base_url}/static/uploads/{unique_filename}"}

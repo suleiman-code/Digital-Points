@@ -24,6 +24,8 @@ const DEFAULT_SERVICES = [
     price: 50,
     city: 'New York',
     state: 'NY',
+    contact_phone: '+1 555 123 4567',
+    contact_email: 'contact@elitecleaning.com',
     image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
     serviceDetails: 'Deep cleaning\nKitchen and bathroom cleaning\nFlexible scheduling',
     createdAt: new Date().toISOString(),
@@ -37,6 +39,8 @@ const DEFAULT_SERVICES = [
     price: 50,
     city: 'Los Angeles',
     state: 'CA',
+    contact_phone: '+1 555 987 6543',
+    contact_email: 'info@mastersparky.com',
     image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80',
     serviceDetails: 'Complete inspection\nEmergency repairs\nSafety checks',
     createdAt: new Date().toISOString(),
@@ -50,6 +54,8 @@ const DEFAULT_SERVICES = [
     price: 50,
     city: 'Chicago',
     state: 'IL',
+    contact_phone: '+1 555 321 0987',
+    contact_email: 'appointments@royaltouch.com',
     image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80',
     serviceDetails: 'Hair Styling & Cut\nBridal Makeup\nSkin Treatments',
     createdAt: new Date().toISOString(),
@@ -63,6 +69,8 @@ const DEFAULT_SERVICES = [
     price: 50,
     city: 'New York',
     state: 'NY',
+    contact_phone: '+1 555 444 5555',
+    contact_email: 'help@precisionplumbing.com',
     image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
     serviceDetails: 'Leak detection\nPipe replacement\nWater pressure adjustment',
     createdAt: new Date().toISOString(),
@@ -76,6 +84,8 @@ const DEFAULT_SERVICES = [
     price: 50,
     city: 'Houston',
     state: 'TX',
+    contact_phone: '+1 555 222 3333',
+    contact_email: 'learn@aplustutors.com',
     image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80',
     serviceDetails: 'One-on-One Tutoring\nExam Preparation\nCustom Study Plans',
     createdAt: new Date().toISOString(),
@@ -227,6 +237,15 @@ export const servicesAPI = {
       }
     ]);
   },
+  postReview: (id: string, review: any) => {
+    if (api) return api.post(`/services/${id}/reviews`, review);
+    return makeResponse({
+      ...review,
+      _id: uid('rev'),
+      service_id: id,
+      created_at: new Date().toISOString(),
+    }, 201);
+  },
   uploadImage: async (file: File) => {
     if (!api) throw new Error("Backend not enabled for local uploads");
     const formData = new FormData();
@@ -240,7 +259,7 @@ export const servicesAPI = {
   },
 };
 
-export const bookingsAPI = {
+export const inquiriesAPI = {
   create: (data: any) => {
     if (api) return api.post('/bookings/', data);
 
@@ -291,6 +310,9 @@ export const bookingsAPI = {
   },
 };
 
+// Backward compatibility for existing admin pages/components.
+export const bookingsAPI = inquiriesAPI;
+
 export const contactAPI = {
   send: (data: any) => {
     if (api) return api.post('/contact/', data);
@@ -332,6 +354,17 @@ export const authAPI = {
     }
 
     return makeResponse({ access_token: uid('token'), token_type: 'bearer' });
+  },
+  me: () => {
+    if (api) return api.get('/auth/me');
+    const token = isBrowser() ? localStorage.getItem('authToken') : null;
+    if (!token) makeApiError('Could not validate credentials', 401);
+    return makeResponse({
+      email: 'admin@example.com',
+      first_name: 'Admin',
+      last_name: 'User',
+      is_admin: true,
+    });
   },
 };
 
