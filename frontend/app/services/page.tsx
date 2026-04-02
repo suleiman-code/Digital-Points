@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
@@ -10,16 +9,21 @@ import { servicesAPI } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function ServicesList() {
-  const searchParams = useSearchParams();
-  
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-  const [locationSearch, setLocationSearch] = useState(searchParams.get('l') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [locationSearch, setLocationSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [priceRange, setPriceRange] = useState('');
   const [minRating, setMinRating] = useState(0);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSearchTerm(params.get('q') || '');
+    setLocationSearch(params.get('l') || '');
+    setSelectedCategory(params.get('category') || '');
+  }, []);
 
   // Autocomplete States
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -251,7 +255,6 @@ function ServicesList() {
                         rating={service.avg_rating}
                         city={service.city}
                         state={service.state}
-                        business_hours={service.business_hours}
                         index={index}
                       />
                     ))}

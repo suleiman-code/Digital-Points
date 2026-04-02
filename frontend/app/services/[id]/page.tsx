@@ -4,14 +4,13 @@ import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { servicesAPI, inquiriesAPI } from '@/lib/api';
-import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 const INITIAL_REVIEWS_COUNT = 4;
 
 function ServiceDetailContent() {
-  const params = useParams();
+  const [serviceId, setServiceId] = useState('');
   
   // REFS
   const reviewFormRef = useRef<HTMLDivElement>(null);
@@ -33,6 +32,14 @@ function ServiceDetailContent() {
   const [submitting, setSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  useEffect(() => {
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    const servicesIndex = pathSegments.indexOf('services');
+    if (servicesIndex >= 0 && pathSegments[servicesIndex + 1]) {
+      setServiceId(decodeURIComponent(pathSegments[servicesIndex + 1]));
+    }
+  }, []);
+
   const handleCopyPhone = async () => {
     const raw = String(service?.contact_phone || '').trim();
     if (!raw) {
@@ -48,18 +55,18 @@ function ServiceDetailContent() {
   };
 
   useEffect(() => {
-    if (params.id) {
+    if (serviceId) {
       setVisibleReviewsCount(INITIAL_REVIEWS_COUNT);
-      fetchServiceData();
+      fetchServiceData(serviceId);
     }
-  }, [params.id]);
+  }, [serviceId]);
 
-  const fetchServiceData = async () => {
+  const fetchServiceData = async (id: string) => {
     try {
       setLoading(true);
       const [serviceRes, reviewsRes] = await Promise.all([
-        servicesAPI.getById(params.id as string),
-        servicesAPI.getReviews(params.id as string)
+        servicesAPI.getById(id),
+        servicesAPI.getReviews(id)
       ]);
       setService(serviceRes.data);
       setReviews(reviewsRes.data);
@@ -74,14 +81,15 @@ function ServiceDetailContent() {
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewForm.user_name || !reviewForm.comment) return toast.error("Name and Comment required");
+    if (!serviceId) return toast.error('Service not found');
     
     setIsPosting(true);
     try {
-      const res = await servicesAPI.postReview(params.id as string, reviewForm);
+      const res = await servicesAPI.postReview(serviceId, reviewForm);
       toast.success('Review posted successfully');
       setReviews(prev => [res.data, ...prev]);
       setReviewForm({ user_name: '', user_email: '', rating: 5, comment: '' });
-      fetchServiceData(); // Refresh to update average rating
+      fetchServiceData(serviceId); // Refresh to update average rating
     } catch (error: any) {
       toast.error('Error posting review');
     } finally {
@@ -108,7 +116,7 @@ function ServiceDetailContent() {
       };
       await inquiriesAPI.create(bookingData);
       toast.success('Inquiry sent successfully!');
-      setBookingForm({ name: '', email: '', phone: '', message: '' });
+      setBookingForm({ name: '', email: '', phone: '', city: '', message: '' });
       setIsModalOpen(false);
     } catch (error) {
       toast.error('Failed to send inquiry.');
