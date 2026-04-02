@@ -17,6 +17,7 @@ function ServicesList() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [priceRange, setPriceRange] = useState('');
   const [minRating, setMinRating] = useState(0);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -77,7 +78,10 @@ function ServicesList() {
         const term = searchTerm.toLowerCase().trim();
         data = data.filter((s: any) => 
           (s.title || '').toLowerCase().includes(term) || 
-          (s.description || '').toLowerCase().includes(term)
+          (s.description || '').toLowerCase().includes(term) ||
+          (s.category || '').toLowerCase().includes(term) ||
+          (s.city || '').toLowerCase().includes(term) ||
+          (s.state || '').toLowerCase().includes(term)
         );
       }
 
@@ -114,7 +118,14 @@ function ServicesList() {
           className="container-max -mt-10 relative z-20"
         >
           <div className="bg-white/80 backdrop-blur-xl p-3 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-white">
-            <div className="flex flex-col md:flex-row gap-3">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                setShowSuggestions(false);
+                fetchServices();
+              }}
+              className="flex flex-col md:flex-row gap-3"
+            >
                <div className="flex-[3] relative flex items-center bg-white rounded-xl px-4 border border-slate-100 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-100/50 transition-all shadow-sm hover:shadow-md">
                   <svg className="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                   <input
@@ -137,9 +148,11 @@ function ServicesList() {
                         {suggestions.map((s, idx) => (
                           <button
                             key={idx}
+                            type="button"
                             onClick={() => {
                               setSearchTerm(s);
                               setShowSuggestions(false);
+                              // We don't fetch here, user can click or press enter
                             }}
                             className="w-full text-left px-4 py-3 hover:bg-blue-50 rounded-lg text-sm font-semibold text-slate-600 flex items-center gap-2 transition-colors"
                           >
@@ -162,22 +175,19 @@ function ServicesList() {
                   />
                </div>
                <button 
-                  onClick={() => {
-                    setShowSuggestions(false);
-                    fetchServices();
-                  }}
+                  type="submit"
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 px-8 rounded-xl"
                >
                  Find Services
                </button>
-            </div>
+            </form>
           </div>
         </motion.div>
 
         <section className="container-max mt-16">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-            <div className="lg:col-span-1">
-              <div className="bg-white/60 backdrop-blur-xl rounded-3xl border border-white shadow-sm p-8 sticky top-28">
+            <div className={`lg:col-span-1 ${isFilterOpen ? 'block' : 'hidden lg:block'}`}>
+              <div className="bg-white/90 backdrop-blur-3xl rounded-[2.5rem] border border-white shadow-xl p-8 sticky top-28">
                 <h2 className="text-xl font-black text-slate-800 mb-6">Filters</h2>
                 
                 <div className="mb-8">
@@ -230,6 +240,42 @@ function ServicesList() {
             </div>
 
             <div className="lg:col-span-3">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                  <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-1">
+                    {loading ? 'Searching...' : `${filteredServices.length} Services Found`}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCategory && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-black uppercase rounded-full shadow-sm">
+                        {selectedCategory}
+                        <button onClick={() => setSelectedCategory('')} className="hover:text-blue-900 ml-1">✕</button>
+                      </span>
+                    )}
+                    {locationSearch && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase rounded-full shadow-sm">
+                        📍 {locationSearch}
+                        <button onClick={() => setLocationSearch('')} className="hover:text-indigo-900 ml-1">✕</button>
+                      </span>
+                    )}
+                    {minRating > 0 && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black uppercase rounded-full shadow-sm">
+                        ⭐ {minRating}+ Stars
+                        <button onClick={() => setMinRating(0)} className="hover:text-amber-900 ml-1">✕</button>
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="lg:hidden flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-xl shadow-sm text-sm font-bold text-slate-700 active:scale-95 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                  {isFilterOpen ? 'Close Filters' : 'All Filters'}
+                </button>
+              </div>
+
               <AnimatePresence mode="wait">
                 {loading ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -260,10 +306,28 @@ function ServicesList() {
                     ))}
                   </motion.div>
                 ) : (
-                  <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">
-                    <h3 className="text-2xl font-bold text-slate-800">No services found</h3>
-                    <p className="text-slate-500">Try adjusting your filters.</p>
-                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 flex flex-col items-center"
+                  >
+                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300">
+                      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <h3 className="text-2xl font-black text-slate-800 mb-2">No matching services</h3>
+                    <p className="text-slate-500 mb-8 max-w-xs mx-auto text-sm">We couldn't find anything matching your search. Try adjusting the keywords or clearing filters.</p>
+                    <button
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedCategory('');
+                        setLocationSearch('');
+                        setMinRating(0);
+                      }}
+                      className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                    >
+                      Clear All Filters
+                    </button>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>

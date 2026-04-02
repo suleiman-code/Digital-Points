@@ -150,6 +150,10 @@ export default function AddListing() {
     });
   };
 
+  const handleHourChange = (day: string, value: string) => {
+    setHours(prev => ({ ...prev, [day]: value }));
+  };
+
   const removeGalleryPhoto = (index: number) => {
     setGalleryFiles(prev => prev.filter((_, i) => i !== index));
     setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
@@ -396,11 +400,32 @@ export default function AddListing() {
                 </div>
               </div>
             </section>
+            
+            {/* --- BUSINESS HOURS --- */}
+            <section className="space-y-6">
+              <div className="items-center gap-3 border-b border-slate-100 pb-4 hidden md:flex">
+                <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">4</span>
+                <h2 className="text-xl font-bold text-slate-800">Business Hours</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Object.entries(hours).map(([day, time]) => (
+                  <div key={day} className="flex flex-col">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">{day}</label>
+                    <input 
+                      value={time} 
+                      onChange={(e) => handleHourChange(day, e.target.value)}
+                      placeholder="e.g. 9am - 6pm or Closed"
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
 
              {/* --- SERVICE DETAILS --- */}
              <section className="space-y-6">
               <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">4</span>
+                <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">5</span>
                 <h2 className="text-xl font-bold text-slate-800">Additional Service Details</h2>
               </div>
               <div>

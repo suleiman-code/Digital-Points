@@ -14,13 +14,18 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
   const [featuredServices, setFeaturedServices] = useState<any[]>([]);
+  const [visibleCount, setVisibleCount] = useState(8);
   const [servicesLoading, setServicesLoading] = useState(true);
 
   const FALLBACK_SERVICES = [
     { id: "1", title: "Elite Home Deep Cleaning", category: "Cleaning", price: "$80/hr", rating: 4.9, image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80", description: "Professional deep cleaning service with eco-friendly products for a spotless home." },
     { id: "2", title: "Master Sparky Electrical", category: "Electrical", price: "From $95", rating: 4.8, image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80", description: "Licensed electricians available 24/7 for all residential and commercial needs." },
     { id: "3", title: "Royal Touch Spa & Salon", category: "Salon", price: "From $45", rating: 4.7, image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", description: "Luxury grooming and spa services in the comfort of your own home." },
-    { id: "4", title: "Precision Plumbing Co.", category: "Plumbing", price: "From $75", rating: 4.9, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80", description: "Fast, reliable plumbing repairs and installations with a satisfaction guarantee." }
+    { id: "4", title: "Precision Plumbing Co.", category: "Plumbing", price: "From $75", rating: 4.9, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80", description: "Fast, reliable plumbing repairs and installations with a satisfaction guarantee." },
+    { id: "5", title: "Green Lawn Maintenance", category: "Garden", price: "From $50", rating: 4.6, image: "https://images.unsplash.com/photo-1558905611-06778f2f2ac4?auto=format&fit=crop&w=800&q=80", description: "Complete lawn care and landscaping services for a beautiful outdoor space." },
+    { id: "6", title: "Quick Move Packers & Movers", category: "Moving", price: "From $200", rating: 4.5, image: "https://images.unsplash.com/photo-1600585152220-90363fe7e115?auto=format&fit=crop&w=800&q=80", description: "Stress-free moving and packing services for local and long-distance moves." },
+    { id: "7", title: "Pure Flow Water Repair", category: "Plumbing", price: "From $65", rating: 4.8, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80", description: "Expert water filtration and pipe repair services with 24/7 emergency support." },
+    { id: "8", title: "Swift Tech Computer Repair", category: "Tech", price: "From $40", rating: 4.9, image: "https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=800&q=80", description: "On-site and remote tech support for all your computer and networking issues." }
   ];
 
   useEffect(() => {
@@ -29,8 +34,8 @@ export default function Home() {
         setServicesLoading(true);
         const res = await servicesAPI.getAll();
         const data: any[] = res.data || [];
-        // Normalize backend fields to match ServiceCard props
-        const normalized = data.slice(0, 8).map((s: any) => ({
+        // Fetch all but initially show limited set
+        const normalized = data.map((s: any) => ({
           id: s._id || s.id,
           title: s.title || s.name,
           category: s.category,
@@ -136,10 +141,43 @@ export default function Home() {
                 Connect with trusted professionals, compare transparent prices, and book your service instantly.
               </p>
 
-              <motion.div
+              {/* Search Bar */}
+              <motion.form
+                onSubmit={handleSearch}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
+                className="max-w-3xl mx-auto bg-white/10 backdrop-blur-xl p-2 rounded-[1.5rem] border border-white/20 shadow-2xl flex flex-col md:flex-row gap-2 mb-10 group"
+              >
+                <div className="flex-[3] flex items-center bg-white/5 px-4 py-3 rounded-2xl border border-white/10 focus-within:bg-white/10 transition-all">
+                  <svg className="w-5 h-5 text-white/40 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                  <input 
+                    type="text" 
+                    placeholder="Search Service (e.g. Plumber...)" 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/40 font-medium"
+                  />
+                </div>
+                <div className="flex-1 flex items-center bg-white/5 px-4 py-3 rounded-2xl border border-white/10 focus-within:bg-white/10 transition-all">
+                  <svg className="w-5 h-5 text-white/40 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <input 
+                    type="text" 
+                    placeholder="City" 
+                    value={locationQuery}
+                    onChange={(e) => setLocationQuery(e.target.value)}
+                    className="bg-transparent border-none outline-none w-full text-white placeholder:text-white/40 font-medium"
+                  />
+                </div>
+                <button type="submit" className="bg-white text-blue-700 px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-50 active:scale-95 transition-all shadow-xl">
+                  Search
+                </button>
+              </motion.form>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
                 className="flex flex-col sm:flex-row gap-5 justify-center mb-16"
               >
                 <Link href="/services" className="btn-light text-center px-10 py-4 text-lg font-bold shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-105 rounded-xl">
@@ -214,11 +252,26 @@ export default function Home() {
                   </div>
                 ))
               ) : (
-                featuredServices.map((service, index) => (
+                featuredServices.slice(0, visibleCount).map((service, index) => (
                   <ServiceCard key={service.id} {...service} index={index} />
                 ))
               )}
             </div>
+
+            {!servicesLoading && featuredServices.length > visibleCount && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-12 text-center"
+              >
+                <button 
+                  onClick={() => setVisibleCount(prev => prev + 8)}
+                  className="px-8 py-3 bg-white border-2 border-blue-600 text-blue-600 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-lg hover:shadow-blue-200"
+                >
+                  More Listings
+                </button>
+              </motion.div>
+            )}
           </div>
         </section>
 
