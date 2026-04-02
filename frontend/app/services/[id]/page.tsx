@@ -140,6 +140,77 @@ function ServiceDetailContent() {
   const businessHoursEntries = service.business_hours && typeof service.business_hours === 'object'
     ? Object.entries(service.business_hours)
     : [];
+
+  const getBusinessStatus = () => {
+    if (!service.business_hours || typeof service.business_hours !== 'object') return null;
+    
+    const stateToTz: { [key: string]: string } = {
+      'AL': 'America/Chicago', 'AK': 'America/Anchorage', 'AZ': 'America/Phoenix', 'AR': 'America/Chicago',
+      'CA': 'America/Los_Angeles', 'CO': 'America/Denver', 'CT': 'America/New_York', 'DE': 'America/New_York',
+      'FL': 'America/New_York', 'GA': 'America/New_York', 'HI': 'Pacific/Honolulu', 'ID': 'America/Boise',
+      'IL': 'America/Chicago', 'IN': 'America/Indiana/Indianapolis', 'IA': 'America/Chicago', 'KS': 'America/Chicago',
+      'KY': 'America/New_York', 'LA': 'America/Chicago', 'ME': 'America/New_York', 'MD': 'America/New_York',
+      'MA': 'America/New_York', 'MI': 'America/Detroit', 'MN': 'America/Chicago', 'MS': 'America/Chicago',
+      'MO': 'America/Chicago', 'MT': 'America/Denver', 'NE': 'America/Chicago', 'NV': 'America/Los_Angeles',
+      'NH': 'America/New_York', 'NJ': 'America/New_York', 'NM': 'America/Denver', 'NY': 'America/New_York',
+      'NC': 'America/New_York', 'ND': 'America/Chicago', 'OH': 'America/New_York', 'OK': 'America/Chicago',
+      'OR': 'America/Los_Angeles', 'PA': 'America/New_York', 'RI': 'America/New_York', 'SC': 'America/New_York',
+      'SD': 'America/Chicago', 'TN': 'America/Chicago', 'TX': 'America/Chicago', 'UT': 'America/Denver',
+      'VT': 'America/New_York', 'VA': 'America/New_York', 'WA': 'America/Los_Angeles', 'WV': 'America/New_York',
+      'WI': 'America/Chicago', 'WY': 'America/Denver', 'DC': 'America/New_York'
+    };
+
+    const stateCode = service.state?.trim().toUpperCase();
+    const tz = stateToTz[stateCode] || 'America/New_York';
+    
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, weekday: 'long', hour: 'numeric', minute: 'numeric', hour12: true
+    });
+    
+    const parts = formatter.formatToParts(now);
+    const businessDay = parts.find(p => p.type === 'weekday')?.value || '';
+    const hourVal = parts.find(p => p.type === 'hour')?.value || '0';
+    const minuteVal = parts.find(p => p.type === 'minute')?.value || '0';
+    const dayPeriod = (parts.find(p => p.type === 'dayPeriod')?.value || 'AM').toUpperCase();
+
+    const hour = parseInt(hourVal);
+    const minute = parseInt(minuteVal);
+    const currentTotalMinutes = (dayPeriod === 'PM' && hour !== 12 ? (hour + 12) * 60 : (dayPeriod === 'AM' && hour === 12 ? 0 : hour * 60)) + minute;
+
+    const todayHoursStr = service.business_hours[businessDay];
+    let statusObj: any = { status: 'Closed', color: 'text-rose-500', businessDay };
+
+    if (!todayHoursStr || todayHoursStr.toLowerCase().includes('closed')) {
+      statusObj = { status: 'Closed', color: 'text-rose-500', businessDay };
+    } else {
+      const timeRegex = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/gi;
+      const matches = Array.from(todayHoursStr.matchAll(timeRegex));
+      
+      if (matches.length < 2) {
+        statusObj = { status: 'Open', color: 'text-blue-500', businessDay };
+      } else {
+        const parseMatch = (m: RegExpMatchArray) => {
+          const h = parseInt(m[1]);
+          const m_min = parseInt(m[2] || '0');
+          const p = m[3].toUpperCase();
+          return (p === 'PM' && h !== 12 ? (h + 12) * 60 : (p === 'AM' && h === 12 ? 0 : h * 60)) + m_min;
+        };
+        const startTotal = parseMatch(matches[0]);
+        const endTotal = parseMatch(matches[1]);
+
+        if (currentTotalMinutes >= startTotal && currentTotalMinutes < endTotal) {
+          statusObj = { status: 'Open Now', color: 'text-emerald-500', businessDay };
+        } else {
+          statusObj = { status: 'Closed', color: 'text-rose-500', businessDay };
+        }
+      }
+    }
+    return statusObj;
+  };
+
+  const businessStatus = getBusinessStatus();
+
   const visibleReviews = reviews.slice(0, visibleReviewsCount);
   const canShowMoreReviews = reviews.length > visibleReviewsCount;
   const canShowLessReviews = reviews.length > INITIAL_REVIEWS_COUNT && visibleReviewsCount >= reviews.length;
@@ -267,37 +338,41 @@ function ServiceDetailContent() {
               </section>
 
               {/* REVIEWS DISPLAY */}
-              <section className="space-y-6 pt-10 border-t border-slate-100">
-                <h2 className="text-xl font-bold text-slate-800 mb-2 uppercase tracking-wide">Customer Feedback</h2>
-                <p className="text-sm text-slate-500 mb-6">Real feedback from verified users.</p>
+              <section className="space-y-8 pt-12 border-t border-slate-100 bg-slate-50/50 rounded-[3rem] p-8">
+                <div className="mb-6">
+                  <h2 className="text-xl font-black text-slate-800 uppercase tracking-widest">Customer Feedback</h2>
+                  <p className="text-sm text-slate-500 font-medium tracking-tight">Real experiences from our community.</p>
+                </div>
                 <div className="space-y-6">
                   {reviews.length > 0 ? visibleReviews.map((rev: any, i: number) => (
-                    <div key={i} className="bg-white border border-slate-200 overflow-hidden">
-                        <div className="bg-slate-50/50 p-2.5 flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xl leading-none font-black text-slate-900">{Number(rev.rating || 0).toFixed(1)}</span>
-                            <div className="min-w-0">
-                              <h4 className="font-bold text-xs text-slate-800 truncate leading-none mb-0.5">{rev.user_name || 'User'}</h4>
-                              <p className="text-slate-400 text-[8px] font-bold uppercase tracking-widest leading-none">
-                                {new Date(rev.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </p>
+                    <div key={i} className="bg-[#fcfdfe] border border-slate-100 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, s) => (
+                              <svg key={s} className={`w-4 h-4 ${s < Math.round(rev.rating || 0) ? 'text-amber-400 fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
+                            ))}
+                            <span className="ml-2 text-xs font-black text-slate-400 uppercase tracking-widest">{Number(rev.rating || 0).toFixed(1)} / 5.0</span>
                           </div>
                         </div>
-                          <div className="text-right shrink-0">
-                            <div className="flex text-amber-400 justify-end">
-                              {[...Array(5)].map((_, s) => (
-                                <svg key={s} className={`w-3 h-3 ${s < Math.round(rev.rating || 0) ? 'fill-current' : 'fill-slate-200'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                              ))}
-                            </div>
-                          </div>
+                        
+                        <p className="text-slate-800 leading-relaxed font-bold uppercase tracking-tight" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
+                          "{rev.comment}"
+                        </p>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{rev.user_name || 'Verified User'}</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {new Date(rev.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
                       </div>
-                      <div className="px-3 py-3 border-t border-slate-50 italic">
-                        <p className="text-slate-500 text-[11px] leading-relaxed" style={{ fontFamily: 'Arial, sans-serif' }}>"{rev.comment}"</p>
-                      </div>
-                      <div className="border-t border-slate-200" />
                     </div>
                   )) : (
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest text-center py-10">No reviews yet.</p>
+                    <div className="text-center py-16 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                      <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No reviews yet.</p>
+                      <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="mt-2 text-blue-600 font-bold text-xs uppercase tracking-widest">Be the first to review</button>
+                    </div>
                   )}
                 </div>
                 {canShowMoreReviews && (
@@ -367,15 +442,33 @@ function ServiceDetailContent() {
                 </div>
               </div>
 
-              <div className="border border-slate-100 rounded-2xl bg-white overflow-hidden shadow-sm">
-                <div className="bg-slate-50 px-4 py-3 border-b border-slate-100 font-black text-[9px] text-slate-400 uppercase tracking-widest">Business Hours</div>
-                <div className="p-5 space-y-3">
-                  {businessHoursEntries.length > 0 ? businessHoursEntries.map(([day, time]: any) => (
-                    <div key={day} className="flex justify-between text-[11px] font-bold border-b border-slate-50 pb-2 last:border-0 last:pb-0">
-                      <span className="text-slate-400 uppercase">{day}</span>
-                      <span className="text-slate-700">{time}</span>
-                    </div>
-                  )) : (
+              <div className="border-2 border-blue-600 rounded-3xl bg-white overflow-hidden shadow-[0_20px_50px_rgba(37,99,235,0.1)]">
+                <div className="bg-blue-600 px-5 py-4 flex justify-between items-center group">
+                  <span className="font-black text-[10px] text-white uppercase tracking-[0.2em]">Live Business Status</span>
+                  {businessStatus && (
+                    <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full bg-white shadow-lg ${businessStatus.color}`}>
+                      ● {businessStatus.status}
+                    </span>
+                  )}
+                </div>
+                <div className="p-6 space-y-4">
+                  {businessHoursEntries.length > 0 ? businessHoursEntries.map(([day, time]: any) => {
+                    const isClosed = time.toLowerCase().includes('closed');
+                    const isToday = businessStatus?.businessDay === day;
+                    return (
+                      <div key={day} className={`flex justify-between items-center py-2 px-3 rounded-xl transition-all ${isToday ? 'bg-blue-50 border border-blue-100 scale-[1.02] shadow-sm' : 'border-b border-slate-50 last:border-0'}`}>
+                        <div className="flex flex-col">
+                          <span className={`text-[11px] font-black uppercase tracking-widest ${isToday ? 'text-blue-600' : 'text-slate-400'}`}>
+                            {day}
+                            {isToday && <span className="ml-2 lowercase font-bold text-[9px] text-blue-400">(Today)</span>}
+                          </span>
+                        </div>
+                        <span className={`text-xs font-bold ${isClosed ? 'text-rose-500 bg-rose-50 px-2 py-0.5 rounded' : isToday ? 'text-blue-700' : 'text-slate-700'}`}>
+                          {time}
+                        </span>
+                      </div>
+                    );
+                  }) : (
                     <div className="text-center py-6">
                       <p className="text-slate-500 font-semibold text-sm">Business hours not updated yet</p>
                       <p className="text-slate-400 text-xs mt-1">Please contact the business for opening hours.</p>
