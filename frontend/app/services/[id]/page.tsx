@@ -88,9 +88,26 @@ function ServiceDetailContent() {
     try {
       const res = await servicesAPI.postReview(serviceId, reviewForm);
       toast.success('Review posted successfully');
+      
+      const newRating = Number(reviewForm.rating);
+      const currentCount = Number(service.reviews_count || 0);
+      const currentAvg = Number(service.avg_rating || 0);
+      
+      const newCount = currentCount + 1;
+      const newAvg = ((currentAvg * currentCount) + newRating) / newCount;
+
+      // Update local state immediately for real-time feel
+      setService((prev: any) => prev ? {
+        ...prev,
+        avg_rating: newAvg,
+        reviews_count: newCount
+      } : null);
+      
       setReviews(prev => [res.data, ...prev]);
       setReviewForm({ user_name: '', user_email: '', rating: 5, comment: '' });
-      fetchServiceData(serviceId); // Refresh to update average rating
+      
+      // Optionally still fetch for ultimate consistency
+      // fetchServiceData(serviceId); 
     } catch (error: any) {
       toast.error('Error posting review');
     } finally {
@@ -185,12 +202,12 @@ function ServiceDetailContent() {
       statusObj = { status: 'Closed', color: 'text-rose-500', businessDay };
     } else {
       const timeRegex = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/gi;
-      const matches = Array.from(todayHoursStr.matchAll(timeRegex));
+      const matches = Array.from(todayHoursStr.matchAll(timeRegex)) as any[];
       
       if (matches.length < 2) {
         statusObj = { status: 'Open', color: 'text-blue-500', businessDay };
       } else {
-        const parseMatch = (m: RegExpMatchArray) => {
+        const parseMatch = (m: any) => {
           const h = parseInt(m[1]);
           const m_min = parseInt(m[2] || '0');
           const p = m[3].toUpperCase();
@@ -237,15 +254,21 @@ function ServiceDetailContent() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 uppercase tracking-tight">
               <div className="space-y-4">
                 <h1 className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{service.title}</h1>
-                <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                  <div className="flex text-amber-400">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className={`w-4 h-4 ${i < Math.round(service.avg_rating || 0) ? 'fill-current' : 'fill-slate-200'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                    ))}
+                <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+                    <div className="flex text-amber-400">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className={`w-3.5 h-3.5 ${i < Math.round(service.avg_rating || 0) ? 'fill-current' : 'fill-slate-200'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
+                      ))}
+                    </div>
+                    <span className="text-amber-600 font-black">{Number(service.avg_rating || 0).toFixed(1)} / 5.0</span>
                   </div>
-                  <span>{service.reviews_count || 0} Reviews</span>
-                  <div className="w-1 h-1 bg-slate-300 rounded-full" />
-                  <span className="text-slate-500">{service.category}</span>
+                  <div className="bg-slate-100 px-3 py-1.5 rounded-full text-slate-500 font-black">
+                    {service.reviews_count || 0} Reviews
+                  </div>
+                  <div className="bg-blue-50 px-3 py-1.5 rounded-full text-blue-600 font-black">
+                    {service.category}
+                  </div>
                 </div>
               </div>
                 <div className="grid grid-cols-3 gap-2 w-full md:max-w-[560px]">
