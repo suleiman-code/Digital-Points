@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
 import { servicesAPI } from '@/lib/api';
@@ -18,13 +18,22 @@ export default function AdminServicesPage() {
 function AdminServicesContent() {
   const { isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const categoryFilter = searchParams.get('category');
+  
+  // Use state for categoryFilter to ensure it's reactive when changed via the dropdown
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   
   const [allServices, setAllServices] = useState<any[]>([]); 
   const [services, setServices] = useState<any[]>([]);       
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Initialize filter from URL on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+       const params = new URLSearchParams(window.location.search);
+       setCategoryFilter(params.get('category'));
+    }
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -70,7 +79,7 @@ function AdminServicesContent() {
     }
   };
 
-  const currentCategory = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('category') || 'all' : 'all';
+  const currentCategory = categoryFilter || 'all';
 
   if (isLoading || !isAuthenticated) {
     return null;
@@ -123,6 +132,7 @@ function AdminServicesContent() {
                 value={categoryFilter || "all"}
                 onChange={(e) => {
                   const val = e.target.value;
+                  setCategoryFilter(val === 'all' ? null : val);
                   if (val === 'all') {
                     router.push('/admin/services');
                   } else {
