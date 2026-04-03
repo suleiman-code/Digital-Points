@@ -322,6 +322,10 @@ export const contactAPI = {
     writeStorage(STORAGE_KEYS.contact, messages);
     return makeResponse({ success: true }, 201);
   },
+  getAll: () => {
+    if (api) return api.get('/contact/');
+    return makeResponse(readStorage<any[]>(STORAGE_KEYS.contact, []));
+  },
 };
 
 export const authAPI = {

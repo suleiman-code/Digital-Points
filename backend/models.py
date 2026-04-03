@@ -52,7 +52,7 @@ class ServiceBase(BaseModel):
     title: str
     description: str
     category: str
-    price: float = Field(..., gt=0)
+    price: Optional[float] = Field(default=0.0, ge=0)
     city: str
     state: str
     image_url: Optional[str] = None

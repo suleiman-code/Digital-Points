@@ -9,8 +9,8 @@ import toast from 'react-hot-toast';
 
 const INITIAL_REVIEWS_COUNT = 4;
 
-function ServiceDetailContent() {
-  const [serviceId, setServiceId] = useState('');
+function ServiceDetailContent({ params }: { params: any }) {
+  const serviceId = typeof params?.id === 'string' ? decodeURIComponent(params.id) : '';
 
   // REFS
   const reviewFormRef = useRef<HTMLDivElement>(null);
@@ -33,13 +33,6 @@ function ServiceDetailContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
 
-  useEffect(() => {
-    const pathSegments = window.location.pathname.split('/').filter(Boolean);
-    const servicesIndex = pathSegments.indexOf('services');
-    if (servicesIndex >= 0 && pathSegments[servicesIndex + 1]) {
-      setServiceId(decodeURIComponent(pathSegments[servicesIndex + 1]));
-    }
-  }, []);
 
   const handleCopyPhone = async () => {
     const raw = String(service?.contact_phone || '').trim();
@@ -88,11 +81,11 @@ function ServiceDetailContent() {
     try {
       const res = await servicesAPI.postReview(serviceId, reviewForm);
       toast.success('Review posted successfully');
-      
+
       const newRating = Number(reviewForm.rating);
       const currentCount = Number(service.reviews_count || 0);
       const currentAvg = Number(service.avg_rating || 0);
-      
+
       const newCount = currentCount + 1;
       const newAvg = ((currentAvg * currentCount) + newRating) / newCount;
 
@@ -102,10 +95,10 @@ function ServiceDetailContent() {
         avg_rating: newAvg,
         reviews_count: newCount
       } : null);
-      
+
       setReviews(prev => [res.data, ...prev]);
       setReviewForm({ user_name: '', user_email: '', rating: 5, comment: '' });
-      
+
       // Optionally still fetch for ultimate consistency
       // fetchServiceData(serviceId); 
     } catch (error: any) {
@@ -160,7 +153,7 @@ function ServiceDetailContent() {
 
   const getBusinessStatus = () => {
     if (!service.business_hours || typeof service.business_hours !== 'object') return null;
-    
+
     const stateToTz: { [key: string]: string } = {
       'AL': 'America/Chicago', 'AK': 'America/Anchorage', 'AZ': 'America/Phoenix', 'AR': 'America/Chicago',
       'CA': 'America/Los_Angeles', 'CO': 'America/Denver', 'CT': 'America/New_York', 'DE': 'America/New_York',
@@ -179,12 +172,12 @@ function ServiceDetailContent() {
 
     const stateCode = service.state?.trim().toUpperCase();
     const tz = stateToTz[stateCode] || 'America/New_York';
-    
+
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: tz, weekday: 'long', hour: 'numeric', minute: 'numeric', hour12: true
     });
-    
+
     const parts = formatter.formatToParts(now);
     const businessDay = parts.find(p => p.type === 'weekday')?.value || '';
     const hourVal = parts.find(p => p.type === 'hour')?.value || '0';
@@ -203,7 +196,7 @@ function ServiceDetailContent() {
     } else {
       const timeRegex = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/gi;
       const matches = Array.from(todayHoursStr.matchAll(timeRegex)) as any[];
-      
+
       if (matches.length < 2) {
         statusObj = { status: 'Open', color: 'text-blue-500', businessDay };
       } else {
@@ -271,23 +264,23 @@ function ServiceDetailContent() {
                   </div>
                 </div>
               </div>
-                <div className="grid grid-cols-3 gap-2 w-full md:max-w-[560px]">
-                  <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    Add a Review
-                  </button>
-                  <button 
-                    onClick={() => setIsPhoneModalOpen(true)}
-                    className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                    Call Now
-                  </button>
-                  <button onClick={() => setIsModalOpen(true)} className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                    Email Us
-                  </button>
-                </div>
+              <div className="grid grid-cols-3 gap-2 w-full md:max-w-[560px]">
+                <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  Add a Review
+                </button>
+                <button
+                  onClick={() => setIsPhoneModalOpen(true)}
+                  className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                  Call Now
+                </button>
+                <button onClick={() => setIsModalOpen(true)} className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  Email Us
+                </button>
+              </div>
             </div>
           </div>
 
@@ -378,7 +371,7 @@ function ServiceDetailContent() {
                             <span className="ml-2 text-xs font-black text-slate-400 uppercase tracking-widest">{Number(rev.rating || 0).toFixed(1)} / 5.0</span>
                           </div>
                         </div>
-                        
+
                         <p className="text-slate-800 leading-relaxed font-bold uppercase tracking-tight" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
                           "{rev.comment}"
                         </p>
@@ -447,7 +440,16 @@ function ServiceDetailContent() {
                 <div className="h-48 bg-slate-50 rounded overflow-hidden">
                   {hasGoogleMap ? (
                     <iframe
-                      src={String(service.google_maps_url).replace('/maps/', '/maps/embed/').split('?')[0] + '?output=embed'}
+                      src={(() => {
+                        const url = String(service.google_maps_url || '');
+                        if (url.includes('pb=')) return url; // Already an embed URL
+                        if (url.includes('place/')) {
+                            const name = url.split('place/')[1].split('/')[0];
+                            return `https://www.google.com/maps/embed/v1/place?key=REPLACE_WITH_KEY_IF_NEEDED&q=${name}`;
+                        }
+                        // Simple fallback transform
+                        return url.replace('/maps/', '/maps/embed/').split('?')[0] + '?output=embed';
+                      })()}
                       className="w-full h-full border-0 grayscale opacity-80" allowFullScreen loading="lazy"
                     />
                   ) : (
@@ -587,6 +589,6 @@ function ServiceDetailContent() {
   );
 }
 
-export default function ServiceDetail() {
-  return <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}><ServiceDetailContent /></Suspense>;
+export default function ServiceDetail({ params }: { params: any }) {
+  return <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}><ServiceDetailContent params={params} /></Suspense>;
 }

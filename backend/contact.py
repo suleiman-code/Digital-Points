@@ -1,13 +1,15 @@
-from fastapi import APIRouter, status, BackgroundTasks
+from fastapi import APIRouter, status, BackgroundTasks, Depends
 from pydantic import BaseModel, EmailStr
 from database import db
 from config import settings
 from fastapi_mail import FastMail, MessageSchema, MessageType, ConnectionConfig
 from datetime import datetime, timezone
+from auth import get_admin_user
+from typing import List
 
 router = APIRouter(prefix="/api/contact", tags=["Contact"])
 
-# Re-using the mail config for consistency
+# Mail config
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
     MAIL_PASSWORD=settings.MAIL_PASSWORD,
@@ -56,6 +58,14 @@ async def send_admin_contact_email(form_data: dict):
         await fm.send_message(message)
     except Exception as e:
         print(f"Failed to send contact email: {e}")
+
+@router.get("/", response_model=List[dict])
+async def get_all_inquiries(admin: dict = Depends(get_admin_user)):
+    messages = await db.db["contact_messages"].find().sort("created_at", -1).to_list(1000)
+    # Convert ObjectId to string for JSON
+    for msg in messages:
+        msg["_id"] = str(msg["_id"])
+    return messages
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def submit_contact_form(form: ContactForm, background_tasks: BackgroundTasks):
