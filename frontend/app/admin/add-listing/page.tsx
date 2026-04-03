@@ -439,11 +439,18 @@ export default function AddListing() {
               </div>
             </section>
 
-            <div className="pt-10 flex justify-end">
+            <div className="pt-10 flex flex-col md:flex-row justify-end gap-4">
+              <button 
+                type="button"
+                onClick={() => router.push('/admin/services')}
+                className="w-full md:w-auto px-10 py-5 bg-white border-2 border-slate-200 text-slate-400 font-black text-sm uppercase tracking-widest rounded-2xl hover:bg-slate-50 hover:text-slate-600 transition-all"
+              >
+                Cancel / Go Back
+              </button>
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full md:w-auto px-12 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-lg rounded-2xl shadow-xl hover:shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
+                className="w-full md:w-auto px-12 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-xl hover:shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
               >
                 {loading ? 'Saving Service...' : editingId ? 'Update Service Listing' : 'Publish Service Listing'}
               </button>
