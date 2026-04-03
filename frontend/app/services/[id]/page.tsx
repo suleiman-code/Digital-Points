@@ -6,8 +6,9 @@ import Footer from '@/components/Footer';
 import { servicesAPI, inquiriesAPI } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 
-const INITIAL_REVIEWS_COUNT = 4;
+const INITIAL_REVIEWS_COUNT = 8;
 
 function ServiceDetailContent({ params }: { params: any }) {
   const serviceId = typeof params?.id === 'string' ? decodeURIComponent(params.id) : '';
@@ -20,6 +21,7 @@ function ServiceDetailContent({ params }: { params: any }) {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+
 
   // Review Form States
   const [reviewForm, setReviewForm] = useState({ user_name: '', user_email: '', rating: 5, comment: '' });
@@ -234,13 +236,13 @@ function ServiceDetailContent({ params }: { params: any }) {
           <div className="pointer-events-none absolute -top-10 right-0 w-72 h-72 bg-blue-100/50 rounded-full blur-3xl" />
 
           <div className="mb-8 flex items-center gap-4">
-            <button
-              onClick={() => window.history.back()}
+            <Link
+              href="/"
               className="group flex items-center gap-2 py-2 px-5 bg-white border border-slate-200 rounded-full text-slate-600 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
             >
               <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
               Back
-            </button>
+            </Link>
           </div>
           {/* HEADER SECTION */}
           <div className="border-b border-slate-200 pb-10 mb-10 relative z-10">
@@ -288,61 +290,22 @@ function ServiceDetailContent({ params }: { params: any }) {
 
             <div className="lg:col-span-8 space-y-12">
 
-              {/* IMAGE SLIDER */}
+              {/* MAIN BUSINESS PHOTO */}
               <section>
                 <div className="relative group rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-lg mb-6">
                   <div className="h-[450px] md:h-[550px] w-full relative overflow-hidden">
-                    <AnimatePresence mode="wait">
-                      <motion.img
-                        key={activeImage}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
-                        src={activeImage || ''}
-                        className="w-full h-full object-cover"
-                        alt="Main Slider"
-                      />
-                    </AnimatePresence>
-
+                    <img
+                      src={activeImage || ''}
+                      className="w-full h-full object-cover"
+                      alt={service.title}
+                    />
                     {allImages.length > 1 && (
-                      <>
-                        <button
-                          onClick={() => {
-                            const idx = allImages.indexOf(activeImage);
-                            setActiveImage(allImages[(idx - 1 + allImages.length) % allImages.length]);
-                          }}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl z-20"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-                        </button>
-                        <button
-                          onClick={() => {
-                            const idx = allImages.indexOf(activeImage);
-                            setActiveImage(allImages[(idx + 1) % allImages.length]);
-                          }}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl z-20"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                        </button>
-                      </>
+                      <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                        +{allImages.length - 1} more photos
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {allImages.length > 1 && (
-                  <div className="flex gap-3 overflow-x-auto pb-4 mb-10 no-scrollbar justify-center">
-                    {allImages.map((img, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveImage(img)}
-                        className={`flex-shrink-0 w-20 h-20 rounded-xl border-4 transition-all duration-300 ${activeImage === img ? 'border-blue-600 scale-105' : 'border-white opacity-60'}`}
-                      >
-                        <img src={img} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
 
                 <div className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm mb-12">
                   <h2 className="text-2xl font-black text-[#0f2340] mb-6 flex items-center gap-3">
@@ -353,85 +316,7 @@ function ServiceDetailContent({ params }: { params: any }) {
                 </div>
               </section>
 
-              {/* REVIEWS DISPLAY */}
-              <section className="space-y-8 pt-12 border-t border-slate-100 bg-slate-50/50 rounded-[3rem] p-8">
-                <div className="mb-6">
-                  <h2 className="text-xl font-black text-slate-800 uppercase tracking-widest">Customer Feedback</h2>
-                  <p className="text-sm text-slate-500 font-medium tracking-tight">Real experiences from our community.</p>
-                </div>
-                <div className="space-y-6">
-                  {reviews.length > 0 ? visibleReviews.map((rev: any, i: number) => (
-                    <div key={i} className="bg-[#fcfdfe] border border-slate-100 rounded-3xl p-8 shadow-sm hover:shadow-md transition-all">
-                      <div className="flex flex-col gap-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, s) => (
-                              <svg key={s} className={`w-4 h-4 ${s < Math.round(rev.rating || 0) ? 'text-amber-400 fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                            ))}
-                            <span className="ml-2 text-xs font-black text-slate-400 uppercase tracking-widest">{Number(rev.rating || 0).toFixed(1)} / 5.0</span>
                           </div>
-                        </div>
-
-                        <p className="text-slate-800 leading-relaxed font-bold uppercase tracking-tight" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
-                          "{rev.comment}"
-                        </p>
-
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{rev.user_name || 'Verified User'}</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            {new Date(rev.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="text-center py-16 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-                      <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No reviews yet.</p>
-                      <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="mt-2 text-blue-600 font-bold text-xs uppercase tracking-widest">Be the first to review</button>
-                    </div>
-                  )}
-                </div>
-                {canShowMoreReviews && (
-                  <button
-                    onClick={() => setVisibleReviewsCount(prev => prev + INITIAL_REVIEWS_COUNT)}
-                    className="mx-auto block px-6 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all"
-                  >
-                    Show More Reviews
-                  </button>
-                )}
-                {canShowLessReviews && (
-                  <button
-                    onClick={() => setVisibleReviewsCount(INITIAL_REVIEWS_COUNT)}
-                    className="mx-auto block px-6 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-sm font-bold hover:bg-slate-100 transition-all"
-                  >
-                    Show Less
-                  </button>
-                )}
-              </section>
-
-              {/* POST REVIEW */}
-              <section ref={reviewFormRef} className="pt-10 border-t border-slate-100">
-                <h2 className="text-base font-bold text-slate-700 mb-2">Leave a review</h2>
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <button key={s} onClick={() => setReviewForm({ ...reviewForm, rating: s })} onMouseEnter={() => setHoverRating(s)} onMouseLeave={() => setHoverRating(0)}>
-                      <svg className={`w-6 h-6 ${(hoverRating || reviewForm.rating) >= s ? 'text-amber-400 fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                    </button>
-                  ))}
-                </div>
-                <form onSubmit={handleReviewSubmit} className="space-y-4">
-                  <textarea required placeholder="Write your feedback..." value={reviewForm.comment} onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })} className="w-full border border-slate-200 rounded p-4 text-sm focus:border-slate-400 outline-none h-24" />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input required placeholder="Your Name" value={reviewForm.user_name} onChange={e => setReviewForm({ ...reviewForm, user_name: e.target.value })} className="border border-slate-200 rounded p-3 text-sm focus:border-slate-400 outline-none" />
-                    <input type="email" placeholder="Your Email (Optional)" value={reviewForm.user_email} onChange={e => setReviewForm({ ...reviewForm, user_email: e.target.value })} className="border border-slate-200 rounded p-3 text-sm focus:border-slate-400 outline-none" />
-                  </div>
-                  <button disabled={isPosting} className="px-10 py-3 bg-blue-600 text-white font-black text-sm uppercase tracking-widest rounded hover:bg-blue-700 shadow-md transition-all">
-                    {isPosting ? 'Posting...' : 'Post Review'}
-                  </button>
-                </form>
-              </section>
-
-            </div>
 
             {/* SIDEBAR */}
             <div className="lg:col-span-4 space-y-10">
@@ -502,8 +387,104 @@ function ServiceDetailContent({ params }: { params: any }) {
                 </div>
               </div>
 
+              {/* ─── MORE DETAILS LINK ─── */}
+              <Link
+                href={`/services/${serviceId}/details`}
+                className="w-full flex items-center justify-between px-6 py-5 bg-gradient-to-r from-[#0f2340] to-indigo-900 text-white rounded-3xl hover:shadow-lg transition-all group border border-slate-200"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">✦</span>
+                  <span className="font-black text-[11px] uppercase tracking-[0.18em]">View More Details</span>
+                </div>
+                <span className="text-white/60 group-hover:translate-x-1 transition-transform">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </Link>
+
             </div>
           </div>
+
+          <div className='mt-16 w-full'>
+{/* REVIEWS DISPLAY */}
+              <section className="space-y-12 pt-16 border-t border-slate-100">
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+                  </div>
+                  <h2 className="text-4xl font-black text-slate-800 tracking-tight">Real Experiences</h2>
+                  <p className="text-slate-500 font-medium text-lg max-w-xl">Hear straight from our community. We pride ourselves on delivering exactly what we promise.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {reviews.length > 0 ? visibleReviews.map((rev: any, i: number) => (
+                    <div key={i} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                      <div className="flex gap-1 mb-6">
+                        {[1,2,3,4,5].map(star => (
+                          <svg key={star} className={`w-5 h-5 ${star <= Math.round(rev.rating || 0) ? 'text-amber-400' : 'text-slate-200'} fill-current`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                        ))}
+                      </div>
+                      <p className="text-slate-600 text-[12px] font-medium leading-relaxed mb-8 flex-grow">"{rev.comment}"</p>
+                      
+                      <div className="flex items-center gap-3 mt-auto pt-6 border-t border-slate-100">
+                        <div>
+                          <h4 className="font-bold text-slate-800">{rev.user_name || 'Verified User'}</h4>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                            {new Date(rev.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="lg:col-span-2 text-center py-16 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
+                      <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No reviews yet.</p>
+                      <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="mt-2 text-blue-600 font-bold text-xs uppercase tracking-widest">Be the first to review</button>
+                    </div>
+                  )}
+                </div>
+                {canShowMoreReviews && (
+                  <button
+                    onClick={() => setVisibleReviewsCount(prev => prev + INITIAL_REVIEWS_COUNT)}
+                    className="mx-auto block px-8 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700 text-sm font-bold hover:bg-slate-50 hover:shadow transition-all"
+                  >
+                    View More Reviews
+                  </button>
+                )}
+                {canShowLessReviews && (
+                  <button
+                    onClick={() => setVisibleReviewsCount(INITIAL_REVIEWS_COUNT)}
+                    className="mx-auto block px-8 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700 text-sm font-bold hover:bg-slate-50 hover:shadow transition-all"
+                  >
+                    Show Less Reviews
+                  </button>
+                )}
+              </section>
+
+              {/* POST REVIEW */}
+              <section ref={reviewFormRef} className="pt-10 border-t border-slate-100">
+                <h2 className="text-base font-bold text-slate-700 mb-2">Leave a review</h2>
+                <div className="flex gap-1 mb-4">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button key={s} onClick={() => setReviewForm({ ...reviewForm, rating: s })} onMouseEnter={() => setHoverRating(s)} onMouseLeave={() => setHoverRating(0)}>
+                      <svg className={`w-6 h-6 ${(hoverRating || reviewForm.rating) >= s ? 'text-amber-400 fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
+                    </button>
+                  ))}
+                </div>
+                <form onSubmit={handleReviewSubmit} className="space-y-4">
+                  <textarea required placeholder="Write your feedback..." value={reviewForm.comment} onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })} className="w-full border border-slate-200 rounded p-4 text-sm focus:border-slate-400 outline-none h-24" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input required placeholder="Your Name" value={reviewForm.user_name} onChange={e => setReviewForm({ ...reviewForm, user_name: e.target.value })} className="border border-slate-200 rounded p-3 text-sm focus:border-slate-400 outline-none" />
+                    <input type="email" placeholder="Your Email (Optional)" value={reviewForm.user_email} onChange={e => setReviewForm({ ...reviewForm, user_email: e.target.value })} className="border border-slate-200 rounded p-3 text-sm focus:border-slate-400 outline-none" />
+                  </div>
+                  <button disabled={isPosting} className="px-10 py-3 bg-blue-600 text-white font-black text-sm uppercase tracking-widest rounded hover:bg-blue-700 shadow-md transition-all">
+                    {isPosting ? 'Posting...' : 'Post Review'}
+                  </button>
+                </form>
+              </section>
+
+          </div>
+
         </div>
       </main>
 
