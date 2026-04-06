@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 import ServiceCardSkeleton from '@/components/ServiceCardSkeleton';
 import { servicesAPI } from '@/lib/api';
+import { ALL_CATEGORIES_WITH_DEFAULT } from '@/lib/businessCategories';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function ServicesList() {
@@ -32,16 +33,7 @@ function ServicesList() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  const categories = [
-    'All Categories',
-    'Cleaning',
-    'Electrical',
-    'Salon',
-    'Plumbing',
-    'Tutoring',
-    'Maintenance',
-    'Creative'
-  ];
+  const categories = ALL_CATEGORIES_WITH_DEFAULT;
 
   useEffect(() => {
     if (!initialized) return;
@@ -206,21 +198,17 @@ function ServicesList() {
                 
                 <div className="mb-8">
                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Category</label>
-                   <div className="space-y-1.5">
+                   <select
+                     value={selectedCategory || 'All Categories'}
+                     onChange={(e) => setSelectedCategory(e.target.value === 'All Categories' ? '' : e.target.value)}
+                     className="w-full px-4 py-3 rounded-xl text-sm font-semibold border border-slate-200 bg-white text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                   >
                      {categories.map((cat) => (
-                       <button
-                         key={cat}
-                         onClick={() => setSelectedCategory(cat === 'All Categories' ? '' : cat)}
-                         className={`w-full text-left px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                           (selectedCategory === cat || (cat === 'All Categories' && !selectedCategory))
-                             ? 'bg-blue-600 text-white shadow-lg'
-                             : 'text-slate-600 hover:bg-white'
-                         }`}
-                       >
+                       <option key={cat} value={cat}>
                          {cat}
-                       </button>
+                       </option>
                      ))}
-                   </div>
+                   </select>
                 </div>
 
                 <div className="mb-8">

@@ -3,17 +3,21 @@
 import { useState, useEffect } from 'react';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 import { motion } from 'framer-motion';
 import { servicesAPI } from '@/lib/api';
+import { BUSINESS_CATEGORIES } from '@/lib/businessCategories';
 
 export default function Home() {
+  const router = useRouter();
 
   const [featuredServices, setFeaturedServices] = useState<any[]>([]);
   const [visibleCount, setVisibleCount] = useState(8);
   const [servicesLoading, setServicesLoading] = useState(true);
+  const [selectedHomepageCategory, setSelectedHomepageCategory] = useState('');
 
   const FALLBACK_SERVICES = [
     { id: "1", title: "Elite Home Deep Cleaning", category: "Cleaning", price: "$80/hr", rating: 4.9, image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80", description: "Professional deep cleaning service with eco-friendly products for a spotless home." },
@@ -76,16 +80,7 @@ export default function Home() {
     },
   ];
 
-  const categories = [
-    'Plumbing',
-    'Electrical',
-    'Cleaning',
-    'Painting',
-    'Carpentry',
-    'Appliance Repair',
-    'Salon',
-    'Tutoring',
-  ];
+  const categories = BUSINESS_CATEGORIES;
 
   return (
     <>
@@ -245,6 +240,30 @@ export default function Home() {
             >
               <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">Explore by Category</h2>
               <p className="text-slate-500 text-lg">Find exactly what you need from our diverse service network.</p>
+              <div className="mt-8 max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
+                <select
+                  value={selectedHomepageCategory}
+                  onChange={(e) => setSelectedHomepageCategory(e.target.value)}
+                  className="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Choose a category</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => {
+                    if (!selectedHomepageCategory) return;
+                    router.push(`/services?category=${encodeURIComponent(selectedHomepageCategory)}`);
+                  }}
+                  className="px-6 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={!selectedHomepageCategory}
+                >
+                  Browse
+                </button>
+              </div>
             </motion.div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

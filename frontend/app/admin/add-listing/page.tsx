@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { authAPI, servicesAPI } from '@/lib/api';
+import { BUSINESS_CATEGORIES } from '@/lib/businessCategories';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -299,11 +300,9 @@ export default function AddListing() {
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Category *</label>
                   <select name="category" value={formData.category} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value="Plumbing">Plumbing</option>
-                    <option value="Electrical">Electrical</option>
-                    <option value="Cleaning">Cleaning</option>
-                    <option value="Salon">Salon</option>
-                    <option value="Tutoring">Tutoring</option>
+                    {BUSINESS_CATEGORIES.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
                   </select>
                 </div>
 

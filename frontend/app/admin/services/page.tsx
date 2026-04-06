@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
 import { servicesAPI } from '@/lib/api';
+import { BUSINESS_CATEGORIES } from '@/lib/businessCategories';
 import Link from 'next/link';
 
 export default function AdminServicesPage() {
@@ -95,9 +96,15 @@ function AdminServicesContent() {
     return null;
   }
 
-  // Generate unique categories from FULL list + Core predefined categories
-  const CORE_CATEGORIES = ['Plumbing', 'Cleaning', 'Electrician', 'General Repair', 'HVAC', 'Carpentry', 'Painting', 'Other'];
-  const uniqueCategories = Array.from(new Set([...CORE_CATEGORIES, ...allServices.map((s: any) => s.category)])).sort();
+  // Keep master category order, then append any legacy categories already present in data.
+  const dynamicCategories = Array.from(
+    new Set(
+      allServices
+        .map((s: any) => String(s.category || '').trim())
+        .filter((c: string) => c && !BUSINESS_CATEGORIES.includes(c))
+    )
+  ).sort((a, b) => a.localeCompare(b));
+  const uniqueCategories = [...BUSINESS_CATEGORIES, ...dynamicCategories];
 
   return (
     <div className="flex min-h-screen bg-gray-50 text-slate-900">
