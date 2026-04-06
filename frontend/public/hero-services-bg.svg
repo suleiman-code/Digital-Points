@@ -1,0 +1,54 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F58B8"/>
+      <stop offset="1" stop-color="#1F7FD1"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(380 260) rotate(36) scale(520 320)">
+      <stop stop-color="#7DD3FC" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#7DD3FC" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1220 620) rotate(-20) scale(520 320)">
+      <stop stop-color="#BFDBFE" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#BFDBFE" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#glow1)"/>
+  <rect width="1600" height="900" fill="url(#glow2)"/>
+
+  <g opacity="0.26" stroke="#E0F2FE" stroke-width="2">
+    <rect x="180" y="145" width="180" height="180" rx="26"/>
+    <rect x="1230" y="120" width="170" height="170" rx="24"/>
+    <rect x="1120" y="610" width="220" height="220" rx="28"/>
+    <rect x="260" y="620" width="200" height="200" rx="28"/>
+  </g>
+
+  <g opacity="0.22" fill="#E0F2FE">
+    <circle cx="1260" cy="365" r="8"/>
+    <circle cx="1320" cy="365" r="8"/>
+    <circle cx="1380" cy="365" r="8"/>
+    <circle cx="1260" cy="425" r="8"/>
+    <circle cx="1320" cy="425" r="8"/>
+    <circle cx="1380" cy="425" r="8"/>
+
+    <circle cx="240" cy="480" r="7"/>
+    <circle cx="290" cy="480" r="7"/>
+    <circle cx="340" cy="480" r="7"/>
+    <circle cx="240" cy="530" r="7"/>
+    <circle cx="290" cy="530" r="7"/>
+    <circle cx="340" cy="530" r="7"/>
+  </g>
+
+  <g opacity="0.28" stroke="#F0F9FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1040 190L1095 245L1040 300"/>
+    <path d="M560 650L620 710L560 770"/>
+
+    <path d="M190 230H250M220 200V260"/>
+    <path d="M1360 700H1420M1390 670V730"/>
+
+    <path d="M1310 180L1340 210L1370 180"/>
+    <path d="M280 740L315 775L350 740"/>
+  </g>
+</svg>
