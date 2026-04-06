@@ -18,6 +18,7 @@ export default function Home() {
   const [visibleCount, setVisibleCount] = useState(8);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [selectedHomepageCategory, setSelectedHomepageCategory] = useState('');
+  const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(8);
 
   const FALLBACK_SERVICES = [
     { id: "1", title: "Elite Home Deep Cleaning", category: "Cleaning", price: "$80/hr", rating: 4.9, image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80", description: "Professional deep cleaning service with eco-friendly products for a spotless home." },
@@ -81,6 +82,7 @@ export default function Home() {
   ];
 
   const categories = BUSINESS_CATEGORIES;
+  const visibleCategories = categories.slice(0, visibleCategoriesCount);
 
   return (
     <>
@@ -267,7 +269,7 @@ export default function Home() {
             </motion.div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {categories.map((category, index) => (
+              {visibleCategories.map((category, index) => (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
@@ -287,6 +289,22 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
+
+            {categories.length > visibleCategoriesCount && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="mt-10 text-center"
+              >
+                <button
+                  onClick={() => setVisibleCategoriesCount((prev) => prev + 4)}
+                  className="px-8 py-3 bg-white border-2 border-blue-600 text-blue-600 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-lg hover:shadow-blue-200"
+                >
+                  More Categories
+                </button>
+              </motion.div>
+            )}
           </div>
         </section>
 

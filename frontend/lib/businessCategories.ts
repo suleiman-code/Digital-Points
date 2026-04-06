@@ -112,4 +112,28 @@ export const BUSINESS_CATEGORIES: string[] = [
   'Zoological Services',
 ];
 
+const CATEGORY_ALIASES: Record<string, string> = {
+  electrical: 'Electrical Services',
+  'electrical service': 'Electrical Services',
+  'electrical services': 'Electrical Services',
+  electrician: 'Electrical Services',
+  cleaning: 'Cleaning Services',
+  'cleaning service': 'Cleaning Services',
+  'cleaning services': 'Cleaning Services',
+  hvac: 'HVAC (Heating & Air)',
+  'hvac services': 'HVAC (Heating & Air)',
+  tech: 'Tech Support',
+  'tech services': 'Tech Support',
+};
+
+export const normalizeCategory = (category: string) => {
+  const value = String(category || '').trim();
+  if (!value) return '';
+
+  const canonical = CATEGORY_ALIASES[value.toLowerCase()];
+  if (canonical) return canonical;
+
+  return value;
+};
+
 export const ALL_CATEGORIES_WITH_DEFAULT = ['All Categories', ...BUSINESS_CATEGORIES];

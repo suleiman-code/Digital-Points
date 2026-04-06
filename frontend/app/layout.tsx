@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Sora } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 const headingFont = Sora({
   subsets: ["latin"],
@@ -16,8 +17,26 @@ const bodyFont = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Digital Point - Find & Book Services",
-  description: "Discover trusted service providers and book services instantly",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Digital Point | Find & Book Trusted Local Services",
+    template: "%s | Digital Point",
+  },
+  description: "Discover trusted local service providers and book services instantly across major US cities.",
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      maxSnippet: -1,
+      maxImagePreview: "large",
+      maxVideoPreview: -1,
+    },
+  },
 };
 
 export const viewport = {

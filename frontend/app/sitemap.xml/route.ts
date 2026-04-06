@@ -1,7 +1,8 @@
 import { servicesAPI } from "@/lib/api";
+import { SITE_URL } from "@/lib/site";
 
 export async function GET() {
-  const baseUrl = "http://localhost:3000"; // Replace with your production URL later
+  const baseUrl = SITE_URL;
   
   // Fetch all services
   let services = [];
@@ -12,7 +13,7 @@ export async function GET() {
     console.error("Sitemap fetch failed");
   }
 
-  const staticRoutes = ["", "/services", "/contact", "/admin/login"];
+  const staticRoutes = ["", "/services", "/about", "/contact", "/privacy", "/terms"];
   
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -25,7 +26,7 @@ export async function GET() {
       `).join('')}
       ${services.map((svc: any) => `
         <url>
-          <loc>${baseUrl}/services/${svc._id}</loc>
+          <loc>${baseUrl}/services/${encodeURIComponent(svc._id || svc.id || '')}</loc>
           <lastmod>${new Date(svc.updated_at || svc.updatedAt || Date.now()).toISOString()}</lastmod>
           <changefreq>weekly</changefreq>
           <priority>0.7</priority>
@@ -37,6 +38,7 @@ export async function GET() {
   return new Response(sitemap, {
     headers: {
       "Content-Type": "application/xml",
+      "Cache-Control": "public, max-age=3600",
     },
   });
 }

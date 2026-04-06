@@ -25,6 +25,42 @@ def is_valid_phone_number(phone: str) -> bool:
     digits_count = sum(ch.isdigit() for ch in phone)
     return 7 <= digits_count <= 15
 
+CATEGORY_ALIASES = {
+    "electrical": "Electrical Services",
+    "electrical service": "Electrical Services",
+    "electrical services": "Electrical Services",
+    "electrician": "Electrical Services",
+    "cleaning": "Cleaning Services",
+    "cleaning service": "Cleaning Services",
+    "cleaning services": "Cleaning Services",
+    "hvac": "HVAC (Heating & Air)",
+    "hvac services": "HVAC (Heating & Air)",
+    "tech": "Tech Support",
+    "tech services": "Tech Support",
+}
+
+def normalize_category(category: str) -> str:
+    value = (category or "").strip()
+    if not value:
+        return value
+    return CATEGORY_ALIASES.get(value.lower(), value)
+
+def category_variants_for_query(category: str) -> list[str]:
+    normalized = normalize_category(category)
+    variants = [normalized]
+    for alias, canonical in CATEGORY_ALIASES.items():
+        if canonical.lower() == normalized.lower() and alias.lower() != normalized.lower():
+            variants.append(alias)
+    # keep order, remove duplicates
+    seen = set()
+    unique = []
+    for item in variants:
+        key = item.lower()
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+    return unique
+
 # 1. GET ALL SERVICES (Public)
 @router.get("/", response_model=List[ServiceResponse])
 async def get_all_services(
@@ -37,7 +73,11 @@ async def get_all_services(
 ):
     query = {}
     if category:
-        query["category"] = {"$regex": f"^{re.escape(category.strip())}$", "$options": "i"}
+        variants = category_variants_for_query(category)
+        query["$or"] = [
+            {"category": {"$regex": f"^{re.escape(v.strip())}$", "$options": "i"}}
+            for v in variants
+        ]
     if city:
         query["city"] = {"$regex": city, "$options": "i"}
     if state:
@@ -78,6 +118,7 @@ async def create_service(service: ServiceCreate, admin: dict = Depends(get_admin
         raise HTTPException(status_code=400, detail="Valid business contact number is required")
 
     service_dict = service.model_dump()
+    service_dict["category"] = normalize_category(service_dict.get("category", ""))
     service_dict["contact_phone"] = normalize_phone_number(service.contact_phone)
     service_dict["created_at"] = datetime.now(timezone.utc)
     service_dict["updated_at"] = datetime.now(timezone.utc)
@@ -101,6 +142,9 @@ async def update_service(id: str, service_data: ServiceUpdate, admin: dict = Dep
         if not update_data["contact_phone"] or not is_valid_phone_number(update_data["contact_phone"]):
             raise HTTPException(status_code=400, detail="Valid business contact number is required")
         update_data["contact_phone"] = normalize_phone_number(update_data["contact_phone"])
+
+    if "category" in update_data:
+        update_data["category"] = normalize_category(update_data["category"])
 
     update_data["updated_at"] = datetime.now(timezone.utc)
     

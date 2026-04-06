@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { authAPI, servicesAPI } from '@/lib/api';
-import { BUSINESS_CATEGORIES } from '@/lib/businessCategories';
+import { BUSINESS_CATEGORIES, normalizeCategory } from '@/lib/businessCategories';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -89,7 +89,7 @@ export default function AddListing() {
 
         setFormData({
           title: svc.title || '',
-          category: svc.category || 'Plumbing',
+          category: normalizeCategory(svc.category || 'Plumbing'),
           price: String(svc.price ?? ''),
           city: svc.city || '',
           state: svc.state || '',

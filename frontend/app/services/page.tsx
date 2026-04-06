@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 import ServiceCardSkeleton from '@/components/ServiceCardSkeleton';
 import { servicesAPI } from '@/lib/api';
-import { ALL_CATEGORIES_WITH_DEFAULT } from '@/lib/businessCategories';
+import { ALL_CATEGORIES_WITH_DEFAULT, normalizeCategory } from '@/lib/businessCategories';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function ServicesList() {
@@ -25,7 +25,7 @@ function ServicesList() {
     const params = new URLSearchParams(window.location.search);
     setSearchTerm(params.get('q') || '');
     setLocationSearch(params.get('l') || '');
-    setSelectedCategory(params.get('category') || '');
+    setSelectedCategory(normalizeCategory(params.get('category') || ''));
     setInitialized(true);
   }, []);
 
@@ -62,7 +62,7 @@ function ServicesList() {
     try {
       setLoading(true);
       const filters: any = {};
-      if (selectedCategory && selectedCategory !== 'All Categories') filters.category = selectedCategory;
+      if (selectedCategory && selectedCategory !== 'All Categories') filters.category = normalizeCategory(selectedCategory);
       if (locationSearch) filters.city = locationSearch;
       if (minRating > 0) filters.min_rating = minRating;
 

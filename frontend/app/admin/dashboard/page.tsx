@@ -1,23 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { servicesAPI } from '@/lib/api';
+import { BUSINESS_CATEGORIES, normalizeCategory } from '@/lib/businessCategories';
 
 export default function AdminDashboard() {
+  const REFRESH_INTERVAL_MS = 5000;
   const { isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
   
   // State for metrics and data
   const [services, setServices] = useState<any[]>([]);
   const [stats, setStats] = useState({
-    totalServices: 0,
+    activeListings: 0,
+    totalCategories: 0,
+    activeCategories: 0,
     avgRating: 0,
     totalInquiries: 0
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -25,13 +30,7 @@ export default function AdminDashboard() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchStats();
-    }
-  }, [isAuthenticated]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const { contactAPI } = await import('@/lib/api');
       const [servicesRes, inquiriesRes] = await Promise.all([
@@ -44,7 +43,17 @@ export default function AdminDashboard() {
       
       setServices(fetchedServices);
       
-      const totalServices = fetchedServices.length;
+      const activeListings = fetchedServices.length;
+      const activeCategories = new Set(
+        fetchedServices
+          .map((s: any) => normalizeCategory(String(s.category || '').trim()))
+          .filter(Boolean)
+      ).size;
+      const totalCategories = new Set(
+        BUSINESS_CATEGORIES
+          .map((category: string) => normalizeCategory(category))
+          .filter(Boolean)
+      ).size;
       const totalInquiries = inquiries.length;
       
       // Calculate real average rating
@@ -52,14 +61,35 @@ export default function AdminDashboard() {
       const avg = ratings.length > 0 ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : 0;
 
       setStats({
-        totalServices,
+        activeListings,
+        totalCategories,
+        activeCategories,
         avgRating: Number(avg.toFixed(1)),
         totalInquiries
       });
+      setLastUpdatedAt(new Date());
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    fetchStats();
+    const interval = setInterval(fetchStats, REFRESH_INTERVAL_MS);
+
+    const handleFocus = () => {
+      fetchStats();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [isAuthenticated, fetchStats]);
 
   if (isLoading) {
     return <div className="text-center py-12">Loading...</div>;
@@ -68,9 +98,6 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return null;
   }
-
-  // Derived distinct categories
-  const categories = Array.from(new Set(services.map((s: any) => s.category))).sort();
 
   return (
     <div className="flex min-h-screen bg-gray-50 text-slate-900">
@@ -119,13 +146,17 @@ export default function AdminDashboard() {
           <header className="mb-10">
             <h1 className="text-4xl font-black tracking-tight text-slate-900">Welcome to Admin Dashboard</h1>
             <p className="text-slate-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Real-time Directory Insights</p>
+            <p className="text-[11px] text-slate-400 font-medium mt-2">
+              Auto refresh every 5s{lastUpdatedAt ? ` • Last updated: ${lastUpdatedAt.toLocaleTimeString()}` : ''}
+            </p>
           </header>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <StatCard icon="🛠️" label="Total Services" value={stats.totalServices} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <StatCard icon="🛠️" label="Active Listings" value={stats.activeListings} />
             <StatCard icon="⭐" label="Avg Rating" value={stats.avgRating || 'N/A'} />
-            <StatCard icon="📁" label="Active Categories" value={categories.length} />
+            <StatCard icon="🧾" label="Total Categories" value={stats.totalCategories} />
+            <StatCard icon="📁" label="Active Categories" value={stats.activeCategories} />
           </div>
 
           {/* Quick Actions */}

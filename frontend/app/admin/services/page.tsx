@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
 import { servicesAPI } from '@/lib/api';
-import { BUSINESS_CATEGORIES } from '@/lib/businessCategories';
+import { BUSINESS_CATEGORIES, normalizeCategory } from '@/lib/businessCategories';
 import Link from 'next/link';
 
 export default function AdminServicesPage() {
@@ -32,7 +32,7 @@ function AdminServicesContent() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
        const params = new URLSearchParams(window.location.search);
-       setCategoryFilter(params.get('category'));
+       setCategoryFilter(normalizeCategory(params.get('category') || ''));
     }
   }, []);
 
@@ -52,12 +52,16 @@ function AdminServicesContent() {
     try {
       setLoading(true);
       const response = await servicesAPI.getAll();
-      const rawData = response.data || [];
+      const rawData = (response.data || []).map((s: any) => ({
+        ...s,
+        category: normalizeCategory(s.category || ''),
+      }));
       
       setAllServices(rawData);
       
       if (categoryFilter) {
-        setServices(rawData.filter((s: any) => s.category === categoryFilter));
+        const normalizedFilter = normalizeCategory(categoryFilter);
+        setServices(rawData.filter((s: any) => normalizeCategory(s.category) === normalizedFilter));
       } else {
         setServices(rawData);
       }
@@ -149,11 +153,11 @@ function AdminServicesContent() {
                 value={categoryFilter || "all"}
                 onChange={(e) => {
                   const val = e.target.value;
-                  setCategoryFilter(val === 'all' ? null : val);
+                  setCategoryFilter(val === 'all' ? null : normalizeCategory(val));
                   if (val === 'all') {
                     router.push('/admin/services');
                   } else {
-                    router.push(`/admin/services?category=${encodeURIComponent(val)}`);
+                    router.push(`/admin/services?category=${encodeURIComponent(normalizeCategory(val))}`);
                   }
                 }}
                 className="w-full bg-white border border-slate-200 rounded-2xl px-6 py-4 font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 transition-all shadow-sm appearance-none cursor-pointer"
@@ -162,7 +166,7 @@ function AdminServicesContent() {
                 <option value="all">All Categories - Show Everything</option>
                 {uniqueCategories.map((cat: any) => (
                   <option key={String(cat)} value={cat}>
-                    {cat} ({allServices.filter(s => s.category === cat).length})
+                    {cat} ({allServices.filter(s => normalizeCategory(s.category) === normalizeCategory(cat)).length})
                   </option>
                 ))}
               </select>
