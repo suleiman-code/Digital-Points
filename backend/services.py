@@ -53,7 +53,7 @@ async def get_all_services(
     if min_rating is not None:
         query["avg_rating"] = {"$gte": min_rating}
         
-    services = await db.db["services"].find(query).sort([("created_at", -1), ("_id", -1)]).to_list(100)
+    services = await db.db["services"].find(query).sort([("featured", -1), ("created_at", -1), ("_id", -1)]).to_list(100)
     return services
 
 # 2. GET SINGLE SERVICE (Public)

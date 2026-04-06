@@ -40,7 +40,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-2xl font-bold mb-2">Contact</h2>
               <p className="text-slate-600">
-                For privacy questions, contact us at support@digitalpoint.com.
+                For privacy questions, contact us at info@digitalpointllc.com.
               </p>
             </div>
           </div>

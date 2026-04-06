@@ -37,11 +37,12 @@ export default function Home() {
           id: s._id || s.id,
           title: s.title || s.name,
           category: s.category,
+          featured: Boolean(s.featured),
           price: s.price ? `From $${s.price}` : 'Contact Us',
           rating: s.rating || 5.0,
           image: (s.image_url || s.image || '') + (s.image_url ? '?auto=format&fit=crop&w=800&q=80' : ''),
           description: s.description,
-        }));
+        })).sort((a: any, b: any) => Number(b.featured) - Number(a.featured));
         setFeaturedServices(normalized.length > 0 ? normalized : FALLBACK_SERVICES);
       } catch (err) {
         setFeaturedServices(FALLBACK_SERVICES);

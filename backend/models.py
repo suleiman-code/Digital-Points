@@ -55,6 +55,7 @@ class ServiceBase(BaseModel):
     price: Optional[float] = Field(default=0.0, ge=0)
     city: str
     state: str
+    featured: bool = False
     image_url: Optional[str] = None
     service_details: Optional[str] = None
     # --- New Business Directory Fields ---
@@ -81,6 +82,7 @@ class ServiceUpdate(BaseModel):
     price: Optional[float] = None
     city: Optional[str] = None
     state: Optional[str] = None
+    featured: Optional[bool] = None
     image_url: Optional[str] = None
     service_details: Optional[str] = None
     address: Optional[str] = None

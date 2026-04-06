@@ -64,19 +64,19 @@ export default function ContactPage() {
               <div className="space-y-8">
                 <div>
                   <h3 className="text-xl font-bold mb-2">📧 Email</h3>
-                  <p className="text-gray-600">support@digitalpoint.com</p>
+                  <p className="text-gray-600">info@digitalpointllc.com</p>
                 </div>
 
                 <div>
                   <h3 className="text-xl font-bold mb-2">📞 Phone</h3>
-                  <p className="text-gray-600">+92 (123) 456-7890</p>
+                  <p className="text-gray-600">+1 267 452 3317</p>
                 </div>
 
                 <div>
                   <h3 className="text-xl font-bold mb-2">📍 Address</h3>
                   <p className="text-gray-600">
-                    123 Business Street<br />
-                    Islamabad, Pakistan 44000
+                    325 CHESTNUT ST SUITE 876 #232<br />
+                    PHILADELPHIA, PA 19106
                   </p>
                 </div>
 

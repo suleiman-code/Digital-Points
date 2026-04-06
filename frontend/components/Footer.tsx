@@ -78,13 +78,13 @@ export default function Footer() {
             © {currentYear} Digital Point. All rights reserved.
           </p>
           <div className="flex gap-4 mt-4 md:mt-0">
-            <a href="mailto:support@digitalpoint.com" className="text-gray-400 hover:text-white">
+            <a href="mailto:info@digitalpointllc.com" className="text-gray-400 hover:text-white">
               Email Us
             </a>
-            <a href="tel:+921234567890" className="text-gray-400 hover:text-white">
+            <a href="tel:+12674523317" className="text-gray-400 hover:text-white">
               Call Support
             </a>
-            <a href="https://wa.me/921234567890" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+            <a href="https://wa.me/12674523317" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
               WhatsApp
             </a>
           </div>

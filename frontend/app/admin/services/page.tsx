@@ -79,6 +79,16 @@ function AdminServicesContent() {
     }
   };
 
+  const toggleFeatured = async (service: any) => {
+    try {
+      await servicesAPI.update(service._id, { featured: !service.featured });
+      toast.success(service.featured ? 'Listing removed from top.' : 'Listing pinned to top.');
+      fetchServices();
+    } catch (error) {
+      toast.error('Error updating featured status');
+    }
+  };
+
   const currentCategory = categoryFilter || 'all';
 
   if (isLoading || !isAuthenticated) {
@@ -176,6 +186,7 @@ function AdminServicesContent() {
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold">Title</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">Category</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold">Top</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">Price</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">Date</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold">Updated</th>
@@ -187,6 +198,11 @@ function AdminServicesContent() {
                     <tr key={service._id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4">{service.title}</td>
                       <td className="px-6 py-4">{service.category}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${service.featured ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
+                          {service.featured ? 'Pinned' : 'Normal'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4">Rs. {Number(service.price || 0).toLocaleString()}</td>
                       <td className="px-6 py-4 text-sm text-gray-500 font-medium">
                         {new Date(service.created_at || Date.now()).toLocaleDateString('en-US', {
@@ -203,6 +219,12 @@ function AdminServicesContent() {
                         })}
                       </td>
                       <td className="px-6 py-4 flex items-center space-x-2">
+                        <button
+                          onClick={() => toggleFeatured(service)}
+                          className={`text-xs py-1 ${service.featured ? 'btn-secondary' : 'btn-primary'}`}
+                        >
+                          {service.featured ? 'Unpin' : 'Pin Top'}
+                        </button>
                         <button
                           onClick={() => {
                             router.push(`/admin/add-listing?edit=${service._id}`);
