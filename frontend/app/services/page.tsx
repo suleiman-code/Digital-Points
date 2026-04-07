@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import toast from 'react-hot-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
@@ -21,6 +22,8 @@ function ServicesList() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
+  const categories = ALL_CATEGORIES_WITH_DEFAULT;
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setSearchTerm(params.get('q') || '');
@@ -29,34 +32,29 @@ function ServicesList() {
     setInitialized(true);
   }, []);
 
-  // Autocomplete States
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const resolveCategoryFromSearch = (query: string) => {
+    const normalizedQuery = normalizeCategory(query).toLowerCase().trim();
+    if (!normalizedQuery) return '';
 
-  const categories = ALL_CATEGORIES_WITH_DEFAULT;
+    const exactMatch = categories.find((cat) => {
+      if (cat === 'All Categories') return false;
+      return normalizeCategory(cat).toLowerCase() === normalizedQuery;
+    });
+    if (exactMatch) return exactMatch;
+
+    const partialMatch = categories.find((cat) => {
+      if (cat === 'All Categories') return false;
+      const normalizedCategory = normalizeCategory(cat).toLowerCase();
+      return normalizedCategory.includes(normalizedQuery) || normalizedQuery.includes(normalizedCategory);
+    });
+
+    return partialMatch || '';
+  };
 
   useEffect(() => {
     if (!initialized) return;
     fetchServices();
-  }, [initialized, searchTerm, locationSearch, selectedCategory, priceRange, minRating]);
-
-  // Autocomplete Logic
-  useEffect(() => {
-    if (searchTerm.length > 0) {
-      const catFiltered = categories.filter(cat => 
-        cat.toLowerCase().includes(searchTerm.toLowerCase()) && cat !== 'All Categories'
-      );
-      const titleMatches = services
-        .filter((s: any) => (s.title || '').toLowerCase().includes(searchTerm.toLowerCase()))
-        .map((s: any) => s.title)
-        .slice(0, 3);
-      
-      setSuggestions([...new Set([...catFiltered, ...titleMatches])]);
-      setShowSuggestions(true);
-    } else {
-      setShowSuggestions(false);
-    }
-  }, [searchTerm, services]);
+  }, [initialized, selectedCategory, locationSearch, priceRange, minRating]);
 
   const fetchServices = async () => {
     try {
@@ -77,19 +75,6 @@ function ServicesList() {
         state: s.state || '',
         service_details: s.service_details || s.serviceDetails || '',
       }));
-
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase().trim();
-        data = data.filter((s: any) => 
-          (s.title || '').toLowerCase().includes(term) || 
-          (s.description || '').toLowerCase().includes(term) ||
-          (s.category || '').toLowerCase().includes(term) ||
-          (s.city || '').toLowerCase().includes(term) ||
-          (s.state || '').toLowerCase().includes(term) ||
-          (s.service_details || '').toLowerCase().includes(term) ||
-          (s.address || '').toLowerCase().includes(term)
-        );
-      }
 
       setServices(data);
       setFilteredServices(data);
@@ -127,8 +112,17 @@ function ServicesList() {
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
-                setShowSuggestions(false);
-                fetchServices();
+                const matchedCategory = resolveCategoryFromSearch(searchTerm);
+
+                if (matchedCategory) {
+                  setSelectedCategory(matchedCategory);
+                  setSearchTerm('');
+                  return;
+                }
+
+                if (searchTerm.trim()) {
+                  toast.error('Please search a service category like Plumbing or Cleaning Services.');
+                }
               }}
               className="flex flex-col md:flex-row gap-3"
             >
@@ -136,45 +130,17 @@ function ServicesList() {
                   <svg className="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                   <input
                     type="text"
-                    placeholder="Search for services (Sweeper, Plumber...)"
+                    placeholder="Search category (Plumber, Sweeper, AC...)"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    onFocus={() => searchTerm.length > 0 && setShowSuggestions(true)}
                     className="w-full p-4 bg-transparent outline-none text-slate-700 font-medium placeholder:text-slate-400"
                   />
-                  
-                  <AnimatePresence>
-                    {showSuggestions && suggestions.length > 0 && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden z-50 p-2"
-                      >
-                        {suggestions.map((s, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => {
-                              setSearchTerm(s);
-                              setShowSuggestions(false);
-                              // We don't fetch here, user can click or press enter
-                            }}
-                            className="w-full text-left px-4 py-3 hover:bg-blue-50 rounded-lg text-sm font-semibold text-slate-600 flex items-center gap-2 transition-colors"
-                          >
-                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            {s}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                </div>
                <div className="flex-1 flex items-center bg-white rounded-xl px-4 border border-slate-100 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-100/50 transition-all shadow-sm hover:shadow-md">
                   <svg className="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                   <input
                     type="text"
-                    placeholder="City/State"
+                    placeholder="City/State (optional)"
                     value={locationSearch}
                     onChange={(e) => setLocationSearch(e.target.value)}
                     className="w-full p-4 bg-transparent outline-none text-slate-700 font-medium text-sm sm:text-base placeholder:text-slate-400"
@@ -227,6 +193,7 @@ function ServicesList() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => {
                     setSearchTerm('');
                     setSelectedCategory('');

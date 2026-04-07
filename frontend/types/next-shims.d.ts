@@ -23,6 +23,9 @@ declare module 'next/navigation' {
     forward: () => void;
     prefetch: (href: string) => Promise<void>;
   };
+  export function useSearchParams(): {
+    get: (name: string) => string | null;
+  };
 }
 
 declare module 'next/*' {

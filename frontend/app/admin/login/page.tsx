@@ -8,6 +8,7 @@ import { authAPI } from '@/lib/api';
 import Link from 'next/link';
 
 export default function AdminLoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, formState: { isSubmitting } } = useForm();
   const router = useRouter();
 
@@ -17,6 +18,7 @@ export default function AdminLoginPage() {
       const token = response.data.access_token || response.data.token;
       if (!token) throw new Error('No token received');
       localStorage.setItem('authToken', token);
+      localStorage.setItem('lastAdminEmail', data.email);
       toast.success('Login successful!');
       router.push('/admin/dashboard');
     } catch (error: any) {
@@ -48,13 +50,43 @@ export default function AdminLoginPage() {
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              {...register('password', { required: 'Password is required' })}
-              required
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                className="pr-10"
+                {...register('password', { required: 'Password is required' })}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  {showPassword ? (
+                    <>
+                      <path d="M3 3L21 21" />
+                      <path d="M10.58 10.58a2 2 0 102.83 2.83" />
+                      <path d="M9.88 5.09A10.94 10.94 0 0112 5c5 0 9.27 3.11 11 7-1.01 2.27-2.67 4.07-4.7 5.18" />
+                      <path d="M6.61 6.61C4.78 7.73 3.3 9.42 2 12c1.73 3.89 6 7 10 7 1.61 0 3.15-.35 4.55-.98" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </>
+                  )}
+                </svg>
+              </button>
+            </div>
+            <div className="mt-2 text-right">
+              <Link href="/admin/forgot-password" className="text-sm text-blue-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <button

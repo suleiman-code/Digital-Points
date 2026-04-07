@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   bookings: 'dp_bookings',
   contact: 'dp_contact_messages',
   admin: 'dp_admin_user',
+  adminResetToken: 'dp_admin_reset_token',
 };
 
 const DEFAULT_ADMIN = {
@@ -358,6 +359,33 @@ export const authAPI = {
     }
 
     return makeResponse({ access_token: uid('token'), token_type: 'bearer' });
+  },
+  forgotPassword: (data: { email: string }) => {
+    if (api) return api.post('/auth/forgot-password', data);
+
+    const admin = getAdmin();
+    if (data.email === admin.email) {
+      const token = `local-reset-${Date.now()}`;
+      localStorage.setItem(STORAGE_KEYS.adminResetToken, token);
+      return makeResponse({
+        message: 'If this admin account exists, a reset link has been sent.',
+        reset_url: `/admin/reset-password?token=${token}`,
+      });
+    }
+    return makeResponse({ message: 'If this admin account exists, a reset link has been sent.' });
+  },
+  resetPassword: (data: { token: string; new_password: string }) => {
+    if (api) return api.post('/auth/reset-password', data);
+
+    const savedToken = localStorage.getItem(STORAGE_KEYS.adminResetToken);
+    if (!savedToken || savedToken !== data.token) {
+      makeApiError('Invalid or expired reset token', 400);
+    }
+
+    const admin = getAdmin();
+    writeStorage(STORAGE_KEYS.admin, { ...admin, password: data.new_password });
+    localStorage.removeItem(STORAGE_KEYS.adminResetToken);
+    return makeResponse({ message: 'Password updated successfully.' });
   },
   me: () => {
     if (api) return api.get('/auth/me');

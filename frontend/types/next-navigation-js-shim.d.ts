@@ -7,4 +7,7 @@ declare module 'next/navigation.js' {
     forward: () => void;
     prefetch: (href: string) => Promise<void>;
   };
+  export function useSearchParams(): {
+    get: (name: string) => string | null;
+  };
 }
