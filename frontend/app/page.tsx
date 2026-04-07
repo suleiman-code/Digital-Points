@@ -96,7 +96,6 @@ export default function Home() {
             backgroundImage: `linear-gradient(120deg, rgba(8, 47, 128, 0.95), rgba(16, 84, 196, 0.85), rgba(14, 116, 171, 0.8)), url('${heroBackground}')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
           }}
         >
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
@@ -190,7 +189,7 @@ export default function Home() {
               </div>
               <Link href="/services" className="group flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition-colors">
                 View All Directory
-                <span className="group-hover:translate-x-1 transiton-transform duration-300">→</span>
+                <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
               </Link>
             </motion.div>
 
@@ -319,7 +318,7 @@ export default function Home() {
               className="text-center mb-16"
             >
               <span className="text-cyan-400 font-bold tracking-widest uppercase text-sm mb-2 block">Our Guarantee</span>
-              <h2 className="text-4xl md:text-5xl font-black mb-6">Why Choose Digital Points?</h2>
+              <h2 className="text-4xl md:text-5xl font-black mb-6">Why Choose Digital Point?</h2>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

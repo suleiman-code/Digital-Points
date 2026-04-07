@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const { isAuthenticated, logout } = useAuth();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentPath, setCurrentPath] = useState('/');
 
   const navItems = [
     { href: '/services', label: 'Services' },
@@ -22,11 +23,7 @@ export default function Header() {
     };
   }, [mobileMenuOpen]);
 
-  useEffect(() => {
-    setCurrentPath(window.location.pathname);
-  }, []);
-
-  const isActive = (href: string) => currentPath === href;
+  const isActive = (href: string) => pathname === href;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-md border-b border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">

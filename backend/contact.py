@@ -1,7 +1,8 @@
-from fastapi import APIRouter, status, BackgroundTasks, Depends
+from fastapi import APIRouter, status, BackgroundTasks, Depends, Request
 from pydantic import BaseModel, EmailStr
 from database import db
 from config import settings
+from rate_limit import limiter
 from fastapi_mail import FastMail, MessageSchema, MessageType, ConnectionConfig
 from datetime import datetime, timezone
 from auth import get_admin_user
@@ -68,7 +69,8 @@ async def get_all_inquiries(admin: dict = Depends(get_admin_user)):
     return messages
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def submit_contact_form(form: ContactForm, background_tasks: BackgroundTasks):
+@limiter.limit(settings.RATE_LIMIT_CONTACT)
+async def submit_contact_form(request: Request, form: ContactForm, background_tasks: BackgroundTasks):
     form_dict = form.model_dump()
     form_dict["created_at"] = datetime.now(timezone.utc)
     

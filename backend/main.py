@@ -2,8 +2,13 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import os
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
 from config import settings
+from rate_limit import limiter
 from database import connect_to_mongo, close_mongo_connection
 from services import router as service_router
 from bookings import router as booking_router
@@ -20,6 +25,10 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Startup
     print("Backend starting...")
+    if not settings.MONGODB_URL:
+        raise RuntimeError("MONGODB_URL is required. Configure it in backend/.env")
+    if not settings.SECRET_KEY:
+        raise RuntimeError("SECRET_KEY is required. Configure it in backend/.env")
     await connect_to_mongo()
     yield
     # Shutdown
@@ -30,6 +39,9 @@ app = FastAPI(
     version=settings.PROJECT_VERSION,
     lifespan=lifespan
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Ensure static directory exists
 if not os.path.exists("./static/uploads"):
@@ -45,15 +57,33 @@ app.include_router(booking_router)
 app.include_router(contact_router)
 
 # CORS Settings
-origins = ["*"] # Broad for testing
+origins = settings.cors_origins()
+allow_credentials = "*" not in origins
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*", "localhost", "127.0.0.1"],
+)
+
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():

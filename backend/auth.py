@@ -2,11 +2,12 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field, EmailStr
 from fastapi_mail import FastMail, MessageSchema, MessageType, ConnectionConfig
 from config import settings
+from rate_limit import limiter
 from database import db
 from models import PyObjectId, UserResponse, UserCreate, UserBase
 
@@ -108,6 +109,17 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
+
+def decode_jwt_with_rotation(token: str):
+    decode_keys = [settings.SECRET_KEY, *settings.previous_secret_keys()]
+    last_error: Optional[Exception] = None
+    for key in decode_keys:
+        try:
+            return jwt.decode(token, key, algorithms=[settings.ALGORITHM])
+        except JWTError as exc:
+            last_error = exc
+    raise last_error or JWTError("Invalid token")
+
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -115,7 +127,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = decode_jwt_with_rotation(token)
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -142,7 +154,8 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
 
 # 1. SIGNUP (Initial admin creation)
 @router.post("/signup", response_model=UserResponse)
-async def signup(user: UserCreate):
+@limiter.limit("5/minute")
+async def signup(request: Request, user: UserCreate):
     # Check if user already exists
     existing_user = await db.db["users"].find_one({"email": user.email})
     if existing_user:
@@ -163,7 +176,8 @@ async def signup(user: UserCreate):
 
 # 2. LOGIN
 @router.post("/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit(settings.RATE_LIMIT_LOGIN)
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     user = await db.db["users"].find_one({"email": form_data.username})
     if not user or not verify_password(form_data.password, user["password"]):
         raise HTTPException(
@@ -180,7 +194,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 @router.post("/forgot-password")
-async def forgot_password(payload: ForgotPasswordRequest, background_tasks: BackgroundTasks):
+@limiter.limit(settings.RATE_LIMIT_FORGOT_PASSWORD)
+async def forgot_password(request: Request, payload: ForgotPasswordRequest, background_tasks: BackgroundTasks):
     user = await db.db["users"].find_one({"email": payload.email})
     if user:
         is_admin = user.get("is_admin") is True
@@ -197,10 +212,11 @@ async def forgot_password(payload: ForgotPasswordRequest, background_tasks: Back
 
 
 @router.post("/reset-password")
-async def reset_password(payload: ResetPasswordRequest):
+@limiter.limit(settings.RATE_LIMIT_RESET_PASSWORD)
+async def reset_password(request: Request, payload: ResetPasswordRequest):
     normalized_token = payload.token.strip().replace(" ", "")
     try:
-        decoded = jwt.decode(normalized_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        decoded = decode_jwt_with_rotation(normalized_token)
         email = decoded.get("sub")
         token_type = decoded.get("type")
         if not email or token_type != "password_reset":

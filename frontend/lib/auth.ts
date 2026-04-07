@@ -16,7 +16,11 @@ export const useAuth = () => {
   const login = async (email: string, password: string) => {
     try {
       const response = await authAPI.login({ email, password });
-      localStorage.setItem('authToken', response.data.token);
+      const token = response?.data?.access_token || response?.data?.token;
+      if (!token) {
+        throw new Error('Authentication token missing in login response');
+      }
+      localStorage.setItem('authToken', token);
       setIsAuthenticated(true);
       router.push('/admin/dashboard');
     } catch (error) {
