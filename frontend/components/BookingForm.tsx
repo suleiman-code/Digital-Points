@@ -10,11 +10,20 @@ interface BookingFormProps {
   serviceId: string;
 }
 
+type BookingFormData = {
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  date: string;
+  message: string;
+};
+
 export default function BookingForm({ serviceName, serviceId }: BookingFormProps) {
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<BookingFormData>();
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: BookingFormData) => {
     try {
       setLoading(true);
       await inquiriesAPI.create({
@@ -48,7 +57,8 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
             id="name"
             type="text"
             placeholder="Your name"
-            {...register('name', { required: 'Name is required' })}
+            maxLength={120}
+            {...register('name', { required: 'Name is required', minLength: 2 })}
             required
           />
         </div>
@@ -59,6 +69,7 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
             id="email"
             type="email"
             placeholder="your@email.com"
+            maxLength={254}
             {...register('email', { required: 'Email is required' })}
             required
           />
@@ -70,7 +81,8 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
             id="phone"
             type="tel"
             placeholder="Your phone number"
-            {...register('phone', { required: 'Phone is required' })}
+            maxLength={30}
+            {...register('phone', { required: 'Phone is required', minLength: 7 })}
             required
           />
         </div>
@@ -81,7 +93,8 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
             id="city"
             type="text"
             placeholder="Your city"
-            {...register('city', { required: 'City is required' })}
+            maxLength={120}
+            {...register('city', { required: 'City is required', minLength: 1 })}
             required
           />
         </div>
@@ -91,6 +104,7 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
           <input
             id="date"
             type="date"
+            min={new Date().toISOString().split('T')[0]}
             {...register('date', { required: 'Date is required' })}
             required
           />
@@ -102,8 +116,10 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
         <textarea
           id="message"
           placeholder="Tell us more about what you need..."
-          {...register('message')}
+          maxLength={3000}
+          {...register('message', { required: 'Message is required', minLength: 10 })}
           rows={4}
+          required
         />
       </div>
 

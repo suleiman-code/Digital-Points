@@ -226,7 +226,16 @@ async def get_reviews(id: str):
 # 9. UPLOAD IMAGE (Admin Only)
 @router.post("/upload/", status_code=status.HTTP_201_CREATED)
 async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_admin_user)):
-    file_extension = file.filename.split(".")[-1]
+    allowed_extensions = {"jpg", "jpeg", "png", "webp", "gif"}
+    filename = file.filename or "upload"
+    file_extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+
+    if file_extension not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Only image files are allowed")
+
+    if file.content_type and not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image files are allowed")
+
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
     upload_dir = os.path.join("static", "uploads")
     os.makedirs(upload_dir, exist_ok=True)

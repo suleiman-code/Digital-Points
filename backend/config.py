@@ -24,6 +24,7 @@ class Settings:
     RATE_LIMIT_FORGOT_PASSWORD: str = os.getenv("RATE_LIMIT_FORGOT_PASSWORD", "5/minute")
     RATE_LIMIT_RESET_PASSWORD: str = os.getenv("RATE_LIMIT_RESET_PASSWORD", "5/minute")
     RATE_LIMIT_CONTACT: str = os.getenv("RATE_LIMIT_CONTACT", "10/minute")
+    RATE_LIMIT_BOOKING: str = os.getenv("RATE_LIMIT_BOOKING", "15/minute")
     
     # --- Email Settings ---
     MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")

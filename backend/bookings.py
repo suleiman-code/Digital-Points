@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks, Depends, Request
 from bson import ObjectId
 from models import BookingCreate, BookingResponse
 from database import db
 from config import settings
 from auth import get_admin_user
+from rate_limit import limiter
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from datetime import datetime, timezone
 from typing import List
@@ -55,7 +56,8 @@ async def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: 
 
 # 1. POST /api/bookings (Public - User submits a booking/inquiry)
 @router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
-async def create_booking(booking: BookingCreate, background_tasks: BackgroundTasks):
+@limiter.limit(settings.RATE_LIMIT_BOOKING)
+async def create_booking(request: Request, booking: BookingCreate, background_tasks: BackgroundTasks):
     if not ObjectId.is_valid(booking.service_id):
         raise HTTPException(status_code=400, detail="Invalid Service ID")
 

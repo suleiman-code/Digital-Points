@@ -32,12 +32,12 @@ class PyObjectId(ObjectId):
 
 # --- User (Admin) Models ---
 class UserBase(BaseModel):
-    email: EmailStr
-    first_name: str
-    last_name: str
+    email: EmailStr = Field(..., max_length=254)
+    first_name: str = Field(..., min_length=1, max_length=80)
+    last_name: str = Field(..., min_length=1, max_length=80)
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=8, max_length=128)
     is_admin: Optional[bool] = None
 
 class UserResponse(UserBase):
@@ -49,25 +49,25 @@ class UserResponse(UserBase):
 
 # --- Service (Listings) Models ---
 class ServiceBase(BaseModel):
-    title: str
-    description: str
-    category: str
+    title: str = Field(..., min_length=2, max_length=120)
+    description: str = Field(..., min_length=10, max_length=2000)
+    category: str = Field(..., min_length=2, max_length=120)
     price: Optional[float] = Field(default=0.0, ge=0)
-    city: str
-    state: str
+    city: str = Field(..., min_length=1, max_length=120)
+    state: str = Field(..., min_length=1, max_length=120)
     featured: bool = False
-    image_url: Optional[str] = None
-    service_details: Optional[str] = None
+    image_url: Optional[str] = Field(default=None, max_length=2048)
+    service_details: Optional[str] = Field(default=None, max_length=5000)
     # --- New Business Directory Fields ---
-    address: Optional[str] = None
-    contact_phone: Optional[str] = None
+    address: Optional[str] = Field(default=None, max_length=300)
+    contact_phone: Optional[str] = Field(default=None, max_length=30)
     contact_email: Optional[EmailStr] = None
-    website_url: Optional[str] = None
+    website_url: Optional[str] = Field(default=None, max_length=2048)
     business_hours: Optional[dict[str, str]] = None # e.g. {"Monday": "9am-6pm", "Tuesday": "Closed"}
-    google_maps_url: Optional[str] = None
-    country: str = "USA" # Added default USA
+    google_maps_url: Optional[str] = Field(default=None, max_length=2048)
+    country: str = Field(default="USA", max_length=120) # Added default USA
     sub_services: Optional[list[str]] = None # Custom Inner Page links defined by Admin
-    reviews: Optional[list[dict]] = [] # User feedback: [{user, rating, comment, date}]
+    reviews: list[dict] = Field(default_factory=list) # User feedback: [{user, rating, comment, date}]
     gallery: Optional[list[str]] = Field(default_factory=list)
     avg_rating: float = 0.0
     reviews_count: int = 0
@@ -76,21 +76,21 @@ class ServiceCreate(ServiceBase):
     pass
 
 class ServiceUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
+    title: Optional[str] = Field(default=None, min_length=2, max_length=120)
+    description: Optional[str] = Field(default=None, min_length=10, max_length=2000)
+    category: Optional[str] = Field(default=None, min_length=2, max_length=120)
     price: Optional[float] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
+    city: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    state: Optional[str] = Field(default=None, min_length=1, max_length=120)
     featured: Optional[bool] = None
-    image_url: Optional[str] = None
-    service_details: Optional[str] = None
-    address: Optional[str] = None
-    contact_phone: Optional[str] = None
+    image_url: Optional[str] = Field(default=None, max_length=2048)
+    service_details: Optional[str] = Field(default=None, max_length=5000)
+    address: Optional[str] = Field(default=None, max_length=300)
+    contact_phone: Optional[str] = Field(default=None, max_length=30)
     contact_email: Optional[EmailStr] = None
-    website_url: Optional[str] = None
+    website_url: Optional[str] = Field(default=None, max_length=2048)
     business_hours: Optional[dict[str, str]] = None
-    google_maps_url: Optional[str] = None
+    google_maps_url: Optional[str] = Field(default=None, max_length=2048)
     sub_services: Optional[list[str]] = None
     gallery: Optional[list[str]] = None
     avg_rating: Optional[float] = None
@@ -105,13 +105,13 @@ class ServiceResponse(ServiceBase):
 
 # --- Booking (Inquiries) Models ---
 class BookingBase(BaseModel):
-    service_id: str
-    service_name: str
-    user_name: str
+    service_id: str = Field(..., min_length=1, max_length=64)
+    service_name: str = Field(..., min_length=2, max_length=160)
+    user_name: str = Field(..., min_length=2, max_length=120)
     user_email: EmailStr
-    user_phone: str
-    user_city: str
-    message: str
+    user_phone: str = Field(..., min_length=7, max_length=30)
+    user_city: str = Field(..., min_length=1, max_length=120)
+    message: str = Field(..., min_length=10, max_length=3000)
     booking_date: Optional[datetime] = None
 
 class BookingCreate(BookingBase):
@@ -126,10 +126,10 @@ class BookingResponse(BookingBase):
 
 # --- Review Models ---
 class ReviewBase(BaseModel):
-    user_name: str
+    user_name: str = Field(..., min_length=2, max_length=120)
     user_email: Optional[str] = None
     rating: float = Field(..., ge=1, le=5)
-    comment: str
+    comment: str = Field(..., min_length=2, max_length=3000)
 
 class ReviewCreate(ReviewBase):
     pass
