@@ -5,54 +5,52 @@ from database import db
 from config import settings
 from auth import get_admin_user
 from rate_limit import limiter
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+import resend
 from datetime import datetime, timezone
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/bookings", tags=["Inquiries"])
 
-# Mail Configuration
-conf = ConnectionConfig(
-    MAIL_USERNAME=settings.MAIL_USERNAME,
-    MAIL_PASSWORD=settings.MAIL_PASSWORD,
-    MAIL_FROM=settings.MAIL_FROM,
-    MAIL_PORT=settings.MAIL_PORT,
-    MAIL_SERVER=settings.MAIL_SERVER,
-    MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
-    MAIL_STARTTLS=settings.MAIL_PORT == 587,
-    MAIL_SSL_TLS=settings.MAIL_PORT == 465,
-    USE_CREDENTIALS=settings.USE_CREDENTIALS,
-    VALIDATE_CERTS=settings.VALIDATE_CERTS
-)
+# Set Resend API key if available
+if settings.RESEND_API_KEY:
+    resend.api_key = settings.RESEND_API_KEY
 
-async def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: str):
-    message = MessageSchema(
-        subject=f"NEW INQUIRY: {booking_data['user_name']} is interested in '{booking_data['service_name']}'",
-        recipients=[recipient_email],
-        reply_to=[booking_data['user_email']],
-        body=f"""
-        Hello,
-        
-        A client has sent an inquiry regarding a listing on Digital Point:
-        -------------------------------------------------------------
-        BUSINESS/SERVICE: {booking_data['service_name']}
-        CLIENT NAME: {booking_data['user_name']}
-        CLIENT EMAIL: {booking_data['user_email']}
-        CLIENT PHONE: {booking_data['user_phone']}
-        -------------------------------------------------------------
-        
-        MESSAGE BODY:
-        {booking_data['message']}
-        
-        Note: You can reply directly to this email to contact the client.
-        """,
-        subtype=MessageType.plain
-    )
-    fm = FastMail(conf)
+def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: str):
+    if not settings.RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not configured, skipping email")
+        return
+    
     try:
-        await fm.send_message(message)
+        email_body = f"""Hello,
+
+A client has sent an inquiry regarding a listing on Digital Point:
+-------------------------------------------------------------
+BUSINESS/SERVICE: {booking_data['service_name']}
+CLIENT NAME: {booking_data['user_name']}
+CLIENT EMAIL: {booking_data['user_email']}
+CLIENT PHONE: {booking_data['user_phone']}
+-------------------------------------------------------------
+
+MESSAGE BODY:
+{booking_data['message']}
+
+Note: You can reply directly to this email to contact the client."""
+        
+        email_params = {
+            "from": f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>",
+            "to": [recipient_email],
+            "reply_to": booking_data['user_email'],
+            "subject": f"NEW INQUIRY: {booking_data['user_name']} is interested in '{booking_data['service_name']}'",
+            "text": email_body,
+        }
+        
+        response = resend.Emails.send(email_params)
+        logger.info(f"Booking inquiry email sent to {recipient_email}. Response: {response}")
     except Exception as e:
-        print(f"Failed to send listing inquiry email: {e}")
+        logger.error(f"Failed to send listing inquiry email: {e}", exc_info=True)
 
 # 1. POST /api/bookings (Public - User submits a booking/inquiry)
 @router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)

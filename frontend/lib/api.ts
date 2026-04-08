@@ -113,6 +113,21 @@ if (api) {
     }
     return config;
   });
+
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      const status = error?.response?.status;
+      const requestUrl = String(error?.config?.url || '');
+
+      // If token is expired/invalid, clear local auth so UI can force re-login cleanly.
+      if (typeof window !== 'undefined' && status === 401 && !requestUrl.includes('/auth/login')) {
+        localStorage.removeItem('authToken');
+      }
+
+      return Promise.reject(error);
+    }
+  );
 }
 
 const isBrowser = () => typeof window !== 'undefined';

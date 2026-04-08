@@ -5,29 +5,32 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field, EmailStr
-from fastapi_mail import FastMail, MessageSchema, MessageType, ConnectionConfig
+import resend
 from config import settings
 from rate_limit import limiter
 from database import db
 from models import PyObjectId, UserResponse, UserCreate, UserBase
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 # Password Hashing Settings
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-reset_mail_conf = ConnectionConfig(
-    MAIL_USERNAME=settings.MAIL_USERNAME,
-    MAIL_PASSWORD=settings.MAIL_PASSWORD,
-    MAIL_FROM=settings.MAIL_FROM,
-    MAIL_PORT=settings.MAIL_PORT,
-    MAIL_SERVER=settings.MAIL_SERVER,
-    MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
-    MAIL_STARTTLS=settings.MAIL_PORT == 587,
-    MAIL_SSL_TLS=settings.MAIL_PORT == 465,
-    USE_CREDENTIALS=settings.USE_CREDENTIALS,
-    VALIDATE_CERTS=settings.VALIDATE_CERTS,
-)
+# Set Resend API key if available
+if settings.RESEND_API_KEY:
+    resend.api_key = settings.RESEND_API_KEY
+
+
+def get_users_collection():
+    if db.db is None or not getattr(db, "is_connected", False):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database is temporarily unavailable. Please try again shortly.",
+        )
+    return db.db["users"]
 
 
 class ResetPasswordRequest(BaseModel):
@@ -50,39 +53,42 @@ def create_password_reset_token(email: str):
 
 
 async def send_reset_password_email(email: str, token: str):
-    if not settings.MAIL_USERNAME or not settings.MAIL_PASSWORD:
+    if not settings.RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not configured, skipping email")
         return
 
     reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/admin/reset-password?token={token}"
-    message = MessageSchema(
-        subject="Reset your Digital Point admin password",
-        recipients=[email],
-        body=(
-            "<div style='font-family:Arial,sans-serif;line-height:1.6;color:#111827'>"
-            "<h2 style='margin:0 0 12px'>Admin Password Reset</h2>"
-            "<p>You requested an admin password reset for Digital Point.</p>"
-            f"<p><a href='{reset_link}' style='display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px'>Reset Password</a></p>"
-            f"<p style='word-break:break-all'>If button does not work, open this link:<br>{reset_link}</p>"
-            "<p>This link expires in 30 minutes. If you did not request this, ignore this email.</p>"
-            "</div>"
-        ),
-        subtype=MessageType.html,
+    email_body = (
+        "<div style='font-family:Arial,sans-serif;line-height:1.6;color:#111827'>"
+        "<h2 style='margin:0 0 12px'>Admin Password Reset</h2>"
+        "<p>You requested an admin password reset for Digital Point.</p>"
+        f"<p><a href='{reset_link}' style='display:inline-block;padding:10px 16px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px'>Reset Password</a></p>"
+        f"<p style='word-break:break-all'>If button does not work, open this link:<br>{reset_link}</p>"
+        "<p>This link expires in 30 minutes. If you did not request this, ignore this email.</p>"
+        "</div>"
     )
-    fm = FastMail(reset_mail_conf)
+    
     try:
-        await fm.send_message(message)
+        email_params = {
+            "from": f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>",
+            "to": [email],
+            "subject": "Reset your Digital Point admin password",
+            "html": email_body,
+        }
+        response = resend.Emails.send(email_params)
+        logger.info(f"Password reset email sent to {email}. Response: {response}")
     except Exception as exc:
-        # Keep response generic and do not leak mail transport state to clients.
-        print(f"Failed to send password reset email: {exc}")
+        logger.error(f"Failed to send password reset email: {exc}", exc_info=True)
 
 
 async def get_admin_account():
-    admin_user = await db.db["users"].find_one({"is_admin": True})
+    users_collection = get_users_collection()
+    admin_user = await users_collection.find_one({"is_admin": True})
     if admin_user:
         return admin_user
 
     # Backward compatibility for legacy records without role fields.
-    oldest_user = await db.db["users"].find_one(sort=[("created_at", 1)])
+    oldest_user = await users_collection.find_one(sort=[("created_at", 1)])
     return oldest_user
 
 def verify_password(plain_password: str, hashed_password: str):
@@ -134,7 +140,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
         
-    user = await db.db["users"].find_one({"email": email})
+    users_collection = get_users_collection()
+    user = await users_collection.find_one({"email": email})
     if user is None:
         raise credentials_exception
     return user
@@ -146,7 +153,8 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
     # Backward compatibility: for legacy records without is_admin,
     # treat the oldest account as admin until roles are explicitly set.
     if "is_admin" not in current_user:
-        oldest_user = await db.db["users"].find_one(sort=[("created_at", 1)])
+        users_collection = get_users_collection()
+        oldest_user = await users_collection.find_one(sort=[("created_at", 1)])
         if oldest_user and oldest_user.get("_id") == current_user.get("_id"):
             return current_user
 
@@ -156,8 +164,9 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
 @router.post("/signup", response_model=UserResponse)
 @limiter.limit("5/minute")
 async def signup(request: Request, user: UserCreate):
+    users_collection = get_users_collection()
     # Check if user already exists
-    existing_user = await db.db["users"].find_one({"email": user.email})
+    existing_user = await users_collection.find_one({"email": user.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="User with this email already exists")
     
@@ -167,18 +176,19 @@ async def signup(request: Request, user: UserCreate):
 
     # First registered user is admin by default.
     if user_dict.get("is_admin") is None:
-        users_count = await db.db["users"].count_documents({})
+        users_count = await users_collection.count_documents({})
         user_dict["is_admin"] = users_count == 0
     
-    new_user = await db.db["users"].insert_one(user_dict)
-    created_user = await db.db["users"].find_one({"_id": new_user.inserted_id})
+    new_user = await users_collection.insert_one(user_dict)
+    created_user = await users_collection.find_one({"_id": new_user.inserted_id})
     return created_user
 
 # 2. LOGIN
 @router.post("/login")
 @limiter.limit(settings.RATE_LIMIT_LOGIN)
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await db.db["users"].find_one({"email": form_data.username})
+    users_collection = get_users_collection()
+    user = await users_collection.find_one({"email": form_data.username})
     if not user or not verify_password(form_data.password, user["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -196,11 +206,12 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
 @router.post("/forgot-password")
 @limiter.limit(settings.RATE_LIMIT_FORGOT_PASSWORD)
 async def forgot_password(request: Request, payload: ForgotPasswordRequest, background_tasks: BackgroundTasks):
-    user = await db.db["users"].find_one({"email": payload.email})
+    users_collection = get_users_collection()
+    user = await users_collection.find_one({"email": payload.email})
     if user:
         is_admin = user.get("is_admin") is True
         if not is_admin and "is_admin" not in user:
-            oldest_user = await db.db["users"].find_one(sort=[("created_at", 1)])
+            oldest_user = await users_collection.find_one(sort=[("created_at", 1)])
             is_admin = bool(oldest_user and oldest_user.get("_id") == user.get("_id"))
 
         if is_admin:
@@ -224,19 +235,20 @@ async def reset_password(request: Request, payload: ResetPasswordRequest):
     except JWTError:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
 
-    user = await db.db["users"].find_one({"email": email})
+    users_collection = get_users_collection()
+    user = await users_collection.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
 
     is_admin = user.get("is_admin") is True
     if not is_admin and "is_admin" not in user:
-        oldest_user = await db.db["users"].find_one(sort=[("created_at", 1)])
+        oldest_user = await users_collection.find_one(sort=[("created_at", 1)])
         is_admin = bool(oldest_user and oldest_user.get("_id") == user.get("_id"))
 
     if not is_admin:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
 
-    await db.db["users"].update_one(
+    await users_collection.update_one(
         {"_id": user["_id"]},
         {
             "$set": {

@@ -3,26 +3,19 @@ from pydantic import BaseModel, EmailStr
 from database import db
 from config import settings
 from rate_limit import limiter
-from fastapi_mail import FastMail, MessageSchema, MessageType, ConnectionConfig
+import resend
 from datetime import datetime, timezone
 from auth import get_admin_user
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/contact", tags=["Contact"])
 
-# Mail config
-conf = ConnectionConfig(
-    MAIL_USERNAME=settings.MAIL_USERNAME,
-    MAIL_PASSWORD=settings.MAIL_PASSWORD,
-    MAIL_FROM=settings.MAIL_FROM,
-    MAIL_PORT=settings.MAIL_PORT,
-    MAIL_SERVER=settings.MAIL_SERVER,
-    MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
-    MAIL_STARTTLS=settings.MAIL_PORT == 587,
-    MAIL_SSL_TLS=settings.MAIL_PORT == 465,
-    USE_CREDENTIALS=settings.USE_CREDENTIALS,
-    VALIDATE_CERTS=settings.VALIDATE_CERTS
-)
+# Set Resend API key if available
+if settings.RESEND_API_KEY:
+    resend.api_key = settings.RESEND_API_KEY
 
 class ContactForm(BaseModel):
     name: str
@@ -30,35 +23,44 @@ class ContactForm(BaseModel):
     subject: str
     message: str
 
-async def send_admin_contact_email(form_data: dict):
-    admin_recipient = settings.MAIL_FROM or settings.MAIL_USERNAME
-
-    message = MessageSchema(
-        subject=f"URGENT: New Inquiry from {form_data['name']} - Digital Point",
-        recipients=[admin_recipient],
-        reply_to=[form_data['email']],
-        body=f"""
-        Hello Admin,
-        
-        A user has sent an inquiry through the Digital Point Contact Form:
-        -------------------------------------------------------------
-        CLIENT NAME: {form_data['name']}
-        CLIENT EMAIL: {form_data['email']}
-        SUBJECT: {form_data['subject']}
-        
-        MESSAGE BODY:
-        {form_data['message']}
-        -------------------------------------------------------------
-        
-        (Pro Tip: You can just click 'Reply' to respond directly to this client).
-        """,
-        subtype=MessageType.plain
-    )
-    fm = FastMail(conf)
+def send_admin_contact_email(form_data: dict):
+    """Send contact form submission to admin using Resend"""
+    if not settings.RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not configured, skipping email")
+        return
+    
     try:
-        await fm.send_message(message)
+        admin_recipient = settings.ADMIN_CONTACT_EMAIL or settings.MAIL_FROM or "noreply@digitalpoints.com"
+        
+        email_body = f"""
+Hello Admin,
+
+A user has sent an inquiry through the Digital Point Contact Form:
+-------------------------------------------------------------
+CLIENT NAME: {form_data['name']}
+CLIENT EMAIL: {form_data['email']}
+SUBJECT: {form_data['subject']}
+
+MESSAGE BODY:
+{form_data['message']}
+-------------------------------------------------------------
+
+(Pro Tip: You can just click 'Reply' to respond directly to this client).
+"""
+        
+        email_params = {
+            "from": f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>",
+            "to": [admin_recipient],
+            "reply_to": form_data['email'],
+            "subject": f"URGENT: New Inquiry from {form_data['name']} - Digital Points",
+            "text": email_body,
+        }
+        
+        response = resend.Emails.send(email_params)
+        logger.info(f"Contact email sent successfully. Response: {response}")
+        
     except Exception as e:
-        print(f"Failed to send contact email: {e}")
+        logger.error(f"Failed to send contact email: {e}", exc_info=True)
 
 @router.get("/", response_model=List[dict])
 async def get_all_inquiries(admin: dict = Depends(get_admin_user)):

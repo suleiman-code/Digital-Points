@@ -10,6 +10,7 @@ except Exception:
 class Database:
     client: AsyncIOMotorClient = None
     db = None
+    is_connected: bool = False
 
 db = Database()
 
@@ -32,8 +33,10 @@ async def connect_to_mongo():
         db.db = db.client[settings.DATABASE_NAME]
         # Trigger an actual connection check
         await db.client.admin.command('ping')
+        db.is_connected = True
         logging.info("Connected to MongoDB!")
     except Exception as e:
+        db.is_connected = False
         logging.error(f"Could not connect to MongoDB: {e}")
         # We don't raise error here, so the server can still start for Swagger UI
         # But DB calls will fail later with clear error
@@ -42,6 +45,7 @@ async def close_mongo_connection():
     if db.client:
         logging.info("Closing MongoDB connection...")
         db.client.close()
+        db.is_connected = False
         logging.info("Closed MongoDB connection!")
     else:
         # Avoid print for testing to see if logging is the issue

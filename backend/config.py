@@ -26,16 +26,17 @@ class Settings:
     RATE_LIMIT_CONTACT: str = os.getenv("RATE_LIMIT_CONTACT", "10/minute")
     RATE_LIMIT_BOOKING: str = os.getenv("RATE_LIMIT_BOOKING", "15/minute")
     
-    # --- Email Settings ---
-    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")
-    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
+    # --- Email Settings (Resend) ---
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")  # Legacy - kept for backward compatibility
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")  # Legacy - kept for backward compatibility
     MAIL_FROM: str = os.getenv("MAIL_FROM", "noreply@digitalpoints.com")
-    MAIL_PORT: int = int(os.getenv("MAIL_PORT", 587))
-    MAIL_SERVER: str = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    ADMIN_CONTACT_EMAIL: str = os.getenv("ADMIN_CONTACT_EMAIL", "")
+    MAIL_PORT: int = int(os.getenv("MAIL_PORT", 587))  # Legacy - kept for backward compatibility
+    MAIL_SERVER: str = os.getenv("MAIL_SERVER", "smtp.gmail.com")  # Legacy - kept for backward compatibility
     MAIL_FROM_NAME: str = os.getenv("MAIL_FROM_NAME", "Digital Points Admin")
-    MAIL_SSL_TLS: bool = True
-    USE_CREDENTIALS: bool = True
-    VALIDATE_CERTS: bool = True
+    USE_CREDENTIALS: bool = True  # Legacy
+    VALIDATE_CERTS: bool = True  # Legacy
 
     def previous_secret_keys(self) -> list[str]:
         return [item.strip() for item in self.SECRET_KEY_PREVIOUS.split(",") if item.strip()]
