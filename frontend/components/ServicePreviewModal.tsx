@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { formatUsd, resolveMediaUrl, servicesAPI } from '@/lib/api';
+import FormattedDescription from '@/components/FormattedDescription';
 
 interface ServicePreviewModalProps {
   open: boolean;
@@ -184,7 +185,7 @@ export default function ServicePreviewModal({ open, serviceId, serviceName, list
 
                     <div>
                       <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-3">Description</h4>
-                      <p className="text-slate-600 leading-7 whitespace-pre-line">{previewData.description}</p>
+                      <FormattedDescription text={String(previewData.description || '')} className="text-slate-600 leading-7 space-y-2" />
                     </div>
 
                     {previewData.details.length > 0 && (

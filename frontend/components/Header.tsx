@@ -1,13 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth';
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 
 export default function Header() {
-  const { isAuthenticated, logout } = useAuth();
-  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -23,10 +19,10 @@ export default function Header() {
     };
   }, [mobileMenuOpen]);
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => typeof window !== 'undefined' && window.location.pathname === href;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-md border-b border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
+    <header className="fixed top-0 left-0 right-0 z-[80] bg-white border-b border-slate-200 shadow-[0_6px_20px_rgba(15,23,42,0.08)] transition-all duration-300">
       <nav className="container-max flex justify-between items-center py-4">
         <Link href="/" className="text-2xl font-bold text-blue-700 tracking-tight">
           Digital Point
@@ -49,22 +45,11 @@ export default function Header() {
           ))}
         </div>
 
-        {/* Admin Links */}
+        {/* Admin Link */}
         <div className="hidden md:flex gap-4">
-          {isAuthenticated ? (
-            <>
-              <Link href="/admin/dashboard" className="btn-secondary">
-                Dashboard
-              </Link>
-              <button onClick={logout} className="btn-danger">
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link href="/admin/login" className="btn-primary">
-              Admin Login
-            </Link>
-          )}
+          <Link href="/admin/login" className="btn-primary">
+            Admin Login
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -96,34 +81,13 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
-          {isAuthenticated ? (
-            <>
-              <Link
-                href="/admin/dashboard"
-                className="block btn-secondary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-              <button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full btn-danger"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link
-              href="/admin/login"
-              className="block btn-primary"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Admin Login
-            </Link>
-          )}
+          <Link
+            href="/admin/login"
+            className="block btn-primary"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Admin Login
+          </Link>
         </div>
       )}
     </header>

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
+import { stripDescriptionFormatting } from '@/components/FormattedDescription';
 import ServiceCardSkeleton from '@/components/ServiceCardSkeleton';
 import { resolveMediaUrl, servicesAPI } from '@/lib/api';
 import { ALL_CATEGORIES_WITH_DEFAULT, normalizeCategory } from '@/lib/businessCategories';
@@ -69,7 +70,7 @@ function ServicesList() {
         ...s,
         _id: s._id || s.id,
         title: s.title || s.name || '',
-        description: s.description || '',
+        description: stripDescriptionFormatting(String(s.description || '')),
         category: s.category || '',
         city: s.city || '',
         state: s.state || '',
@@ -265,7 +266,7 @@ function ServicesList() {
                         title={service.title}
                         description={service.description}
                         price={service.price}
-                        image={resolveMediaUrl(service.image_url || service.image)}
+                        image={resolveMediaUrl(service.image_url || service.image || (Array.isArray(service.gallery) ? service.gallery[0] : '') || '')}
                         category={service.category}
                         rating={service.avg_rating}
                         city={service.city}

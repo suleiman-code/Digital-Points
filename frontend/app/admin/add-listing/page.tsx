@@ -1,13 +1,49 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { authAPI, servicesAPI } from '@/lib/api';
+import { authAPI, resolveMediaUrl, servicesAPI } from '@/lib/api';
 import { BUSINESS_CATEGORIES, normalizeCategory } from '@/lib/businessCategories';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import ServicePreviewModal from '@/components/ServicePreviewModal';
+import RichTextEditor, { stripRichText } from '@/components/RichTextEditor';
+
+const COUNTRY_OPTIONS = ['USA', 'Canada'] as const;
+
+const normalizeCountry = (country: string) => {
+  const value = String(country || '').trim().toLowerCase();
+  if (['usa', 'us', 'united states', 'united states of america', 'u.s.a.'].includes(value)) return 'USA';
+  if (['canada', 'ca'].includes(value)) return 'Canada';
+  return 'USA';
+};
+
+const formatPhoneForCountryInput = (phone: string, country: string) => {
+  const digits = String(phone || '').replace(/\D/g, '');
+  const normalizedCountry = normalizeCountry(country);
+
+  if (normalizedCountry === 'USA' || normalizedCountry === 'Canada') {
+    if (digits.length === 10) return `+1 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+    if (digits.length === 11 && digits.startsWith('1')) {
+      const core = digits.slice(1);
+      return `+1 ${core.slice(0, 3)} ${core.slice(3, 6)} ${core.slice(6)}`;
+    }
+  }
+
+  return phone;
+};
+
+const isValidPhoneForCountry = (phone: string, country: string) => {
+  const digits = String(phone || '').replace(/\D/g, '');
+  const normalizedCountry = normalizeCountry(country);
+
+  if (normalizedCountry === 'USA' || normalizedCountry === 'Canada') {
+    return digits.length === 10 || (digits.length === 11 && digits.startsWith('1'));
+  }
+
+  return digits.length >= 7 && digits.length <= 15;
+};
 
 export default function AddListing() {
   const router = useRouter();
@@ -107,17 +143,21 @@ export default function AddListing() {
           city: svc.city || '',
           state: svc.state || '',
           description: svc.description || '',
-          image_url: svc.image_url || svc.image || '',
+          image_url: resolveMediaUrl(svc.image_url || svc.image || ''),
           address: svc.address || '',
           contact_phone: svc.contact_phone || '',
           contact_email: svc.contact_email || '',
           website_url: svc.website_url || '',
           google_maps_url: svc.google_maps_url || '',
-          country: svc.country || 'USA',
+          country: normalizeCountry(svc.country || 'USA'),
         });
 
-        setMainImagePreview(svc.image_url || svc.image || null);
-        setGalleryPreviews(Array.isArray(svc.gallery) ? svc.gallery : []);
+        setMainImagePreview(resolveMediaUrl(svc.image_url || svc.image || '') || null);
+        setGalleryPreviews(
+          Array.isArray(svc.gallery)
+            ? svc.gallery.map((img: any) => resolveMediaUrl(String(img || ''))).filter(Boolean)
+            : []
+        );
         setServiceDetailsInput(svc.service_details || '');
 
         if (svc.business_hours && typeof svc.business_hours === 'object') {
@@ -136,6 +176,22 @@ export default function AddListing() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'country') {
+      const normalizedCountry = normalizeCountry(value);
+      setFormData(prev => ({
+        ...prev,
+        country: normalizedCountry,
+        contact_phone: prev.contact_phone ? formatPhoneForCountryInput(prev.contact_phone, normalizedCountry) : prev.contact_phone,
+      }));
+      return;
+    }
+
+    if (name === 'contact_phone') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -218,19 +274,43 @@ export default function AddListing() {
         uploadedGalleryUrls.push(res.url);
       }
 
-      const { price: _price, address: _address, contact_email: _contactEmail, ...requiredFields } = formData;
+      const normalizedCountry = normalizeCountry(formData.country);
+      if (!isValidPhoneForCountry(formData.contact_phone, normalizedCountry)) {
+        toast.error(`Please enter a valid ${normalizedCountry} contact number.`);
+        setLoading(false);
+        return;
+      }
+
+      const plainDescription = stripRichText(formData.description);
+      if (plainDescription.length < 10) {
+        toast.error('Description must be at least 10 characters long.');
+        setLoading(false);
+        return;
+      }
+
+      const { price: _price, address: _address, contact_email: _contactEmail, website_url: _websiteUrl, google_maps_url: _googleMapsUrl, ...requiredFields } = formData;
       const parsedPrice = parseFloat(formData.price);
+      const existingGalleryUrls = galleryPreviews
+        .map((url) => resolveMediaUrl(String(url || '')))
+        .filter((url) => url.startsWith('http'));
+      const mergedGalleryUrls = Array.from(new Set([...existingGalleryUrls, ...uploadedGalleryUrls]));
+      if (!String(finalImageUrl || '').trim() && mergedGalleryUrls.length > 0) {
+        finalImageUrl = mergedGalleryUrls[0];
+      }
       const payload = {
         ...requiredFields,
+        country: normalizedCountry,
         category: normalizeCategory(formData.category),
         image_url: finalImageUrl,
-        gallery: [...galleryPreviews.filter((url) => url.startsWith('http')), ...uploadedGalleryUrls],
+        gallery: mergedGalleryUrls,
         business_hours: hours,
-        service_details: serviceDetailsInput,
+        ...(serviceDetailsInput.trim() ? { service_details: serviceDetailsInput.trim() } : {}),
         ...(formData.contact_phone.trim() ? { contact_phone: formData.contact_phone.trim() } : {}),
         ...(Number.isFinite(parsedPrice) ? { price: parsedPrice } : {}),
         ...(formData.address.trim() ? { address: formData.address.trim() } : {}),
-        ...(formData.contact_email.trim() ? { contact_email: formData.contact_email.trim() } : {})
+        ...(formData.contact_email.trim() ? { contact_email: formData.contact_email.trim() } : {}),
+        ...(formData.website_url.trim() ? { website_url: formData.website_url.trim() } : {}),
+        ...(formData.google_maps_url.trim() ? { google_maps_url: formData.google_maps_url.trim() } : {})
       };
 
       if (editingId) {
@@ -379,7 +459,11 @@ export default function AddListing() {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-slate-700 mb-2">Service Description *</label>
-                  <textarea name="description" value={formData.description} onChange={handleChange} required rows={4} placeholder="Briefly describe the service..." className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <RichTextEditor
+                    value={formData.description}
+                    onChange={(next) => setFormData(prev => ({ ...prev, description: next }))}
+                    placeholder="Briefly describe the service..."
+                  />
                 </div>
               </div>
             </section>
@@ -395,6 +479,15 @@ export default function AddListing() {
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-slate-700 mb-2">Business Address (Optional)</label>
                   <input name="address" value={formData.address} onChange={handleChange} placeholder="Street address, Suite, etc." className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Country *</label>
+                  <select name="country" value={formData.country} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none">
+                    {COUNTRY_OPTIONS.map((country) => (
+                      <option key={country} value={country}>{country}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -415,11 +508,13 @@ export default function AddListing() {
                     name="contact_phone"
                     value={formData.contact_phone}
                     onChange={handleChange}
+                    onBlur={(e) => setFormData(prev => ({ ...prev, contact_phone: formatPhoneForCountryInput(e.target.value, prev.country) }))}
                     required
                     minLength={7}
-                    placeholder="+1 555 123 4567"
+                    placeholder={formData.country === 'Canada' ? '+1 416 555 1234' : '+1 310 555 1234'}
                     className="w-full bg-white border-2 border-blue-100 rounded-xl p-4 shadow-sm"
                   />
+                  <p className="text-[11px] mt-1 text-slate-500 font-semibold">{formData.country}: 10 digits (or 11 digits starting with 1)</p>
                 </div>
 
                 <div>

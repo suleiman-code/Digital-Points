@@ -91,6 +91,7 @@ class ServiceUpdate(BaseModel):
     website_url: Optional[str] = Field(default=None, max_length=2048)
     business_hours: Optional[dict[str, str]] = None
     google_maps_url: Optional[str] = Field(default=None, max_length=2048)
+    country: Optional[str] = Field(default=None, max_length=120)
     sub_services: Optional[list[str]] = None
     gallery: Optional[list[str]] = None
     avg_rating: Optional[float] = None
@@ -138,4 +139,6 @@ class ReviewResponse(ReviewBase):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
     
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    service_id: Optional[str] = None
+    status: str = "pending"  # pending, approved, rejected
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

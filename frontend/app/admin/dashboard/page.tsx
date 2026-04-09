@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { servicesAPI } from '@/lib/api';
 import { normalizeCategory } from '@/lib/businessCategories';
+import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
   const REFRESH_INTERVAL_MS = 5000;
@@ -14,6 +15,8 @@ export default function AdminDashboard() {
   
   // State for metrics and data
   const [services, setServices] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewActionId, setReviewActionId] = useState<string>('');
   const [stats, setStats] = useState({
     activeListings: 0,
     activeCategories: 0,
@@ -34,15 +37,18 @@ export default function AdminDashboard() {
   const fetchStats = useCallback(async () => {
     try {
       const { contactAPI } = await import('@/lib/api');
-      const [servicesRes, inquiriesRes] = await Promise.all([
+      const [servicesRes, inquiriesRes, reviewsRes] = await Promise.all([
         servicesAPI.getAll(),
-        contactAPI.getAll()
+        contactAPI.getAll(),
+        servicesAPI.getAllReviewsAdmin(),
       ]);
       
       const fetchedServices = servicesRes?.data || [];
       const inquiries = inquiriesRes?.data || [];
+      const moderationReviews = reviewsRes?.data || [];
       
       setServices(fetchedServices);
+      setReviews(moderationReviews);
       
       const activeListings = fetchedServices.length;
       const activeCategories = new Set(
@@ -106,6 +112,26 @@ export default function AdminDashboard() {
     .map(([name, count]) => ({ name, count }));
 
   const selectedCategoryCount = selectedCategory ? listedCategoryCounts[selectedCategory] || 0 : 0;
+  const pendingReviews = reviews.filter((review: any) => String(review.status || '').toLowerCase() === 'pending');
+  const recentReviews = reviews.slice(0, 10);
+
+  const handleReviewStatusUpdate = async (reviewId: string, status: 'approved' | 'rejected') => {
+    try {
+      setReviewActionId(reviewId);
+      await servicesAPI.updateReviewStatus(reviewId, status);
+      toast.success(`Review ${status === 'approved' ? 'approved' : 'rejected'} successfully.`);
+      await fetchStats();
+    } catch (error) {
+      toast.error('Unable to update review status right now.');
+    } finally {
+      setReviewActionId('');
+    }
+  };
+
+  const getServiceTitle = (serviceId: string) => {
+    const found = services.find((service: any) => String(service._id) === String(serviceId));
+    return found?.title || 'Unknown Listing';
+  };
 
   return (
     <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.08),_transparent_40%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900">
@@ -216,6 +242,82 @@ export default function AdminDashboard() {
               <p className="text-xs text-slate-400 mt-2 italic font-medium">Database: MongoDB Atlas</p>
             </div>
           </div>
+
+          <section className="mt-8 bg-white rounded-[2rem] shadow-xl p-5 sm:p-7 border border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
+              <div>
+                <h2 className="text-2xl font-black tracking-tight text-slate-900">User Feedback Moderation</h2>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500 mt-1">
+                  Pending Reviews: {pendingReviews.length}
+                </p>
+              </div>
+              <div className="text-xs font-bold text-slate-500">
+                Total Feedback: {reviews.length}
+              </div>
+            </div>
+
+            {recentReviews.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">No feedback submitted yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentReviews.map((review: any) => {
+                  const status = String(review.status || 'approved').toLowerCase();
+                  const statusBadge = status === 'approved'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : status === 'rejected'
+                      ? 'bg-rose-100 text-rose-700'
+                      : 'bg-amber-100 text-amber-700';
+
+                  return (
+                    <div key={review._id} className="rounded-2xl border border-slate-200 p-4 sm:p-5">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-sm font-black text-slate-900">{review.user_name || 'User'}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {getServiceTitle(String(review.service_id || ''))}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {new Date(review.created_at || Date.now()).toLocaleDateString('en-US', {
+                              month: 'short', day: 'numeric', year: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        <span className={`inline-flex self-start px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${statusBadge}`}>
+                          {status}
+                        </span>
+                      </div>
+
+                      <p className="mt-3 text-sm text-slate-700 leading-relaxed">"{review.comment || ''}"</p>
+
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-amber-500">Rating: {Number(review.rating || 0).toFixed(1)} / 5</span>
+                        <div className="ml-auto flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleReviewStatusUpdate(String(review._id), 'approved')}
+                            disabled={reviewActionId === String(review._id)}
+                            className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-emerald-500 disabled:opacity-60"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleReviewStatusUpdate(String(review._id), 'rejected')}
+                            disabled={reviewActionId === String(review._id)}
+                            className="px-3 py-2 rounded-lg bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-rose-500 disabled:opacity-60"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </div>

@@ -26,6 +26,7 @@ declare module 'next/navigation' {
   export function useSearchParams(): {
     get: (name: string) => string | null;
   };
+  export function usePathname(): string;
 }
 
 declare module 'next/*' {

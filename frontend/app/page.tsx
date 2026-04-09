@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
+import { stripDescriptionFormatting } from '@/components/FormattedDescription';
 import { motion } from 'framer-motion';
 import { formatUsd, resolveMediaUrl, servicesAPI } from '@/lib/api';
 import { BUSINESS_CATEGORIES } from '@/lib/businessCategories';
@@ -34,8 +35,8 @@ export default function Home() {
           featured: Boolean(s.featured),
           price: s.price ? `From ${formatUsd(s.price)}` : 'Contact Us',
           rating: s.rating || 5.0,
-          image: resolveMediaUrl(s.image_url || s.image || ''),
-          description: s.description,
+          image: resolveMediaUrl(s.image_url || s.image || (Array.isArray(s.gallery) ? s.gallery[0] : '') || ''),
+          description: stripDescriptionFormatting(String(s.description || '')),
         })).filter((s: any) => Boolean(s.id))
           .sort((a: any, b: any) => Number(b.featured) - Number(a.featured));
         setFeaturedServices(normalized);
@@ -109,11 +110,11 @@ export default function Home() {
                 </span>
               </motion.div>
 
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-tight mb-5 sm:mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-cyan-100 drop-shadow-sm">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-tight mb-5 sm:mb-6 text-white drop-shadow-sm">
                 Book Skilled Pros Without the Hassle.
               </h1>
 
-              <p className="text-base sm:text-xl md:text-2xl text-blue-50/90 mb-8 sm:mb-10 max-w-3xl mx-auto font-light leading-relaxed px-1">
+              <p className="text-base sm:text-xl md:text-2xl text-white/90 mb-8 sm:mb-10 max-w-3xl mx-auto font-light leading-relaxed px-1">
                 Connect with trusted professionals, compare transparent prices, and book your service instantly.
               </p>
 
@@ -150,8 +151,8 @@ export default function Home() {
                     key={item.label}
                     className="rounded-2xl px-4 py-5 bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl transition-all"
                   >
-                    <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-cyan-300 drop-shadow-md mb-1">{item.metric}</p>
-                    <p className="text-blue-100/80 text-[11px] sm:text-sm font-medium uppercase tracking-wider">{item.label}</p>
+                    <p className="text-2xl sm:text-3xl font-black text-white drop-shadow-md mb-1">{item.metric}</p>
+                    <p className="text-white/80 text-[11px] sm:text-sm font-medium uppercase tracking-wider">{item.label}</p>
                   </motion.div>
                 ))}
               </motion.div>

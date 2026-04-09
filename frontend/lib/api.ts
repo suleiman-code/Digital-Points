@@ -42,6 +42,7 @@ export const resolveMediaUrl = (input?: string | null) => {
 
 const STORAGE_KEYS = {
   services: 'dp_services',
+  reviews: 'dp_reviews',
   bookings: 'dp_bookings',
   contact: 'dp_contact_messages',
   admin: 'dp_admin_user',
@@ -218,6 +219,8 @@ const getServices = () => {
 };
 
 const setServices = (services: any[]) => writeStorage(STORAGE_KEYS.services, services);
+const getStoredReviews = () => readStorage<any[]>(STORAGE_KEYS.reviews, []);
+const setStoredReviews = (reviews: any[]) => writeStorage(STORAGE_KEYS.reviews, reviews);
 
 const getBookings = () => readStorage<any[]>(STORAGE_KEYS.bookings, []);
 const setBookings = (bookings: any[]) => writeStorage(STORAGE_KEYS.bookings, bookings);
@@ -274,30 +277,57 @@ export const servicesAPI = {
   },
   addReview: (id: string, data: any) => {
     if (api) return api.post(`/services/${id}/reviews`, data);
-    return makeResponse({ ...data, _id: uid('rev'), createdAt: new Date().toISOString() }, 201);
+    const newReview = {
+      ...data,
+      _id: uid('rev'),
+      service_id: id,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    };
+    const reviews = [newReview, ...getStoredReviews()];
+    setStoredReviews(reviews);
+    return makeResponse(newReview, 201);
   },
   getReviews: (id: string) => {
     if (api) return api.get(`/services/${id}/reviews`);
-    return makeResponse([
-      {
-        _id: 'mock1',
-        service_id: id,
-        user_name: 'Osman',
-        user_email: 'osman@example.com',
-        rating: 5,
-        comment: "I really hope my career will one day make me prove to United states that I'm going to be a good plumber one day...",
-        created_at: new Date('2019-12-16T15:11:00Z').toISOString()
-      }
-    ]);
+    const reviews = getStoredReviews()
+      .filter((r: any) => r.service_id === id && (r.status === 'approved' || !r.status))
+      .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    return makeResponse(reviews);
   },
   postReview: (id: string, review: any) => {
     if (api) return api.post(`/services/${id}/reviews`, review);
-    return makeResponse({
+    const created = {
       ...review,
       _id: uid('rev'),
       service_id: id,
+      status: 'pending',
       created_at: new Date().toISOString(),
-    }, 201);
+    };
+    const reviews = [created, ...getStoredReviews()];
+    setStoredReviews(reviews);
+    return makeResponse(created, 201);
+  },
+  getAllReviewsAdmin: () => {
+    if (api) return api.get('/services/reviews/moderation/all');
+    const reviews = getStoredReviews().sort(
+      (a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    );
+    return makeResponse(reviews);
+  },
+  updateReviewStatus: (reviewId: string, newStatus: 'pending' | 'approved' | 'rejected') => {
+    if (api) {
+      return api.put(`/services/reviews/moderation/${reviewId}/status`, null, {
+        params: { new_status: newStatus },
+      });
+    }
+
+    const reviews = getStoredReviews();
+    const index = reviews.findIndex((r: any) => r._id === reviewId);
+    if (index === -1) makeApiError('Review not found', 404);
+    reviews[index] = { ...reviews[index], status: newStatus };
+    setStoredReviews(reviews);
+    return makeResponse(reviews[index]);
   },
   uploadImage: async (file: File) => {
     if (!api) throw new Error("Backend not enabled for local uploads");

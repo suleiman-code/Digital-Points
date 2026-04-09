@@ -32,6 +32,10 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
         gallery: Array.isArray(res.data?.gallery)
           ? res.data.gallery.map((img: any) => resolveMediaUrl(String(img || ''))).filter(Boolean)
           : [],
+        contact_email: String(res.data?.contact_email || '').trim(),
+        website_url: String(res.data?.website_url || '').trim(),
+        contact_phone: String(res.data?.contact_phone || '').trim(),
+        address: String(res.data?.address || '').trim(),
       };
       setService(normalizedService);
     } catch (error) {
@@ -45,10 +49,21 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
   if (!service) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
   const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
-  const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''}`.trim();
+  const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.country || ''}`.trim();
   const rawContactPhone = String(service.contact_phone || '').trim();
 
   const features = service.service_details ? service.service_details.split('\n').filter(Boolean) : [];
+  const featureTags = Array.from(
+    new Set(
+      [
+        service.category,
+        ...features,
+      ]
+        .flatMap((item: string) => String(item || '').split(/[,:/|\-]/g))
+        .map((part: string) => part.trim())
+        .filter((part: string) => part.length >= 3)
+    )
+  ).slice(0, 10);
 
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col font-sans">
@@ -94,9 +109,14 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             {allImages.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {allImages.map((img, i) => (
-                  <div
+                  <motion.button
                     key={i}
+                    type="button"
                     onClick={() => setActiveImage(img)}
+                    initial={{ opacity: 0, y: 18, scale: 0.98 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: '-40px' }}
+                    transition={{ duration: 0.35, delay: i * 0.03, ease: 'easeOut' }}
                     className="group relative rounded-2xl overflow-hidden cursor-pointer bg-slate-100/60 shadow-sm border border-slate-200/60 transform transition-all duration-500 hover:-translate-y-1 hover:shadow-xl aspect-square flex items-center justify-center p-2 md:p-3"
                   >
                     <img src={img} className="max-w-full max-h-full object-contain rounded-xl shadow-sm border border-black/5 transition-transform duration-700 group-hover:scale-105" alt={`Portfolio item ${i + 1}`} />
@@ -107,7 +127,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </motion.button>
                 ))}
               </div>
             ) : (
@@ -133,6 +153,18 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               </div>
 
               <div className="md:w-2/3 w-full relative z-10">
+                {featureTags.length > 0 && (
+                  <div className="mb-5 flex flex-wrap gap-2">
+                    {featureTags.map((tag, index) => (
+                      <span
+                        key={`${tag}-${index}`}
+                        className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-amber-700"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {features.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {features.map((point: string, i: number) => (

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense, useRef } from 'react';
+import FormattedDescription from '@/components/FormattedDescription';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { resolveMediaUrl, servicesAPI, inquiriesAPI } from '@/lib/api';
@@ -93,7 +94,7 @@ function ServiceDetailContent({ params }: { params: any }) {
     setIsPosting(true);
     try {
       const res = await servicesAPI.postReview(serviceId, reviewForm);
-      toast.success('Review posted successfully');
+      toast.success('Review submitted. It will be visible after admin approval.');
 
       const newRating = Number(reviewForm.rating);
       const currentCount = Number(service.reviews_count || 0);
@@ -158,8 +159,12 @@ function ServiceDetailContent({ params }: { params: any }) {
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center font-bold text-slate-300 animate-pulse text-xs uppercase tracking-widest">Digital Points...</div>;
   if (!service) return <div className="min-h-screen flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
-  const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''}`.trim();
+  const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.country || ''}`.trim();
   const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
+  const serviceHighlights = String(service.service_details || '')
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
   const rawContactPhone = String(service.contact_phone || '').trim();
   const normalizedPhone = rawContactPhone.startsWith('+')
     ? `+${rawContactPhone.slice(1).replace(/\D/g, '')}`
@@ -243,7 +248,7 @@ function ServiceDetailContent({ params }: { params: any }) {
   const visibleReviews = reviews.slice(0, visibleReviewsCount);
   const canShowMoreReviews = reviews.length > visibleReviewsCount;
   const canShowLessReviews = reviews.length > INITIAL_REVIEWS_COUNT && visibleReviewsCount >= reviews.length;
-  const logoImage = String(service.image_url || service.image || '').trim();
+  const logoImage = String(service.image_url || service.image || (Array.isArray(service.gallery) ? service.gallery[0] : '') || '').trim();
   const contactEmail = String(service.contact_email || service.email || '').trim();
   const actionBtnBase = 'justify-center px-4 py-3 border border-slate-300 text-slate-800 font-semibold transition-all duration-200 flex items-center gap-2 text-sm whitespace-nowrap bg-white rounded-xl shadow-sm hover:bg-slate-900 hover:text-white hover:border-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300';
   const actionBtnDisabled = 'justify-center px-4 py-3 border border-slate-200 text-slate-400 font-semibold transition-all duration-200 flex items-center gap-2 text-sm whitespace-nowrap bg-slate-50 rounded-xl cursor-not-allowed';
@@ -342,7 +347,7 @@ function ServiceDetailContent({ params }: { params: any }) {
                     <span className="w-1.5 h-8 bg-blue-600 rounded-full" />
                     Business Description
                   </h2>
-                  <p className="text-slate-600 leading-relaxed font-medium text-lg whitespace-pre-line">{service.description}</p>
+                  <FormattedDescription text={String(service.description || '')} className="text-slate-600 font-medium text-lg space-y-2" />
                 </div>
 
                 <div className="relative group rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-lg mb-6">
@@ -359,6 +364,40 @@ function ServiceDetailContent({ params }: { params: any }) {
                     )}
                   </div>
                 </div>
+
+                {allImages.length > 1 && (
+                  <div className="mb-10 md:mb-12 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <p className="text-xs sm:text-sm font-bold text-slate-600">
+                        This listing has {allImages.length - 1} extra gallery photo{allImages.length - 1 > 1 ? 's' : ''}.
+                      </p>
+                      <Link
+                        href={`/services/${serviceId}/details`}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider hover:bg-slate-800 transition-colors"
+                      >
+                        Open Gallery
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {serviceHighlights.length > 0 && (
+                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm mb-8 md:mb-12">
+                    <h2 className="text-xl sm:text-2xl font-black text-[#0f2340] mb-5 flex items-center gap-3">
+                      <span className="w-1.5 h-7 bg-emerald-500 rounded-full" />
+                      Service Highlights
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {serviceHighlights.map((point, index) => (
+                        <div key={`${point}-${index}`} className="flex items-start gap-3 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100">
+                          <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                          <p className="text-sm font-semibold text-slate-700 leading-relaxed">{point}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </section>
 
                           </div>

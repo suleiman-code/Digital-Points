@@ -12,6 +12,17 @@ from bson import ObjectId
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/services", tags=["Services"])
+ALLOWED_REVIEW_STATUSES = {"pending", "approved", "rejected"}
+
+ALLOWED_COUNTRIES = {"USA", "Canada"}
+
+def normalize_country(country: str | None) -> str:
+    value = (country or "").strip().lower()
+    if value in {"usa", "us", "united states", "united states of america", "u.s.", "u.s.a."}:
+        return "USA"
+    if value in {"canada", "ca"}:
+        return "Canada"
+    return (country or "").strip() or "USA"
 
 def normalize_phone_number(phone: str) -> str:
     phone = (phone or "").strip()
@@ -24,6 +35,28 @@ def is_valid_phone_number(phone: str) -> bool:
         return False
     digits_count = sum(ch.isdigit() for ch in phone)
     return 7 <= digits_count <= 15
+
+def is_valid_phone_number_for_country(phone: str, country: str) -> bool:
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    normalized_country = normalize_country(country)
+
+    # USA and Canada use NANP. Accept 10 digits or 11 digits with leading 1.
+    if normalized_country in {"USA", "Canada"}:
+        return len(digits) == 10 or (len(digits) == 11 and digits.startswith("1"))
+
+    return is_valid_phone_number(phone)
+
+def format_phone_for_country(phone: str, country: str) -> str:
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    normalized_country = normalize_country(country)
+
+    if normalized_country in {"USA", "Canada"}:
+        if len(digits) == 10:
+            return f"+1{digits}"
+        if len(digits) == 11 and digits.startswith("1"):
+            return f"+{digits}"
+
+    return normalize_phone_number(phone)
 
 CATEGORY_ALIASES = {
     "electrical": "Electrical Services",
@@ -111,12 +144,17 @@ async def get_service(id: str):
 # 3. CREATE SERVICE (Admin Only)
 @router.post("/", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
 async def create_service(service: ServiceCreate, admin: dict = Depends(get_admin_user)):
-    if not service.contact_phone or not is_valid_phone_number(service.contact_phone):
-        raise HTTPException(status_code=400, detail="Valid business contact number is required")
+    normalized_country = normalize_country(service.country)
+    if normalized_country not in ALLOWED_COUNTRIES:
+        raise HTTPException(status_code=400, detail="Country must be either USA or Canada")
+
+    if not service.contact_phone or not is_valid_phone_number_for_country(service.contact_phone, normalized_country):
+        raise HTTPException(status_code=400, detail=f"Valid {normalized_country} contact number is required")
 
     service_dict = service.model_dump()
     service_dict["category"] = normalize_category(service_dict.get("category", ""))
-    service_dict["contact_phone"] = normalize_phone_number(service.contact_phone)
+    service_dict["country"] = normalized_country
+    service_dict["contact_phone"] = format_phone_for_country(service.contact_phone, normalized_country)
     service_dict["created_at"] = datetime.now(timezone.utc)
     service_dict["updated_at"] = datetime.now(timezone.utc)
     
@@ -129,13 +167,24 @@ async def create_service(service: ServiceCreate, admin: dict = Depends(get_admin
 async def update_service(id: str, service_data: ServiceUpdate, admin: dict = Depends(get_admin_user)):
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail="Invalid Service ID")
+
+    existing_service = await db.db["services"].find_one({"_id": ObjectId(id)})
+    if not existing_service:
+        raise HTTPException(status_code=404, detail="Service not found")
         
     update_data = {k: v for k, v in service_data.model_dump().items() if v is not None}
 
+    if "country" in update_data:
+        update_data["country"] = normalize_country(update_data["country"])
+        if update_data["country"] not in ALLOWED_COUNTRIES:
+            raise HTTPException(status_code=400, detail="Country must be either USA or Canada")
+
+    validation_country = normalize_country(update_data.get("country") or existing_service.get("country") or "USA")
+
     if "contact_phone" in update_data:
-        if not update_data["contact_phone"] or not is_valid_phone_number(update_data["contact_phone"]):
-            raise HTTPException(status_code=400, detail="Valid business contact number is required")
-        update_data["contact_phone"] = normalize_phone_number(update_data["contact_phone"])
+        if not update_data["contact_phone"] or not is_valid_phone_number_for_country(update_data["contact_phone"], validation_country):
+            raise HTTPException(status_code=400, detail=f"Valid {validation_country} contact number is required")
+        update_data["contact_phone"] = format_phone_for_country(update_data["contact_phone"], validation_country)
 
     if "category" in update_data:
         update_data["category"] = normalize_category(update_data["category"])
@@ -191,12 +240,13 @@ async def create_review(id: str, review: ReviewCreate):
 
     review_dict = review.model_dump()
     review_dict["service_id"] = id
+    review_dict["status"] = "pending"
     review_dict["created_at"] = datetime.now(timezone.utc)
     
     new_review = await db.db["reviews"].insert_one(review_dict)
     
     # Update Service Average Rating
-    all_reviews = await db.db["reviews"].find({"service_id": id}).to_list(1000)
+    all_reviews = await db.db["reviews"].find({"service_id": id, "status": "approved"}).to_list(1000)
     count = len(all_reviews)
     avg = sum([r["rating"] for r in all_reviews]) / count if count > 0 else 0
     
@@ -214,10 +264,61 @@ async def get_reviews(id: str):
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail="Invalid Service ID")
         
-    reviews = await db.db["reviews"].find({"service_id": id}).sort("created_at", -1).to_list(100)
+    reviews = await db.db["reviews"].find({
+        "service_id": id,
+        "$or": [
+            {"status": "approved"},
+            {"status": {"$exists": False}},
+        ],
+    }).sort("created_at", -1).to_list(100)
     return reviews
 
-# 9. UPLOAD IMAGE (Admin Only)
+
+# 9. LIST ALL REVIEWS FOR MODERATION (Admin Only)
+@router.get("/reviews/moderation/all", response_model=List[ReviewResponse])
+async def get_reviews_for_moderation(admin: dict = Depends(get_admin_user)):
+    reviews = await db.db["reviews"].find({}).sort("created_at", -1).to_list(500)
+    for review in reviews:
+        if review.get("status") not in ALLOWED_REVIEW_STATUSES:
+            review["status"] = "approved"
+    return reviews
+
+
+# 10. UPDATE REVIEW STATUS (Admin Only)
+@router.put("/reviews/moderation/{review_id}/status", response_model=ReviewResponse)
+async def update_review_status(review_id: str, new_status: str, admin: dict = Depends(get_admin_user)):
+    if not ObjectId.is_valid(review_id):
+        raise HTTPException(status_code=400, detail="Invalid Review ID")
+
+    normalized_status = (new_status or "").strip().lower()
+    if normalized_status not in ALLOWED_REVIEW_STATUSES:
+        raise HTTPException(status_code=400, detail="Status must be pending, approved, or rejected")
+
+    existing_review = await db.db["reviews"].find_one({"_id": ObjectId(review_id)})
+    if not existing_review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    await db.db["reviews"].update_one(
+        {"_id": ObjectId(review_id)},
+        {"$set": {"status": normalized_status}},
+    )
+
+    service_id = existing_review.get("service_id")
+    if service_id and ObjectId.is_valid(service_id):
+        approved_reviews = await db.db["reviews"].find({"service_id": service_id, "status": "approved"}).to_list(1000)
+        count = len(approved_reviews)
+        avg = sum([r["rating"] for r in approved_reviews]) / count if count > 0 else 0
+        await db.db["services"].update_one(
+            {"_id": ObjectId(service_id)},
+            {"$set": {"avg_rating": round(avg, 1), "reviews_count": count}}
+        )
+
+    updated_review = await db.db["reviews"].find_one({"_id": ObjectId(review_id)})
+    if updated_review and updated_review.get("status") not in ALLOWED_REVIEW_STATUSES:
+        updated_review["status"] = "approved"
+    return updated_review
+
+# 11. UPLOAD IMAGE (Admin Only)
 @router.post("/upload/", status_code=status.HTTP_201_CREATED)
 async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_admin_user)):
     allowed_extensions = {"jpg", "jpeg", "png", "webp", "gif"}
