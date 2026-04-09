@@ -158,7 +158,7 @@ function AdminServicesContent() {
 
         <div className="p-4 sm:p-6 md:p-8">
           {/* Filters & Actions */}
-          <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10">
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-end gap-4 md:gap-6 mb-8 md:mb-10">
             <div className="w-full md:w-80">
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Filter by Category</label>
               <select 
@@ -186,7 +186,7 @@ function AdminServicesContent() {
 
             <Link
               href="/admin/add-listing"
-              className="px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg hover:shadow-green-500/20 active:scale-95 transition-all text-center"
+              className="w-full md:w-auto px-6 md:px-10 py-4 md:py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg hover:shadow-green-500/20 active:scale-95 transition-all text-center"
             >
               + Create New Listing
             </Link>
@@ -203,7 +203,70 @@ function AdminServicesContent() {
                <p className="text-slate-400 text-xs mt-1">Please select another category or add a new listing.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+            <>
+            <div className="md:hidden space-y-3">
+              {services.map((service: any) => (
+                <div key={service._id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-slate-900 truncate">{service.title}</p>
+                      <p className="text-xs text-slate-500 mt-1">{service.category}</p>
+                    </div>
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${service.featured ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {service.featured ? 'Pinned' : 'Normal'}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded-lg bg-slate-50 px-3 py-2">
+                      <p className="text-slate-400 uppercase tracking-wider text-[10px] font-black">Price</p>
+                      <p className="text-slate-700 font-bold mt-1">{formatUsd(service.price || 0)}</p>
+                    </div>
+                    <div className="rounded-lg bg-slate-50 px-3 py-2">
+                      <p className="text-slate-400 uppercase tracking-wider text-[10px] font-black">Updated</p>
+                      <p className="text-slate-700 font-bold mt-1">{new Date(service.updated_at || service.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => setPreviewService(service)}
+                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      title="Preview"
+                      aria-label="Preview"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                    <button
+                      onClick={() => toggleFeatured(service)}
+                      className={`h-8 w-8 inline-flex items-center justify-center rounded-lg border ${service.featured ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-blue-200 bg-blue-50 text-blue-700'} hover:opacity-90`}
+                      title={service.featured ? 'Unpin' : 'Pin Top'}
+                      aria-label={service.featured ? 'Unpin' : 'Pin Top'}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7 7 7M12 3v18"/></svg>
+                    </button>
+                    <button
+                      onClick={() => router.push(`/admin/add-listing?edit=${service._id}`)}
+                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                      title="Edit"
+                      aria-label="Edit"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(service._id)}
+                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                      title="Delete"
+                      aria-label="Delete"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16"/></svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block bg-white rounded-lg shadow-md overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-100 border-b">
                   <tr>
@@ -284,6 +347,7 @@ function AdminServicesContent() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
 
         </div>

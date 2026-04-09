@@ -81,7 +81,7 @@ export default function Home() {
       <main>
         {/* Hero Section */}
         <section
-          className="relative overflow-hidden text-white py-24 min-h-[85vh] flex items-center"
+          className="relative overflow-hidden text-white py-16 sm:py-24 min-h-[70vh] sm:min-h-[85vh] flex items-center"
           style={{
             backgroundImage: `linear-gradient(120deg, rgba(8, 47, 128, 0.95), rgba(16, 84, 196, 0.85), rgba(14, 116, 171, 0.8)), url('${heroBackground}')`,
             backgroundSize: 'cover',
@@ -89,8 +89,8 @@ export default function Home() {
           }}
         >
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
-          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-blue-400/30 blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -left-20 w-[500px] h-[500px] rounded-full bg-cyan-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute -top-32 -right-24 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-blue-400/30 blur-3xl animate-pulse" />
+          <div className="absolute -bottom-32 -left-10 w-[280px] h-[280px] sm:w-[500px] sm:h-[500px] rounded-full bg-cyan-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
 
           <div className="container-max relative z-10">
             <motion.div
@@ -104,16 +104,16 @@ export default function Home() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
-                <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-cyan-50 font-medium text-sm mb-6 tracking-wide shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+                <span className="inline-block py-1.5 px-3 sm:px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-cyan-50 font-medium text-xs sm:text-sm mb-5 sm:mb-6 tracking-wide shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
                   Discover Premium Services
                 </span>
               </motion.div>
 
-              <h1 className="text-5xl md:text-7xl font-black leading-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-cyan-100 drop-shadow-sm">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-tight mb-5 sm:mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-cyan-100 drop-shadow-sm">
                 Book Skilled Pros Without the Hassle.
               </h1>
 
-              <p className="text-xl md:text-2xl text-blue-50/90 mb-10 max-w-3xl mx-auto font-light leading-relaxed">
+              <p className="text-base sm:text-xl md:text-2xl text-blue-50/90 mb-8 sm:mb-10 max-w-3xl mx-auto font-light leading-relaxed px-1">
                 Connect with trusted professionals, compare transparent prices, and book your service instantly.
               </p>
 
@@ -123,12 +123,12 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
-                className="flex flex-col sm:flex-row gap-5 justify-center mb-16"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center mb-10 sm:mb-16"
               >
-                <Link href="/services" className="btn-light text-center px-10 py-4 text-lg font-bold shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-105 rounded-xl">
+                <Link href="/services" className="btn-light text-center px-6 sm:px-10 py-3.5 sm:py-4 text-base sm:text-lg font-bold shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] transition-all duration-300 hover:scale-105 rounded-xl">
                   Explore Services
                 </Link>
-                <Link href="/contact" className="btn-outline !border-white/30 !text-white hover:!bg-white/10 text-center px-10 py-4 text-lg font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105 rounded-xl">
+                <Link href="/contact" className="btn-outline !border-white/30 !text-white hover:!bg-white/10 text-center px-6 sm:px-10 py-3.5 sm:py-4 text-base sm:text-lg font-bold backdrop-blur-sm transition-all duration-300 hover:scale-105 rounded-xl">
                   How It Works
                 </Link>
               </motion.div>
@@ -150,8 +150,8 @@ export default function Home() {
                     key={item.label}
                     className="rounded-2xl px-4 py-5 bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl transition-all"
                   >
-                    <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-cyan-300 drop-shadow-md mb-1">{item.metric}</p>
-                    <p className="text-blue-100/80 text-sm font-medium uppercase tracking-wider">{item.label}</p>
+                    <p className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-cyan-300 drop-shadow-md mb-1">{item.metric}</p>
+                    <p className="text-blue-100/80 text-[11px] sm:text-sm font-medium uppercase tracking-wider">{item.label}</p>
                   </motion.div>
                 ))}
               </motion.div>

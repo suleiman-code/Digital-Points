@@ -147,12 +147,12 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
         {/* Top Bar */}
-        <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-30">
+        <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 p-3 sm:p-4 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center gap-2">
             <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hover:text-gray-900 hidden md:block" aria-label="Toggle sidebar">☰</button>
           </div>
-          <div className="text-slate-500 font-bold uppercase tracking-[0.22em] text-[10px]">Dashboard Control Center</div>
+          <div className="text-slate-500 font-bold uppercase tracking-[0.18em] text-[10px] hidden sm:block">Dashboard Control Center</div>
         </div>
 
         {/* Dashboard Content */}
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="bg-white rounded-[2rem] shadow-xl p-6 sm:p-8 border border-slate-100 lg:col-span-2">
               <h2 className="text-2xl font-black mb-6 tracking-tight">Main Controls</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

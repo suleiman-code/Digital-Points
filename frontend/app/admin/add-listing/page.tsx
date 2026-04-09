@@ -173,6 +173,32 @@ export default function AddListing() {
     setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  const getApiErrorMessage = (error: any) => {
+    const detail = error?.response?.data?.detail;
+    const fallback = error?.response?.data?.message || error?.message || 'Failed to list service';
+
+    if (typeof detail === 'string' && detail.trim()) return detail;
+
+    if (Array.isArray(detail)) {
+      const parsed = detail
+        .map((item) => item?.msg || item?.message)
+        .filter(Boolean)
+        .join(', ');
+      if (parsed) return parsed;
+    }
+
+    if (detail && typeof detail === 'object') {
+      if (typeof detail.message === 'string' && detail.message.trim()) return detail.message;
+      try {
+        return JSON.stringify(detail);
+      } catch {
+        return fallback;
+      }
+    }
+
+    return fallback;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -192,14 +218,16 @@ export default function AddListing() {
         uploadedGalleryUrls.push(res.url);
       }
 
+      const { price: _price, address: _address, contact_email: _contactEmail, ...requiredFields } = formData;
       const parsedPrice = parseFloat(formData.price);
       const payload = {
-        ...formData,
+        ...requiredFields,
         category: normalizeCategory(formData.category),
         image_url: finalImageUrl,
         gallery: [...galleryPreviews.filter((url) => url.startsWith('http')), ...uploadedGalleryUrls],
         business_hours: hours,
         service_details: serviceDetailsInput,
+        ...(formData.contact_phone.trim() ? { contact_phone: formData.contact_phone.trim() } : {}),
         ...(Number.isFinite(parsedPrice) ? { price: parsedPrice } : {}),
         ...(formData.address.trim() ? { address: formData.address.trim() } : {}),
         ...(formData.contact_email.trim() ? { contact_email: formData.contact_email.trim() } : {})
@@ -214,7 +242,7 @@ export default function AddListing() {
       }
       router.push('/admin/services');
     } catch (error: any) {
-      toast.error('Error: ' + (error.response?.data?.detail || 'Failed to list service'));
+      toast.error(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }

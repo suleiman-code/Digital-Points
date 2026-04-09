@@ -36,16 +36,15 @@ function ServiceDetailContent({ params }: { params: any }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
 
-
   const handleCopyPhone = async () => {
-    const raw = String(service?.contact_phone || '').trim();
-    if (!raw) {
-      toast.error('Phone number is not available.');
+    if (!rawContactPhone) {
+      toast.error('Phone number is not available for this listing right now.');
       return;
     }
+
     try {
-      await navigator.clipboard.writeText(raw);
-      toast.success('Phone number copied.');
+      await navigator.clipboard.writeText(rawContactPhone);
+      toast.success('Phone number copied successfully.');
     } catch {
       toast.error('Unable to copy phone number.');
     }
@@ -124,6 +123,12 @@ function ServiceDetailContent({ params }: { params: any }) {
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!contactEmail) {
+      toast.error('Business email is not available for this listing right now.');
+      setIsModalOpen(false);
+      return;
+    }
+
     if (!bookingForm.name || !bookingForm.email || !bookingForm.phone || !bookingForm.city || !bookingForm.message) {
       return toast.error('Please fill all inquiry fields.');
     }
@@ -238,6 +243,10 @@ function ServiceDetailContent({ params }: { params: any }) {
   const visibleReviews = reviews.slice(0, visibleReviewsCount);
   const canShowMoreReviews = reviews.length > visibleReviewsCount;
   const canShowLessReviews = reviews.length > INITIAL_REVIEWS_COUNT && visibleReviewsCount >= reviews.length;
+  const logoImage = String(service.image_url || service.image || '').trim();
+  const contactEmail = String(service.contact_email || service.email || '').trim();
+  const actionBtnBase = 'justify-center px-4 py-3 border border-slate-300 text-slate-800 font-semibold transition-all duration-200 flex items-center gap-2 text-sm whitespace-nowrap bg-white rounded-xl shadow-sm hover:bg-slate-900 hover:text-white hover:border-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300';
+  const actionBtnDisabled = 'justify-center px-4 py-3 border border-slate-200 text-slate-400 font-semibold transition-all duration-200 flex items-center gap-2 text-sm whitespace-nowrap bg-slate-50 rounded-xl cursor-not-allowed';
 
   return (
     <div className="bg-gradient-to-b from-slate-50 via-white to-slate-50 min-h-screen flex flex-col font-sans">
@@ -257,55 +266,87 @@ function ServiceDetailContent({ params }: { params: any }) {
             </Link>
           </div>
           {/* HEADER SECTION */}
-          <div className="border-b border-slate-200 pb-10 mb-10 relative z-10">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 uppercase tracking-tight">
-              <div className="space-y-4">
-                <h1 className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{service.title}</h1>
-                <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
-                    <div className="flex text-amber-400">
-                      {[...Array(5)].map((_, i) => (
-                        <svg key={i} className={`w-3.5 h-3.5 ${i < Math.round(service.avg_rating || 0) ? 'fill-current' : 'fill-slate-200'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                      ))}
+          <div className="mb-8 md:mb-10 relative z-10">
+            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[320px_1fr] gap-5 md:gap-8 items-start bg-white rounded-2xl border border-slate-200 shadow-[0_14px_40px_rgba(15,23,42,0.08)] overflow-hidden p-4 sm:p-5 md:p-6">
+              <div className="bg-slate-100 h-[200px] sm:h-[220px] w-full flex items-center justify-center overflow-hidden rounded-xl border border-slate-200">
+                {logoImage ? (
+                  <img src={logoImage} className="w-full h-full object-cover object-center bg-slate-100" alt={service.title} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-center text-slate-700 bg-slate-100">
+                    <div>
+                      <svg className="w-28 h-28 mx-auto mb-2 text-slate-800/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7a2 2 0 012-2h2l1-1h8l1 1h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /><circle cx="12" cy="12" r="3" strokeWidth="1.5" /></svg>
+                      <p className="text-2xl font-black leading-tight">No Image<br />Available</p>
                     </div>
-                    <span className="text-amber-600 font-black">{Number(service.avg_rating || 0).toFixed(1)} / 5.0</span>
                   </div>
-                  <div className="bg-slate-100 px-3 py-1.5 rounded-full text-slate-500 font-black">
-                    {service.reviews_count || 0} Reviews
-                  </div>
-                  <div className="bg-blue-50 px-3 py-1.5 rounded-full text-blue-600 font-black">
-                    {service.category}
+                )}
+              </div>
+
+              <div className="pt-1 pr-0">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800 mb-4 leading-tight">{service.title}</h1>
+
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <p className="text-xl md:text-2xl font-semibold text-slate-800 leading-none">Rating {Number(service.avg_rating || 0).toFixed(1)}</p>
+                  <div className="flex items-center gap-1 text-amber-400">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className={`w-6 h-6 md:w-7 md:h-7 ${i < Math.round(service.avg_rating || 0) ? 'fill-current' : 'fill-slate-200'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
+                    ))}
                   </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 w-full md:max-w-[560px]">
-                <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  Add a Review
-                </button>
-                <button
-                  onClick={() => setIsPhoneModalOpen(true)}
-                  className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                  Call Now
-                </button>
-                <button onClick={() => setIsModalOpen(true)} className="justify-center px-3 sm:px-4 py-2.5 border-2 border-[#1e293b] text-[#1e293b] font-semibold hover:bg-slate-50 transition-all flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap bg-white">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                  Email Us
-                </button>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mt-4 sm:mt-5">
+                  <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className={actionBtnBase}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Add a Review
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!hasCallablePhone) {
+                        toast.error('Phone number is not available for this listing right now.');
+                        return;
+                      }
+                      setIsPhoneModalOpen(true);
+                    }}
+                    className={hasCallablePhone ? actionBtnBase : actionBtnDisabled}
+                    aria-disabled={!hasCallablePhone}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                    Call Now
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (contactEmail) {
+                        setIsModalOpen(true);
+                        return;
+                      }
+                      toast.error('Business email is not available for this listing right now.');
+                    }}
+                    className={actionBtnBase}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l8.89 5.26a2 2 0 002.22 0L23 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    Email
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
 
             <div className="lg:col-span-8 space-y-12">
 
               {/* MAIN BUSINESS PHOTO */}
               <section>
+                <div className="bg-white p-6 sm:p-8 md:p-10 rounded-3xl border border-slate-100 shadow-sm mb-8 md:mb-12">
+                  <h2 className="text-2xl font-black text-[#0f2340] mb-6 flex items-center gap-3">
+                    <span className="w-1.5 h-8 bg-blue-600 rounded-full" />
+                    Business Description
+                  </h2>
+                  <p className="text-slate-600 leading-relaxed font-medium text-lg whitespace-pre-line">{service.description}</p>
+                </div>
+
                 <div className="relative group rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-lg mb-6">
-                  <div className="h-[450px] md:h-[550px] w-full relative overflow-hidden">
+                  <div className="h-[260px] sm:h-[360px] md:h-[550px] w-full relative overflow-hidden">
                     <img
                       src={activeImage || ''}
                       className="w-full h-full object-cover"
@@ -317,14 +358,6 @@ function ServiceDetailContent({ params }: { params: any }) {
                       </div>
                     )}
                   </div>
-                </div>
-
-                <div className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm mb-12">
-                  <h2 className="text-2xl font-black text-[#0f2340] mb-6 flex items-center gap-3">
-                    <span className="w-1.5 h-8 bg-blue-600 rounded-full" />
-                    Business Description
-                  </h2>
-                  <p className="text-slate-600 leading-relaxed font-medium text-lg whitespace-pre-line">{service.description}</p>
                 </div>
               </section>
 
@@ -528,6 +561,10 @@ function ServiceDetailContent({ params }: { params: any }) {
 
               <h2 className="text-2xl font-black text-[#0f2340] mb-2 uppercase tracking-tight">Direct Inquiry</h2>
               <p className="text-sm text-slate-500 mb-8 font-medium">Send a direct message to {service.title}</p>
+              <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+                <p className="text-[11px] font-black uppercase tracking-widest text-blue-700">Recipient Email</p>
+                <p className="text-sm font-semibold text-blue-900 mt-1 break-all">{contactEmail || 'Not Available'}</p>
+              </div>
 
               <form onSubmit={handleBookingSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -559,25 +596,48 @@ function ServiceDetailContent({ params }: { params: any }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsPhoneModalOpen(false)}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCopyPhone();
-              }}
-              className="bg-white rounded-xl p-6 w-full max-w-[260px] shadow-lg text-center cursor-pointer hover:bg-slate-50 transition-all border border-slate-100 group"
+              initial={{ scale: 0.95, y: 14 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 14 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-2xl border border-slate-100"
             >
-              <h3 className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em]">Contact Number</h3>
-              <p className="text-2xl font-black text-blue-600 tracking-tighter group-active:scale-95 transition-transform">{rawContactPhone || 'Not Listed'}</p>
-              <p className="text-[9px] font-bold text-slate-300 mt-2 uppercase tracking-widest">Click anywhere to copy</p>
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Business Phone</p>
+                  <h3 className="text-xl font-black text-slate-900 mt-1 break-words leading-tight">{rawContactPhone || 'Not Available'}</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPhoneModalOpen(false)}
+                  className="text-slate-400 hover:text-rose-500 transition-colors bg-slate-100 hover:bg-rose-50 rounded-full p-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleCopyPhone}
+                  className="w-11 h-11 rounded-full border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all flex items-center justify-center"
+                  aria-label="Copy phone number"
+                  title="Copy phone number"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M8 7V5a2 2 0 012-2h9a2 2 0 012 2v9a2 2 0 01-2 2h-2" />
+                    <rect x="3" y="7" width="13" height="13" rx="2" ry="2" strokeWidth="1.8" />
+                  </svg>
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 }

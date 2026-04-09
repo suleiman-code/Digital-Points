@@ -40,6 +40,7 @@ export default function ServiceCard(props: ServiceCardProps) {
   const displayPrice = typeof price === 'number' ? formatUsd(price) : price;
 
   return (
+    <Link href={`/services/${id}`} className="block h-full" aria-label={`Open ${title}`}>
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -90,12 +91,13 @@ export default function ServiceCard(props: ServiceCardProps) {
         
         <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-200/50">
           <p className="text-xl font-black text-slate-800 tracking-tight">{displayPrice}</p>
-          <Link href={`/services/${id}`} className="inline-flex items-center gap-1 px-4 py-2 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+          <span className="inline-flex items-center gap-1 px-4 py-2 bg-blue-50 group-hover:bg-blue-600 text-blue-700 group-hover:text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
             Details
             <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-          </Link>
+          </span>
         </div>
       </div>
     </motion.div>
+    </Link>
   );
 }

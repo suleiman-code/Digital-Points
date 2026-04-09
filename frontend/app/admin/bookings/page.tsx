@@ -113,7 +113,7 @@ export default function AdminBookingsPage() {
             <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hidden md:block" aria-label="Toggle sidebar">☰</button>
           </div>
-          <h1 className="text-xl font-bold">Bookings Management</h1>
+          <h1 className="text-base sm:text-xl font-bold text-right">Bookings Management</h1>
         </div>
 
         <div className="p-4 sm:p-6 md:p-8">
@@ -123,7 +123,40 @@ export default function AdminBookingsPage() {
           ) : bookings.length === 0 ? (
             <p className="text-center text-gray-600 py-12">No bookings found</p>
           ) : (
-            <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+            <>
+            <div className="md:hidden space-y-3">
+              {bookings.map((booking: any) => (
+                <div key={booking._id || booking.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                  <p className="text-sm font-black text-slate-900 truncate">{booking.service_name || booking.serviceName || '—'}</p>
+                  <p className="text-xs text-slate-600 mt-1">{booking.user_name || booking.userName || '—'}</p>
+                  <a href={`mailto:${booking.user_email || booking.userEmail}`} className="text-xs text-blue-600 break-all mt-1 block">{booking.user_email || booking.userEmail || '—'}</a>
+
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                        booking.status === 'contacted'
+                          ? 'bg-green-100 text-green-800'
+                          : booking.status === 'completed'
+                          ? 'bg-blue-100 text-blue-800'
+                          : booking.status === 'cancelled'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}
+                    >
+                      {booking.status || 'pending'}
+                    </span>
+                    <p className="text-[11px] text-slate-500">{new Date(booking.created_at || booking.createdAt).toLocaleDateString()}</p>
+                  </div>
+
+                  <div className="mt-3 flex items-center gap-2">
+                    <button onClick={() => setSelectedBooking(booking)} className="btn-secondary text-xs py-1.5 px-3">View</button>
+                    <button onClick={() => handleDelete(booking._id || booking.id)} className="btn-danger text-xs py-1.5 px-3">Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block bg-white rounded-lg shadow-md overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-100 border-b">
                   <tr>
@@ -178,6 +211,7 @@ export default function AdminBookingsPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
 
           {/* Booking Details Modal */}
