@@ -55,7 +55,7 @@ Message:
 Tip: Use Reply in your email client to respond directly to this user.
 """
 
-            html_body = f"""
+        html_body = f"""
 <div style=\"font-family:Arial,Helvetica,sans-serif;line-height:1.5;color:#0f172a;max-width:680px;margin:0 auto;\">
     <h2 style=\"margin:0 0 12px;\">New Contact Form Inquiry</h2>
     <p style=\"margin:0 0 16px;\">A new inquiry has been submitted on <strong>Digital Point</strong>.</p>
