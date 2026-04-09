@@ -1,6 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from config import settings
 import logging
+from fastapi import HTTPException, status
 
 try:
     import dns.resolver
@@ -13,7 +14,6 @@ class Database:
     is_connected: bool = False
 
 db = Database()
-
 async def connect_to_mongo():
     try:
         logging.info("Connecting to MongoDB...")
@@ -38,8 +38,9 @@ async def connect_to_mongo():
     except Exception as e:
         db.is_connected = False
         logging.error(f"Could not connect to MongoDB: {e}")
-        # We don't raise error here, so the server can still start for Swagger UI
-        # But DB calls will fail later with clear error
+        raise RuntimeError(
+            "Could not connect to MongoDB. Check MONGODB_URL, DATABASE_NAME, and network access."
+        ) from e
 
 async def close_mongo_connection():
     if db.client:
@@ -50,3 +51,12 @@ async def close_mongo_connection():
     else:
         # Avoid print for testing to see if logging is the issue
         print("No MongoDB connection to close.")
+
+
+def ensure_database_connected():
+    if db.db is None or not db.is_connected:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database is temporarily unavailable. Please try again shortly.",
+        )
+    return db.db

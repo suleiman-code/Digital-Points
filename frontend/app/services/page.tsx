@@ -6,7 +6,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 import ServiceCardSkeleton from '@/components/ServiceCardSkeleton';
-import { servicesAPI } from '@/lib/api';
+import { resolveMediaUrl, servicesAPI } from '@/lib/api';
 import { ALL_CATEGORIES_WITH_DEFAULT, normalizeCategory } from '@/lib/businessCategories';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -74,7 +74,7 @@ function ServicesList() {
         city: s.city || '',
         state: s.state || '',
         service_details: s.service_details || s.serviceDetails || '',
-      }));
+      })).filter((s: any) => Boolean(s._id));
 
       setServices(data);
       setFilteredServices(data);
@@ -265,7 +265,7 @@ function ServicesList() {
                         title={service.title}
                         description={service.description}
                         price={service.price}
-                        image={service.image_url || service.image}
+                        image={resolveMediaUrl(service.image_url || service.image)}
                         category={service.category}
                         rating={service.avg_rating}
                         city={service.city}

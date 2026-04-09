@@ -4,9 +4,10 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
-import { servicesAPI } from '@/lib/api';
+import { formatUsd, servicesAPI } from '@/lib/api';
 import { BUSINESS_CATEGORIES, normalizeCategory } from '@/lib/businessCategories';
 import Link from 'next/link';
+import ServicePreviewModal from '@/components/ServicePreviewModal';
 
 export default function AdminServicesPage() {
   return (
@@ -27,6 +28,8 @@ function AdminServicesContent() {
   const [services, setServices] = useState<any[]>([]);       
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [previewService, setPreviewService] = useState<any | null>(null);
 
   // Initialize filter from URL on mount
   useEffect(() => {
@@ -114,8 +117,7 @@ function AdminServicesContent() {
     <div className="flex min-h-screen bg-gray-50 text-slate-900">
       {/* Sidebar - Same as before */}
       <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'
-          } bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
         <div className="p-4 border-b border-gray-700">
           <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
@@ -135,16 +137,26 @@ function AdminServicesContent() {
         </div>
       </div>
 
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          aria-label="Close menu"
+        />
+      )}
+
       {/* Main Content */}
-      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} w-full transition-all duration-300`}>
+      <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
         <div className="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700">
-            ☰
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hidden md:block" aria-label="Toggle sidebar">☰</button>
+          </div>
           <div className="text-slate-500 font-black uppercase tracking-widest text-[10px]">Management Control</div>
         </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* Filters & Actions */}
           <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10">
             <div className="w-full md:w-80">
@@ -214,7 +226,7 @@ function AdminServicesContent() {
                           {service.featured ? 'Pinned' : 'Normal'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">Rs. {Number(service.price || 0).toLocaleString()}</td>
+                      <td className="px-6 py-4">{formatUsd(service.price || 0)}</td>
                       <td className="px-6 py-4 text-sm text-gray-500 font-medium">
                         {new Date(service.created_at || Date.now()).toLocaleDateString('en-US', {
                           month: 'short',
@@ -229,27 +241,43 @@ function AdminServicesContent() {
                           year: 'numeric'
                         })}
                       </td>
-                      <td className="px-6 py-4 flex items-center space-x-2">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          onClick={() => setPreviewService(service)}
+                          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          title="Preview"
+                          aria-label="Preview"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/></svg>
+                        </button>
                         <button
                           onClick={() => toggleFeatured(service)}
-                          className={`text-xs py-1 ${service.featured ? 'btn-secondary' : 'btn-primary'}`}
+                          className={`h-8 w-8 inline-flex items-center justify-center rounded-lg border ${service.featured ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-blue-200 bg-blue-50 text-blue-700'} hover:opacity-90`}
+                          title={service.featured ? 'Unpin' : 'Pin Top'}
+                          aria-label={service.featured ? 'Unpin' : 'Pin Top'}
                         >
-                          {service.featured ? 'Unpin' : 'Pin Top'}
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7 7 7M12 3v18"/></svg>
                         </button>
                         <button
                           onClick={() => {
                             router.push(`/admin/add-listing?edit=${service._id}`);
                           }}
-                          className="btn-secondary text-xs py-1"
+                          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                          title="Edit"
+                          aria-label="Edit"
                         >
-                          Edit
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button
                           onClick={() => handleDelete(service._id)}
-                          className="btn-danger text-xs py-1"
+                          className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                          title="Delete"
+                          aria-label="Delete"
                         >
-                          Delete
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16"/></svg>
                         </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -260,6 +288,13 @@ function AdminServicesContent() {
 
         </div>
       </div>
+      <ServicePreviewModal
+        open={Boolean(previewService)}
+        serviceId={previewService?._id || null}
+        serviceName={previewService?.title}
+        listing={previewService}
+        onClose={() => setPreviewService(null)}
+      />
     </div>
   );
 }

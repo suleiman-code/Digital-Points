@@ -4,12 +4,13 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ListingOwnerEmailForm from '@/components/ListingOwnerEmailForm';
-import { servicesAPI } from '@/lib/api';
+import { resolveMediaUrl, servicesAPI } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 function ServiceAdditionalDetailsContent({ params }: { params: any }) {
-  const serviceId = typeof params?.id === 'string' ? decodeURIComponent(params.id) : '';
+  const rawServiceId = params?.id;
+  const serviceId = rawServiceId ? decodeURIComponent(String(rawServiceId)) : '';
 
   const [service, setService] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,14 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
     try {
       setLoading(true);
       const res = await servicesAPI.getById(id);
-      setService(res.data);
+      const normalizedService = {
+        ...res.data,
+        image_url: resolveMediaUrl(res.data?.image_url || res.data?.image),
+        gallery: Array.isArray(res.data?.gallery)
+          ? res.data.gallery.map((img: any) => resolveMediaUrl(String(img || ''))).filter(Boolean)
+          : [],
+      };
+      setService(normalizedService);
     } catch (error) {
       console.error('Error fetching details', error);
     } finally {
@@ -36,7 +44,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
   if (loading) return <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-bold text-blue-500 animate-pulse text-sm uppercase tracking-widest"><div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>Loading Details...</div>;
   if (!service) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
-  const allImages = [service.image_url || service.image, ...(service.gallery || [])].filter(Boolean);
+  const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
   const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''}`.trim();
   const rawContactPhone = String(service.contact_phone || '').trim();
 

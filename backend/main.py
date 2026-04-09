@@ -9,7 +9,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.middleware import SlowAPIMiddleware
 from config import settings
 from rate_limit import limiter
-from database import connect_to_mongo, close_mongo_connection
+from database import connect_to_mongo, close_mongo_connection, db
 from services import router as service_router
 from bookings import router as booking_router
 from auth import router as auth_router
@@ -128,6 +128,18 @@ def read_root():
     </body>
     </html>
     """
+
+
+@app.get("/health/db")
+async def db_health_check():
+    if db.client is None:
+        return {"status": "disconnected", "database": settings.DATABASE_NAME, "reason": "client_not_initialized"}
+
+    try:
+        await db.client.admin.command("ping")
+        return {"status": "ok", "database": settings.DATABASE_NAME}
+    except Exception:
+        return {"status": "disconnected", "database": settings.DATABASE_NAME, "reason": "ping_failed"}
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))

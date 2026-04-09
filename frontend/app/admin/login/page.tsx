@@ -14,14 +14,25 @@ export default function AdminLoginPage() {
 
   const onSubmit = async (data: any) => {
     try {
-      const response = await authAPI.login(data);
+      const payload = {
+        email: String(data?.email || '').trim().toLowerCase(),
+        password: String(data?.password || ''),
+      };
+
+      localStorage.removeItem('authToken');
+      const response = await authAPI.login(payload);
       const token = response.data.access_token || response.data.token;
       if (!token) throw new Error('No token received');
       localStorage.setItem('authToken', token);
-      localStorage.setItem('lastAdminEmail', data.email);
+
+      // Validate token immediately so broken sessions do not pass UI login.
+      await authAPI.me();
+
+      localStorage.setItem('lastAdminEmail', payload.email);
       toast.success('Login successful!');
       router.push('/admin/dashboard');
     } catch (error: any) {
+      localStorage.removeItem('authToken');
       toast.error(error.response?.data?.detail || error.response?.data?.message || 'Login failed. Check your credentials.');
     }
   };

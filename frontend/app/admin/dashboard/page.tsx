@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { servicesAPI } from '@/lib/api';
-import { BUSINESS_CATEGORIES, normalizeCategory } from '@/lib/businessCategories';
+import { normalizeCategory } from '@/lib/businessCategories';
 
 export default function AdminDashboard() {
   const REFRESH_INTERVAL_MS = 5000;
@@ -16,12 +16,13 @@ export default function AdminDashboard() {
   const [services, setServices] = useState<any[]>([]);
   const [stats, setStats] = useState({
     activeListings: 0,
-    totalCategories: 0,
     activeCategories: 0,
     avgRating: 0,
     totalInquiries: 0
   });
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -49,11 +50,6 @@ export default function AdminDashboard() {
           .map((s: any) => normalizeCategory(String(s.category || '').trim()))
           .filter(Boolean)
       ).size;
-      const totalCategories = new Set(
-        BUSINESS_CATEGORIES
-          .map((category: string) => normalizeCategory(category))
-          .filter(Boolean)
-      ).size;
       const totalInquiries = inquiries.length;
       
       // Calculate real average rating
@@ -62,7 +58,6 @@ export default function AdminDashboard() {
 
       setStats({
         activeListings,
-        totalCategories,
         activeCategories,
         avgRating: Number(avg.toFixed(1)),
         totalInquiries
@@ -99,18 +94,30 @@ export default function AdminDashboard() {
     return null;
   }
 
+  const listedCategoryCounts = services.reduce((acc: Record<string, number>, service: any) => {
+    const category = normalizeCategory(String(service?.category || '').trim());
+    if (!category) return acc;
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {});
+
+  const listedCategoryOptions = Object.entries(listedCategoryCounts)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([name, count]) => ({ name, count }));
+
+  const selectedCategoryCount = selectedCategory ? listedCategoryCounts[selectedCategory] || 0 : 0;
+
   return (
-    <div className="flex min-h-screen bg-gray-50 text-slate-900">
+    <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.08),_transparent_40%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900">
       {/* Sidebar */}
       <div
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
         <div className="p-4 border-b border-gray-700">
-          <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
+          <Link href="/admin/dashboard" className="text-2xl font-black tracking-tight truncate">
             {sidebarOpen ? 'SH Admin' : 'SA'}
           </Link>
+          {sidebarOpen && <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-1">Control Panel</p>}
         </div>
 
         <nav className="mt-8 space-y-2 p-4">
@@ -128,60 +135,85 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          aria-label="Close menu"
+        />
+      )}
+
       {/* Main Content */}
-      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} w-full transition-all duration-300`}>
+      <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
         {/* Top Bar */}
-        <div className="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-2xl text-gray-700 hover:text-gray-900"
-          >
-            ☰
-          </button>
-          <div className="text-gray-600 font-semibold uppercase tracking-widest text-[10px]">Dashboard Control Center</div>
+        <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-30">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hover:text-gray-900 hidden md:block" aria-label="Toggle sidebar">☰</button>
+          </div>
+          <div className="text-slate-500 font-bold uppercase tracking-[0.22em] text-[10px]">Dashboard Control Center</div>
         </div>
 
         {/* Dashboard Content */}
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           <header className="mb-10">
-            <h1 className="text-4xl font-black tracking-tight text-slate-900">Welcome to Admin Dashboard</h1>
-            <p className="text-slate-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Real-time Directory Insights</p>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">Welcome to Admin Dashboard</h1>
+            <p className="text-slate-500 font-bold mt-2 uppercase tracking-[0.18em] text-[10px]">Real-time Directory Insights</p>
             <p className="text-[11px] text-slate-400 font-medium mt-2">
               Auto refresh every 5s{lastUpdatedAt ? ` • Last updated: ${lastUpdatedAt.toLocaleTimeString()}` : ''}
             </p>
+
+            <div className="mt-5 max-w-sm">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Listed Categories</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="">Select category</option>
+                {listedCategoryOptions.map((item) => (
+                  <option key={item.name} value={item.name}>
+                    {item.name} ({item.count})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-slate-500 font-semibold">
+                {selectedCategory ? `${selectedCategory}: ${selectedCategoryCount} listing(s)` : `${listedCategoryOptions.length} category options available`}
+              </p>
+            </div>
           </header>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-8 max-w-4xl">
             <StatCard icon="🛠️" label="Active Listings" value={stats.activeListings} />
             <StatCard icon="⭐" label="Avg Rating" value={stats.avgRating || 'N/A'} />
-            <StatCard icon="🧾" label="Total Categories" value={stats.totalCategories} />
             <StatCard icon="📁" label="Active Categories" value={stats.activeCategories} />
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white rounded-[2rem] shadow-xl p-8 border border-slate-50">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="bg-white rounded-[2rem] shadow-xl p-6 sm:p-8 border border-slate-100 lg:col-span-2">
               <h2 className="text-2xl font-black mb-6 tracking-tight">Main Controls</h2>
-              <div className="space-y-4">
-                <Link href="/admin/add-listing" className="block w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black text-xs uppercase tracking-widest text-center rounded-2xl shadow-lg hover:shadow-green-500/20 transition-all active:scale-95">
-                   + Create New Listing
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Link href="/admin/add-listing" className="w-full py-3 px-5 bg-slate-900 text-white border border-slate-900 font-bold text-xs uppercase tracking-[0.16em] rounded-xl hover:bg-slate-800 transition-all active:scale-95 inline-flex items-center justify-center gap-2">
+                  <span className="text-base leading-none">+</span>
+                  Create New Listing
                 </Link>
-                <Link href="/admin/services" className="block w-full py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-widest text-center rounded-2xl shadow-lg hover:bg-slate-800 transition-all active:scale-95">
-                   Manage Listings
+                <Link href="/admin/services" className="w-full py-3 px-5 bg-slate-900 text-white border border-slate-900 font-bold text-xs uppercase tracking-[0.16em] rounded-xl hover:bg-slate-800 transition-all active:scale-95 inline-flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  Manage Listings
                 </Link>
               </div>
             </div>
 
-            <div className="bg-white rounded-[2rem] shadow-xl p-8 border border-slate-50 flex items-center justify-center text-center">
-              <div>
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">System Status</p>
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                  <p className="text-lg font-bold text-slate-800 tracking-tight">Online & Connected</p>
-                </div>
-                <p className="text-xs text-slate-400 mt-2 italic font-medium">Database: MongoDB Atlas</p>
+            <div className="bg-white rounded-[2rem] shadow-xl p-6 border border-slate-100 text-center">
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">System Status</p>
+              <div className="flex items-center gap-2 justify-center">
+                <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                <p className="text-lg font-bold text-slate-800 tracking-tight">Online & Connected</p>
               </div>
+              <p className="text-xs text-slate-400 mt-2 italic font-medium">Database: MongoDB Atlas</p>
             </div>
           </div>
         </div>
@@ -206,14 +238,14 @@ function SidebarLink({ href, icon, label, open }: any) {
 
 function StatCard({ icon, label, value }: any) {
   return (
-    <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-50 relative overflow-hidden group">
-      <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-all duration-500 opacity-50"></div>
+    <div className="bg-white p-4 sm:p-5 rounded-[1.25rem] shadow-lg border border-slate-100 relative overflow-hidden group">
+      <div className="absolute top-0 right-0 w-16 h-16 bg-slate-50 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-all duration-500 opacity-60"></div>
       <div className="flex items-center justify-between relative z-10">
         <div>
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-          <p className="text-4xl font-black text-slate-900 tracking-tighter">{value}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">{value}</p>
         </div>
-        <div className="text-4xl filter grayscale group-hover:grayscale-0 transition-all duration-300">{icon}</div>
+        <div className="text-2xl sm:text-3xl">{icon}</div>
       </div>
     </div>
   );

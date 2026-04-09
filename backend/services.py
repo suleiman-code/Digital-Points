@@ -111,9 +111,6 @@ async def get_service(id: str):
 # 3. CREATE SERVICE (Admin Only)
 @router.post("/", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
 async def create_service(service: ServiceCreate, admin: dict = Depends(get_admin_user)):
-    if not service.contact_email:
-        raise HTTPException(status_code=400, detail="Business email is required for inquiry routing")
-
     if not service.contact_phone or not is_valid_phone_number(service.contact_phone):
         raise HTTPException(status_code=400, detail="Valid business contact number is required")
 
@@ -134,9 +131,6 @@ async def update_service(id: str, service_data: ServiceUpdate, admin: dict = Dep
         raise HTTPException(status_code=400, detail="Invalid Service ID")
         
     update_data = {k: v for k, v in service_data.model_dump().items() if v is not None}
-
-    if "contact_email" in update_data and not update_data["contact_email"]:
-        raise HTTPException(status_code=400, detail="Business email is required for inquiry routing")
 
     if "contact_phone" in update_data:
         if not update_data["contact_phone"] or not is_valid_phone_number(update_data["contact_phone"]):

@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { formatUsd } from '@/lib/api';
 
 interface ServiceCardProps {
   id: string;
@@ -36,7 +37,7 @@ export default function ServiceCard(props: ServiceCardProps) {
     setImgSrc(image);
   }, [image]);
 
-  const displayPrice = typeof price === 'number' ? `$${price}` : price;
+  const displayPrice = typeof price === 'number' ? formatUsd(price) : price;
 
   return (
     <motion.div

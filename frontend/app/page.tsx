@@ -8,7 +8,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 import { motion } from 'framer-motion';
-import { servicesAPI } from '@/lib/api';
+import { formatUsd, resolveMediaUrl, servicesAPI } from '@/lib/api';
 import { BUSINESS_CATEGORIES } from '@/lib/businessCategories';
 
 export default function Home() {
@@ -19,17 +19,6 @@ export default function Home() {
   const [servicesLoading, setServicesLoading] = useState(true);
   const [selectedHomepageCategory, setSelectedHomepageCategory] = useState('');
   const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(8);
-
-  const FALLBACK_SERVICES = [
-    { id: "1", title: "Elite Home Deep Cleaning", category: "Cleaning", price: "$80/hr", rating: 4.9, image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80", description: "Professional deep cleaning service with eco-friendly products for a spotless home." },
-    { id: "2", title: "Master Sparky Electrical", category: "Electrical", price: "From $95", rating: 4.8, image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80", description: "Licensed electricians available 24/7 for all residential and commercial needs." },
-    { id: "3", title: "Royal Touch Spa & Salon", category: "Salon", price: "From $45", rating: 4.7, image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", description: "Luxury grooming and spa services in the comfort of your own home." },
-    { id: "4", title: "Precision Plumbing Co.", category: "Plumbing", price: "From $75", rating: 4.9, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80", description: "Fast, reliable plumbing repairs and installations with a satisfaction guarantee." },
-    { id: "5", title: "Green Lawn Maintenance", category: "Garden", price: "From $50", rating: 4.6, image: "https://images.unsplash.com/photo-1558905611-06778f2f2ac4?auto=format&fit=crop&w=800&q=80", description: "Complete lawn care and landscaping services for a beautiful outdoor space." },
-    { id: "6", title: "Quick Move Packers & Movers", category: "Moving", price: "From $200", rating: 4.5, image: "https://images.unsplash.com/photo-1600585152220-90363fe7e115?auto=format&fit=crop&w=800&q=80", description: "Stress-free moving and packing services for local and long-distance moves." },
-    { id: "7", title: "Pure Flow Water Repair", category: "Plumbing", price: "From $65", rating: 4.8, image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80", description: "Expert water filtration and pipe repair services with 24/7 emergency support." },
-    { id: "8", title: "Swift Tech Computer Repair", category: "Tech", price: "From $40", rating: 4.9, image: "https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=800&q=80", description: "On-site and remote tech support for all your computer and networking issues." }
-  ];
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -43,14 +32,15 @@ export default function Home() {
           title: s.title || s.name,
           category: s.category,
           featured: Boolean(s.featured),
-          price: s.price ? `From $${s.price}` : 'Contact Us',
+          price: s.price ? `From ${formatUsd(s.price)}` : 'Contact Us',
           rating: s.rating || 5.0,
-          image: (s.image_url || s.image || '') + (s.image_url ? '?auto=format&fit=crop&w=800&q=80' : ''),
+          image: resolveMediaUrl(s.image_url || s.image || ''),
           description: s.description,
-        })).sort((a: any, b: any) => Number(b.featured) - Number(a.featured));
-        setFeaturedServices(normalized.length > 0 ? normalized : FALLBACK_SERVICES);
+        })).filter((s: any) => Boolean(s.id))
+          .sort((a: any, b: any) => Number(b.featured) - Number(a.featured));
+        setFeaturedServices(normalized);
       } catch (err) {
-        setFeaturedServices(FALLBACK_SERVICES);
+        setFeaturedServices([]);
       } finally {
         setServicesLoading(false);
       }
@@ -185,7 +175,7 @@ export default function Home() {
             >
               <div className="max-w-2xl">
                 <span className="inline-block py-1 px-3 rounded-md bg-blue-100 text-blue-700 font-bold tracking-widest uppercase text-xs mb-3">Exclusive Selection</span>
-                <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Premium Hand-Picked Services</h2>
+                <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Top Rated Business Listings</h2>
               </div>
               <Link href="/services" className="group flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition-colors">
                 View All Directory

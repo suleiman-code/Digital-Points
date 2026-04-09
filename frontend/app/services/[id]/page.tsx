@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { servicesAPI, inquiriesAPI } from '@/lib/api';
+import { resolveMediaUrl, servicesAPI, inquiriesAPI } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -11,7 +11,8 @@ import Link from 'next/link';
 const INITIAL_REVIEWS_COUNT = 8;
 
 function ServiceDetailContent({ params }: { params: any }) {
-  const serviceId = typeof params?.id === 'string' ? decodeURIComponent(params.id) : '';
+  const rawServiceId = params?.id;
+  const serviceId = rawServiceId ? decodeURIComponent(String(rawServiceId)) : '';
 
   // REFS
   const reviewFormRef = useRef<HTMLDivElement>(null);
@@ -60,13 +61,24 @@ function ServiceDetailContent({ params }: { params: any }) {
   const fetchServiceData = async (id: string) => {
     try {
       setLoading(true);
-      const [serviceRes, reviewsRes] = await Promise.all([
-        servicesAPI.getById(id),
-        servicesAPI.getReviews(id)
-      ]);
-      setService(serviceRes.data);
-      setReviews(reviewsRes.data);
-      setActiveImage(serviceRes.data.image_url || serviceRes.data.image);
+      const serviceRes = await servicesAPI.getById(id);
+      const normalizedService = {
+        ...serviceRes.data,
+        image_url: resolveMediaUrl(serviceRes.data?.image_url || serviceRes.data?.image),
+        gallery: Array.isArray(serviceRes.data?.gallery)
+          ? serviceRes.data.gallery.map((img: any) => resolveMediaUrl(String(img || ''))).filter(Boolean)
+          : [],
+      };
+      setService(normalizedService);
+      const media = [normalizedService.image_url, ...(normalizedService.gallery || [])].filter(Boolean);
+      setActiveImage(media[0] || null);
+
+      try {
+        const reviewsRes = await servicesAPI.getReviews(id);
+        setReviews(reviewsRes.data || []);
+      } catch {
+        setReviews([]);
+      }
     } catch (error) {
       toast.error('Service details not found');
     } finally {
@@ -142,7 +154,7 @@ function ServiceDetailContent({ params }: { params: any }) {
   if (!service) return <div className="min-h-screen flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
   const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''}`.trim();
-  const allImages = [service.image_url || service.image, ...(service.gallery || [])].filter(Boolean);
+  const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
   const rawContactPhone = String(service.contact_phone || '').trim();
   const normalizedPhone = rawContactPhone.startsWith('+')
     ? `+${rawContactPhone.slice(1).replace(/\D/g, '')}`

@@ -1,7 +1,44 @@
 import axios from 'axios';
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').trim();
-const isBackendEnabled = API_URL.length > 0;
+const FORCE_LOCAL_MODE = process.env.NEXT_PUBLIC_FORCE_LOCAL_MODE === '1';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').trim().replace(/\/$/, '');
+const isBackendEnabled = !FORCE_LOCAL_MODE && API_URL.length > 0;
+
+export const formatUsd = (value: number | string | undefined | null) => {
+  const amount = Number(value || 0);
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+  }).format(Number.isFinite(amount) ? amount : 0);
+};
+
+export const resolveMediaUrl = (input?: string | null) => {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  if (raw.startsWith('data:')) return raw;
+
+  const localOrigins = ['http://127.0.0.1:8000', 'http://localhost:8000', 'https://localhost:8000'];
+  for (const origin of localOrigins) {
+    if (raw.startsWith(origin)) {
+      return `${API_URL}${raw.slice(origin.length)}`;
+    }
+  }
+
+  if (raw.startsWith('/')) {
+    return `${API_URL}${raw}`;
+  }
+
+  if (raw.startsWith('static/')) {
+    return `${API_URL}/${raw}`;
+  }
+
+  if (raw.startsWith('uploads/')) {
+    return `${API_URL}/static/${raw}`;
+  }
+
+  return raw;
+};
 
 const STORAGE_KEYS = {
   services: 'dp_services',
@@ -190,7 +227,7 @@ const getAdmin = () => readStorage(STORAGE_KEYS.admin, DEFAULT_ADMIN);
 export const servicesAPI = {
   getAll: (filters?: any) => (api ? api.get('/services/', { params: filters }) : makeResponse(getServices())),
   getById: (id: string) => {
-    if (api) return api.get(`/services/${id}/`);
+    if (api) return api.get(`/services/${id}`);
     const service = getServices().find((item) => item._id === id);
     if (!service) makeApiError('Service not found', 404);
     return makeResponse(service);
@@ -211,7 +248,7 @@ export const servicesAPI = {
     return makeResponse(newService, 201);
   },
   update: (id: string, data: any) => {
-    if (api) return api.put(`/services/${id}/`, data);
+    if (api) return api.put(`/services/${id}`, data);
 
     const services = getServices();
     const index = services.findIndex((item) => item._id === id);
@@ -228,7 +265,7 @@ export const servicesAPI = {
     return makeResponse(updated);
   },
   delete: (id: string) => {
-    if (api) return api.delete(`/services/${id}/`);
+    if (api) return api.delete(`/services/${id}`);
 
     const services = getServices();
     const next = services.filter((item) => item._id !== id);
@@ -236,11 +273,11 @@ export const servicesAPI = {
     return makeResponse({ success: true });
   },
   addReview: (id: string, data: any) => {
-    if (api) return api.post(`/services/${id}/reviews/`, data);
+    if (api) return api.post(`/services/${id}/reviews`, data);
     return makeResponse({ ...data, _id: uid('rev'), createdAt: new Date().toISOString() }, 201);
   },
   getReviews: (id: string) => {
-    if (api) return api.get(`/services/${id}/reviews/`);
+    if (api) return api.get(`/services/${id}/reviews`);
     return makeResponse([
       {
         _id: 'mock1',
@@ -361,7 +398,7 @@ export const authAPI = {
       const formData = new URLSearchParams();
       formData.append('username', data.email);
       formData.append('password', data.password);
-      return api.post('/auth/login/', formData, {
+      return api.post('/auth/login', formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
     }

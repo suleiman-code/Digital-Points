@@ -13,6 +13,7 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
   useEffect(() => {
@@ -75,9 +76,7 @@ export default function AdminBookingsPage() {
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
         <div className="p-4 border-b border-gray-700">
           <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
@@ -98,16 +97,26 @@ export default function AdminBookingsPage() {
         </div>
       </div>
 
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          aria-label="Close menu"
+        />
+      )}
+
       {/* Main Content */}
-      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} w-full transition-all duration-300`}>
+      <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
         <div className="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700">
-            ☰
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hidden md:block" aria-label="Toggle sidebar">☰</button>
+          </div>
           <h1 className="text-xl font-bold">Bookings Management</h1>
         </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {/* Bookings Table */}
           {loading ? (
             <p>Loading bookings...</p>

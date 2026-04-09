@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import ServicePreviewModal from '@/components/ServicePreviewModal';
 
 export default function AddListing() {
   const router = useRouter();
@@ -15,11 +16,13 @@ export default function AddListing() {
   const [isEditLoading, setIsEditLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Plumbing',
+    category: BUSINESS_CATEGORIES[0] || 'Plumbing Services',
     price: '',
     city: '',
     state: '',
@@ -52,6 +55,16 @@ export default function AddListing() {
     Saturday: '10am to 4pm',
     Sunday: 'Closed',
   });
+
+  const previewListing = {
+    ...formData,
+    _id: editingId,
+    image_url: mainImagePreview || formData.image_url,
+    gallery: galleryPreviews,
+    business_hours: hours,
+    service_details: serviceDetailsInput,
+    price: formData.price,
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -179,13 +192,17 @@ export default function AddListing() {
         uploadedGalleryUrls.push(res.url);
       }
 
+      const parsedPrice = parseFloat(formData.price);
       const payload = {
         ...formData,
-        price: parseFloat(formData.price) || 0,
+        category: normalizeCategory(formData.category),
         image_url: finalImageUrl,
         gallery: [...galleryPreviews.filter((url) => url.startsWith('http')), ...uploadedGalleryUrls],
         business_hours: hours,
-        service_details: serviceDetailsInput
+        service_details: serviceDetailsInput,
+        ...(Number.isFinite(parsedPrice) ? { price: parsedPrice } : {}),
+        ...(formData.address.trim() ? { address: formData.address.trim() } : {}),
+        ...(formData.contact_email.trim() ? { contact_email: formData.contact_email.trim() } : {})
       };
 
       if (editingId) {
@@ -208,8 +225,7 @@ export default function AddListing() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'
-          } bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
         <div className="p-4 border-b border-gray-700">
           <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
@@ -236,22 +252,44 @@ export default function AddListing() {
         </div>
       </div>
 
-      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} w-full transition-all duration-300`}>
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          aria-label="Close menu"
+        />
+      )}
+
+      <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
         <div className="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700">
-            ☰
-          </button>
-          <h1 className="text-xl font-bold">{editingId ? 'Edit Service' : 'Add New Service'}</h1>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hidden md:block" aria-label="Toggle sidebar">☰</button>
+          </div>
+          <div className="flex items-center gap-3">
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="h-9 px-3 rounded-full border border-slate-200 text-slate-700 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all inline-flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z"/></svg>
+                Preview
+              </button>
+            )}
+            <h1 className="text-xl font-bold">{editingId ? 'Edit Business' : 'Add New Business'}</h1>
+          </div>
         </div>
 
-        <main className="p-8">
+        <main className="p-4 sm:p-6 md:p-8">
           <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100">
-          <div className="bg-gradient-to-r from-[#0f2340] to-indigo-900 p-8 text-white">
-            <h1 className="text-3xl font-extrabold tracking-tight">{editingId ? 'Edit Service' : 'Add New Service'}</h1>
-            <p className="text-blue-200 mt-2">{editingId ? 'Update all service details from one complete form.' : 'Fill in the professional details to list a new business.'}</p>
+          <div className="bg-gradient-to-r from-[#0f2340] to-indigo-900 p-6 md:p-8 text-white">
+            <h1 className="text-3xl font-extrabold tracking-tight">{editingId ? 'Edit Business' : 'Add New Business'}</h1>
+            <p className="text-blue-200 mt-2">{editingId ? 'Update all business details from one complete form.' : 'Fill in the professional details to list a new business.'}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-10">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-12 space-y-10">
             
             {/* --- BASIC INFO --- */}
             <section className="space-y-6">
@@ -307,8 +345,8 @@ export default function AddListing() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Starting Price ($) *</label>
-                  <input type="number" name="price" value={formData.price} onChange={handleChange} min="0" required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Starting Price ($) (Optional)</label>
+                  <input type="number" name="price" value={formData.price} onChange={handleChange} min="0" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
 
                 <div className="md:col-span-2">
@@ -327,8 +365,8 @@ export default function AddListing() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Business Address *</label>
-                  <input name="address" value={formData.address} onChange={handleChange} required placeholder="Street address, Suite, etc." className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none" />
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Business Address (Optional)</label>
+                  <input name="address" value={formData.address} onChange={handleChange} placeholder="Street address, Suite, etc." className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none" />
                 </div>
 
                 <div>
@@ -357,8 +395,8 @@ export default function AddListing() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Business Email *</label>
-                  <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Business Email (Optional)</label>
+                  <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
                 </div>
 
                 <div className="md:col-span-2">
@@ -377,7 +415,7 @@ export default function AddListing() {
               
               <div className="space-y-6">
                 <div className="p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                  <label className="block text-sm font-bold text-slate-700 mb-4 text-center">Upload Work Gallery (Max 6 Photos)</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-4 text-center">Upload Work Gallery (Max 8 Photos)</label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <AnimatePresence>
                       {galleryPreviews.map((preview, i) => (
@@ -387,7 +425,7 @@ export default function AddListing() {
                         </motion.div>
                       ))}
                     </AnimatePresence>
-                    {galleryPreviews.length < 6 && (
+                    {galleryPreviews.length < 8 && (
                       <label className="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-all">
                         <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
                         <span className="text-[10px] font-bold text-slate-500 mt-1 uppercase">Add Photo</span>
@@ -459,6 +497,13 @@ export default function AddListing() {
           </div>
         </main>
       </div>
+      <ServicePreviewModal
+        open={previewOpen}
+        serviceId={editingId}
+        serviceName={formData.title || 'Service Preview'}
+        listing={previewListing}
+        onClose={() => setPreviewOpen(false)}
+      />
     </div>
   );
 }
