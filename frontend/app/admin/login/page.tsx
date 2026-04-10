@@ -38,10 +38,13 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-600 to-blue-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Digital Point Admin</h1>
-        <p className="text-center text-gray-600 mb-8">Login to your admin panel</p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_35%),linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)] flex items-center justify-center p-4">
+      <div className="bg-white rounded-[2rem] shadow-2xl p-8 max-w-md w-full border border-blue-100">
+        <div className="mb-6 text-center">
+          <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 border border-blue-100">Admin Panel</span>
+          <h1 className="mt-4 text-3xl font-black text-center text-slate-900">Digital Point Admin</h1>
+          <p className="text-center text-slate-500 mt-2">Login to your admin panel</p>
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
@@ -73,7 +76,7 @@ export default function AdminLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-50 hover:text-blue-700"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -109,10 +112,10 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <p className="text-center text-gray-600 text-sm">
+        <div className="mt-6 pt-4 border-t border-blue-100">
+          <p className="text-center text-slate-500 text-sm">
             Not an admin?{' '}
-            <Link href="/" className="text-blue-600 hover:underline">
+            <Link href="/" className="text-blue-700 hover:underline">
               Go to Home
             </Link>
           </p>

@@ -9,6 +9,7 @@ import resend
 from datetime import datetime, timezone
 from typing import List
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,64 @@ router = APIRouter(prefix="/api/bookings", tags=["Inquiries"])
 # Set Resend API key if available
 if settings.RESEND_API_KEY:
     resend.api_key = settings.RESEND_API_KEY
+
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+def _safe_text(value, fallback: str) -> str:
+    text = str(value).strip() if value is not None else ""
+    return text or fallback
+
+def _safe_email(value) -> str:
+    text = _safe_text(value, "unknown@example.com")
+    return text if EMAIL_RE.match(text) else "unknown@example.com"
+
+def _safe_status(value) -> str:
+    text = _safe_text(value, "pending").lower()
+    return text if text in {"pending", "contacted", "completed", "cancelled"} else "pending"
+
+def _ensure_min_len(value: str, minimum: int, fallback: str) -> str:
+    text = value.strip()
+    return text if len(text) >= minimum else fallback
+
+def _safe_created_at(value):
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc)
+
+def _safe_optional_datetime(value):
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    return None
+
+def normalize_booking_document(booking_doc: dict) -> dict:
+    """Backfill legacy booking fields so admin endpoints stay stable for old records."""
+    if not booking_doc:
+        return booking_doc
+
+    booking_doc["service_id"] = _ensure_min_len(_safe_text(booking_doc.get("service_id"), "legacy-service")[:64], 1, "legacy-service")
+    booking_doc["service_name"] = _ensure_min_len(_safe_text(booking_doc.get("service_name"), "Unknown Service")[:160], 2, "Unknown Service")
+    booking_doc["user_name"] = _ensure_min_len(_safe_text(booking_doc.get("user_name"), "Unknown User")[:120], 2, "Unknown User")
+    booking_doc["user_email"] = _safe_email(booking_doc.get("user_email"))
+    booking_doc["user_phone"] = _ensure_min_len(_safe_text(booking_doc.get("user_phone"), "0000000")[:30], 7, "0000000")
+    booking_doc["user_city"] = _ensure_min_len(_safe_text(booking_doc.get("user_city"), "Unknown")[:120], 1, "Unknown")
+    booking_doc["message"] = _ensure_min_len(_safe_text(booking_doc.get("message"), "No message provided")[:3000], 10, "No message provided")
+    booking_doc["status"] = _safe_status(booking_doc.get("status"))
+    booking_doc["created_at"] = _safe_created_at(booking_doc.get("created_at"))
+    booking_doc["booking_date"] = _safe_optional_datetime(booking_doc.get("booking_date"))
+
+    return booking_doc
 
 def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: str):
     if not settings.RESEND_API_KEY:
@@ -80,12 +139,13 @@ async def create_booking(request: Request, booking: BookingCreate, background_ta
     # Send email in background so user doesn't wait
     background_tasks.add_task(send_listing_owner_inquiry_email, booking_dict, recipient_email)
     
-    return created_booking
+    return normalize_booking_document(created_booking)
 
 # 2. GET /api/bookings (Admin Only)
 @router.get("/", response_model=List[BookingResponse])
 async def get_all_bookings(admin: dict = Depends(get_admin_user)):
     bookings = await db.db["bookings"].find().to_list(100)
+    bookings = [normalize_booking_document(item) for item in bookings]
     return bookings
 
 # 3. PUT /api/bookings/{id}/status (Admin Only)
@@ -107,7 +167,7 @@ async def update_booking_status(id: str, new_status: str, admin: dict = Depends(
         raise HTTPException(status_code=404, detail="Booking not found")
         
     updated_booking = await db.db["bookings"].find_one({"_id": ObjectId(id)})
-    return updated_booking
+    return normalize_booking_document(updated_booking)
 
 # 4. DELETE /api/bookings/{id} (Admin Only)
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import toast from 'react-hot-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
@@ -12,8 +11,8 @@ import { ALL_CATEGORIES_WITH_DEFAULT, normalizeCategory } from '@/lib/businessCa
 import { motion, AnimatePresence } from 'framer-motion';
 
 function ServicesList() {
-  const [services, setServices] = useState([]);
-  const [filteredServices, setFilteredServices] = useState([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [filteredServices, setFilteredServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [locationSearch, setLocationSearch] = useState('');
@@ -33,29 +32,52 @@ function ServicesList() {
     setInitialized(true);
   }, []);
 
-  const resolveCategoryFromSearch = (query: string) => {
-    const normalizedQuery = normalizeCategory(query).toLowerCase().trim();
-    if (!normalizedQuery) return '';
+  const isUsaAlias = (value: string) => {
+    const v = String(value || '').toLowerCase().trim();
+    return ['usa', 'us', 'america', 'united states', 'united states of america'].includes(v);
+  };
 
-    const exactMatch = categories.find((cat) => {
-      if (cat === 'All Categories') return false;
-      return normalizeCategory(cat).toLowerCase() === normalizedQuery;
+  const applySearchFilter = (items: any[], query: string) => {
+    const normalizedQuery = String(query || '').toLowerCase().trim();
+    if (!normalizedQuery) return items;
+
+    const compactQuery = normalizedQuery.replace(/[^a-z0-9]/g, '');
+
+    return items.filter((item: any) => {
+      const country = String(item.country || '').toLowerCase().trim();
+
+      if (isUsaAlias(normalizedQuery)) {
+        if (['usa', 'us', 'america', 'united states', 'united states of america'].includes(country)) {
+          return true;
+        }
+      }
+
+      const fields = [
+        item.title,
+        item.category,
+        item.description,
+        item.city,
+        item.state,
+        item.country,
+      ]
+        .map((val) => String(val || '').toLowerCase())
+        .filter(Boolean);
+
+      return fields.some((field) => {
+        const compactField = field.replace(/[^a-z0-9]/g, '');
+        return field.includes(normalizedQuery) || compactField.includes(compactQuery);
+      });
     });
-    if (exactMatch) return exactMatch;
-
-    const partialMatch = categories.find((cat) => {
-      if (cat === 'All Categories') return false;
-      const normalizedCategory = normalizeCategory(cat).toLowerCase();
-      return normalizedCategory.includes(normalizedQuery) || normalizedQuery.includes(normalizedCategory);
-    });
-
-    return partialMatch || '';
   };
 
   useEffect(() => {
     if (!initialized) return;
     fetchServices();
   }, [initialized, selectedCategory, locationSearch, priceRange, minRating]);
+
+  useEffect(() => {
+    setFilteredServices(applySearchFilter(services, searchTerm));
+  }, [services, searchTerm]);
 
   const fetchServices = async () => {
     try {
@@ -74,11 +96,12 @@ function ServicesList() {
         category: s.category || '',
         city: s.city || '',
         state: s.state || '',
+        country: s.country || '',
         service_details: s.service_details || s.serviceDetails || '',
       })).filter((s: any) => Boolean(s._id));
 
       setServices(data);
-      setFilteredServices(data);
+      setFilteredServices(applySearchFilter(data, searchTerm));
     } catch (error) {
       console.error('Error fetching services:', error);
     } finally {
@@ -113,17 +136,7 @@ function ServicesList() {
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
-                const matchedCategory = resolveCategoryFromSearch(searchTerm);
-
-                if (matchedCategory) {
-                  setSelectedCategory(matchedCategory);
-                  setSearchTerm('');
-                  return;
-                }
-
-                if (searchTerm.trim()) {
-                  toast.error('Please search a service category like Plumbing or Cleaning Services.');
-                }
+                setFilteredServices(applySearchFilter(services, searchTerm));
               }}
               className="flex flex-col md:flex-row gap-3"
             >
@@ -285,7 +298,7 @@ function ServicesList() {
                       <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
                     <h3 className="text-2xl font-black text-slate-800 mb-2">No matching services</h3>
-                    <p className="text-slate-500 mb-8 max-w-xs mx-auto text-sm">We couldn't find anything matching your search. Try adjusting the keywords or clearing filters.</p>
+                    <p className="text-slate-500 mb-8 max-w-xs mx-auto text-sm">We couldn&apos;t find anything matching your search. Try adjusting the keywords or clearing filters.</p>
                     <button
                       onClick={() => {
                         setSearchTerm('');

@@ -329,6 +329,19 @@ export const servicesAPI = {
     setStoredReviews(reviews);
     return makeResponse(reviews[index]);
   },
+  deleteReviewPermanently: (reviewId: string) => {
+    if (api) return api.delete(`/services/reviews/moderation/${reviewId}`);
+
+    const reviews = getStoredReviews();
+    const review = reviews.find((r: any) => r._id === reviewId);
+    if (!review) makeApiError('Review not found', 404);
+    if (String(review.status || 'pending').toLowerCase() !== 'rejected') {
+      makeApiError('Only rejected reviews can be permanently deleted', 400);
+    }
+    const next = reviews.filter((r: any) => r._id !== reviewId);
+    setStoredReviews(next);
+    return makeResponse({ success: true });
+  },
   uploadImage: async (file: File) => {
     if (!api) throw new Error("Backend not enabled for local uploads");
     const formData = new FormData();
@@ -356,7 +369,20 @@ export const inquiriesAPI = {
     setBookings(bookings);
     return makeResponse(newBooking, 201);
   },
-  getAll: () => (api ? api.get('/bookings/') : makeResponse(getBookings())),
+  getAll: async () => {
+    if (api) {
+      try {
+        return await api.get('/bookings/');
+      } catch (error: any) {
+        // If backend is unreachable (network error), keep admin usable with local fallback.
+        if (!error?.response) {
+          return makeResponse(getBookings());
+        }
+        throw error;
+      }
+    }
+    return makeResponse(getBookings());
+  },
 
   // Used by Admin to update booking status.
   // Backend: PUT /api/bookings/{id}/status?new_status=pending|contacted|completed|cancelled
@@ -405,8 +431,17 @@ export const contactAPI = {
     writeStorage(STORAGE_KEYS.contact, messages);
     return makeResponse({ success: true }, 201);
   },
-  getAll: () => {
-    if (api) return api.get('/contact/');
+  getAll: async () => {
+    if (api) {
+      try {
+        return await api.get('/contact/');
+      } catch (error: any) {
+        if (!error?.response) {
+          return makeResponse(readStorage<any[]>(STORAGE_KEYS.contact, []));
+        }
+        throw error;
+      }
+    }
     return makeResponse(readStorage<any[]>(STORAGE_KEYS.contact, []));
   },
 };

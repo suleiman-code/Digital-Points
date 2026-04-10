@@ -51,6 +51,9 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
   const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
   const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.country || ''}`.trim();
   const rawContactPhone = String(service.contact_phone || '').trim();
+  const normalizedDialPhone = rawContactPhone.startsWith('+')
+    ? `+${rawContactPhone.slice(1).replace(/\D/g, '')}`
+    : rawContactPhone.replace(/\D/g, '');
 
   const features = service.service_details ? service.service_details.split('\n').filter(Boolean) : [];
   const featureTags = Array.from(
@@ -65,16 +68,18 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
     )
   ).slice(0, 10);
 
+  const phoneHref = normalizedDialPhone ? `tel:${normalizedDialPhone}` : '';
+
   return (
-    <div className="bg-slate-50 min-h-screen flex flex-col font-sans">
+    <div className="bg-[#f4f9ff] min-h-screen flex flex-col font-sans">
       <Header />
 
       <main className="flex-grow pt-[6.5rem] pb-20">
         {/* HERO SECTION */}
-        <div className="bg-[#0f2340] relative overflow-hidden text-white pt-8 pb-12 px-4 rounded-b-[2rem] md:rounded-b-[3rem] mb-12 shadow-2xl">
+        <div className="bg-[#2f74c8] relative overflow-hidden text-white pt-8 pb-12 px-4 rounded-b-[2rem] md:rounded-b-[3rem] mb-12 shadow-2xl">
           {/* Decorative Background Elements */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/20 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
+          <div className="absolute top-0 right-0 w-80 h-80 bg-sky-300/35 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-300/25 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
           
           <div className="container-max relative z-10 max-w-5xl mx-auto">
             <Link
@@ -86,14 +91,14 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             </Link>
 
             <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight mb-3">{service.title}</h1>
-            <p className="text-blue-200 font-medium tracking-wide text-base md:text-lg max-w-2xl">Dive deeper into what makes us different. Explore our portfolio, read our highlights, and get in touch.</p>
+            <p className="text-sky-100 font-medium tracking-wide text-base md:text-lg max-w-2xl">Dive deeper into what makes us different. Explore our portfolio, read our highlights, and get in touch.</p>
           </div>
         </div>
 
         <div className="container-max px-4 max-w-5xl mx-auto space-y-24">
 
           {/* PORTFOLIO / GALLERY */}
-          <section>
+          <section id="gallery">
             <div className="flex items-center gap-4 mb-10 text-center justify-center">
               <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-4 hidden">
                  {/* icon if centered */}
@@ -142,10 +147,10 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
           <section>
             <div className="flex flex-col md:flex-row items-center gap-10 bg-white p-10 md:p-14 rounded-[3rem] border border-slate-200 shadow-lg relative overflow-hidden">
               {/* Abstract decorative shape */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
               
               <div className="md:w-1/3 relative z-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-amber-100 text-amber-500 mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-blue-100 text-blue-600 mb-6">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
                 </div>
                 <h2 className="text-4xl font-black text-slate-800 leading-tight mb-4 text-balance">The Highlights & Features</h2>
@@ -158,7 +163,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                     {featureTags.map((tag, index) => (
                       <span
                         key={`${tag}-${index}`}
-                        className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-amber-700"
+                        className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-blue-700"
                       >
                         {tag}
                       </span>
@@ -168,8 +173,8 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                 {features.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {features.map((point: string, i: number) => (
-                      <div key={i} className="flex gap-4 p-5 rounded-2xl bg-amber-50/50 border border-amber-100/50 hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                        <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center font-black flex-shrink-0 text-sm mt-0.5 shadow-sm">✓</div>
+                      <div key={i} className="flex gap-4 p-5 rounded-2xl bg-blue-50/60 border border-blue-100/70 hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-black flex-shrink-0 text-sm mt-0.5 shadow-sm">✓</div>
                         <p className="text-sm font-bold text-slate-700 leading-relaxed">{point.trim()}</p>
                       </div>
                     ))}
@@ -187,16 +192,13 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
 
           {/* CONTACT INFO GRID */}
           <section>
-            <div className="flex items-center gap-4 mb-10">
-              <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-              </div>
-              <h2 className="text-3xl font-black text-slate-800">Reach Out & Let's Connect</h2>
+            <div className="flex items-center justify-between gap-4 mb-10">
+              <h2 className="text-3xl font-black text-slate-800">Let&apos;s Connect</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {rawContactPhone && (
-                <div className="flex items-start gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              {phoneHref && (
+                <a href={phoneHref} className="flex items-start gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
                   <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                   </div>
@@ -204,7 +206,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-transparent">Direct Phone</p>
                     <p className="text-xl font-black text-slate-800">{rawContactPhone}</p>
                   </div>
-                </div>
+                </a>
               )}
 
               {service.contact_email && (

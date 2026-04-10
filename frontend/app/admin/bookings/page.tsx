@@ -4,17 +4,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/lib/auth';
-import { bookingsAPI } from '@/lib/api';
+import { contactAPI } from '@/lib/api';
 import Link from 'next/link';
 
 export default function AdminBookingsPage() {
   const { isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
-  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [directEmails, setDirectEmails] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -24,61 +23,45 @@ export default function AdminBookingsPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchBookings();
+      fetchDirectEmails();
     }
   }, [isAuthenticated]);
 
-  const fetchBookings = async () => {
+  const fetchDirectEmails = async () => {
     try {
       setLoading(true);
-      const response = await bookingsAPI.getAll();
-      setBookings(response.data);
+      const response = await contactAPI.getAll();
+      setDirectEmails(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      toast.error('Error fetching bookings');
+      setDirectEmails([]);
+      toast.error('Error fetching direct admin emails');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateStatus = async (id: string, newStatus: string) => {
-    try {
-      // Backend: PUT /api/bookings/{id}/status?new_status=...
-      if (typeof (bookingsAPI as any).updateStatus === 'function') {
-        await (bookingsAPI as any).updateStatus(id, newStatus);
-      } else {
-        await bookingsAPI.update(id, { status: newStatus });
-      }
-      toast.success('Status updated!');
-      fetchBookings();
-      setSelectedBooking(null);
-    } catch (error) {
-      toast.error('Error updating booking');
-    }
-  };
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-slate-600 font-semibold">Loading bookings panel...</div>;
+  }
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this booking?')) {
-      try {
-        await bookingsAPI.delete(id);
-        toast.success('Booking deleted!');
-        fetchBookings();
-      } catch (error) {
-        toast.error('Error deleting booking');
-      }
-    }
-  };
-
-  if (isLoading || !isAuthenticated) {
-    return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm max-w-md w-full">
+          <p className="text-slate-700 font-semibold">Please login to access bookings messages.</p>
+          <Link href="/admin/login" className="inline-block mt-4 btn-primary">Go to Admin Login</Link>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)]">
       {/* Sidebar */}
       <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[linear-gradient(180deg,_#1d4c83_0%,_#274f87_55%,_#2f6fb1_100%)] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-white/10">
           <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
             {sidebarOpen ? 'SH Admin' : 'SA'}
           </Link>
@@ -88,10 +71,16 @@ export default function AdminBookingsPage() {
           <SidebarItem href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
           <SidebarItem href="/admin/services" icon="🛠️" label="Services" open={sidebarOpen} />
           <SidebarItem href="/admin/bookings" icon="📅" label="Bookings" open={sidebarOpen} active />
+          <SidebarItem href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
         </nav>
 
         <div className="absolute bottom-4 left-4 right-4">
-          <button onClick={logout} className="w-full btn-danger text-sm py-2">
+          <button
+            onClick={logout}
+            className="w-full btn-danger text-sm py-2"
+            aria-label="Logout"
+            title="Logout"
+          >
             {sidebarOpen ? 'Logout' : '🚪'}
           </button>
         </div>
@@ -113,172 +102,47 @@ export default function AdminBookingsPage() {
             <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hidden md:block" aria-label="Toggle sidebar">☰</button>
           </div>
-          <h1 className="text-base sm:text-xl font-bold text-right">Bookings Management</h1>
+          <h1 className="text-base sm:text-xl font-bold text-right">Direct Admin Contact Messages</h1>
         </div>
 
         <div className="p-4 sm:p-6 md:p-8">
-          {/* Bookings Table */}
-          {loading ? (
-            <p>Loading bookings...</p>
-          ) : bookings.length === 0 ? (
-            <p className="text-center text-gray-600 py-12">No bookings found</p>
-          ) : (
-            <>
-            <div className="md:hidden space-y-3">
-              {bookings.map((booking: any) => (
-                <div key={booking._id || booking.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-                  <p className="text-sm font-black text-slate-900 truncate">{booking.service_name || booking.serviceName || '—'}</p>
-                  <p className="text-xs text-slate-600 mt-1">{booking.user_name || booking.userName || '—'}</p>
-                  <a href={`mailto:${booking.user_email || booking.userEmail}`} className="text-xs text-blue-600 break-all mt-1 block">{booking.user_email || booking.userEmail || '—'}</a>
-
-                  <div className="mt-3 flex items-center justify-between gap-2">
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-                        booking.status === 'contacted'
-                          ? 'bg-green-100 text-green-800'
-                          : booking.status === 'completed'
-                          ? 'bg-blue-100 text-blue-800'
-                          : booking.status === 'cancelled'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {booking.status || 'pending'}
-                    </span>
-                    <p className="text-[11px] text-slate-500">{new Date(booking.created_at || booking.createdAt).toLocaleDateString()}</p>
-                  </div>
-
-                  <div className="mt-3 flex items-center gap-2">
-                    <button onClick={() => setSelectedBooking(booking)} className="btn-secondary text-xs py-1.5 px-3">View</button>
-                    <button onClick={() => handleDelete(booking._id || booking.id)} className="btn-danger text-xs py-1.5 px-3">Delete</button>
-                  </div>
-                </div>
-              ))}
+          <div className="mt-8">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Contact Messages (Direct to Admin)</h2>
+              <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs font-semibold">
+                {directEmails.length} records
+              </span>
             </div>
 
-            <div className="hidden md:block bg-white rounded-lg shadow-md overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Service</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Customer Name</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Email</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Date</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map((booking: any) => (
-                    <tr key={booking._id || booking.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-800">{booking.service_name || booking.serviceName || '—'}</td>
-                      <td className="px-6 py-4">{booking.user_name || booking.userName || '—'}</td>
-                      <td className="px-6 py-4 text-blue-600">
-                        <a href={`mailto:${booking.user_email || booking.userEmail}`}>{booking.user_email || booking.userEmail || '—'}</a>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            booking.status === 'contacted'
-                              ? 'bg-green-100 text-green-800'
-                              : booking.status === 'completed'
-                              ? 'bg-blue-100 text-blue-800'
-                              : booking.status === 'cancelled'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {booking.status || 'pending'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-500 text-sm">{new Date(booking.created_at || booking.createdAt).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 space-x-2">
-                        <button
-                          onClick={() => setSelectedBooking(booking)}
-                          className="btn-secondary text-xs py-1"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleDelete(booking._id || booking.id)}
-                          className="btn-danger text-xs py-1"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            </>
-          )}
-
-          {/* Booking Details Modal */}
-          {selectedBooking && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg p-8 max-w-md w-full">
-                <h2 className="text-2xl font-bold mb-4">Booking Details</h2>
-
-                <div className="space-y-4 mb-6">
-                  <div className="bg-slate-50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Service</p>
-                    <p className="font-semibold text-gray-800 mt-1">{selectedBooking.service_name || selectedBooking.serviceName}</p>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Customer</p>
-                    <p className="font-semibold text-gray-800 mt-1">{selectedBooking.user_name || selectedBooking.userName}</p>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Email</p>
-                    <a href={`mailto:${selectedBooking.user_email || selectedBooking.userEmail}`} className="font-semibold text-blue-600 mt-1 block hover:underline">{selectedBooking.user_email || selectedBooking.userEmail}</a>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Phone</p>
-                    <a href={`tel:${selectedBooking.user_phone || selectedBooking.userPhone}`} className="font-semibold text-green-600 mt-1 block hover:underline">{selectedBooking.user_phone || selectedBooking.userPhone}</a>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Message</p>
-                    <p className="font-medium text-gray-700 mt-1 leading-relaxed">{selectedBooking.message}</p>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Current Status</p>
-                    <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${
-                        selectedBooking.status === 'contacted' ? 'bg-green-100 text-green-800' :
-                        selectedBooking.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                        selectedBooking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>{selectedBooking.status || 'pending'}</span>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-lg">
-                    <p className="text-gray-500 text-xs uppercase font-bold tracking-wide">Received On</p>
-                    <p className="font-medium text-gray-700 mt-1">{new Date(selectedBooking.created_at || selectedBooking.createdAt).toLocaleString()}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <button
-                    onClick={() => updateStatus(selectedBooking._id, 'contacted')}
-                    className="btn-primary w-full"
-                  >
-                    Mark as Contacted
-                  </button>
-                  <button
-                    onClick={() => updateStatus(selectedBooking._id, 'completed')}
-                    className="btn-secondary w-full"
-                  >
-                    Mark as Completed
-                  </button>
-                  <button
-                    onClick={() => setSelectedBooking(null)}
-                    className="btn-outline w-full"
-                  >
-                    Close
-                  </button>
-                </div>
+            {directEmails.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border border-slate-100 p-6 text-center text-slate-600">
+                No direct contact messages found
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="space-y-3">
+                {directEmails.map((item: any) => (
+                  <div key={item._id || item.id} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 break-words">{item.subject || 'No Subject'}</p>
+                        <p className="text-xs text-slate-500 mt-1">From: {item.name || 'Unknown Sender'}</p>
+                        <a href={`mailto:${item.email || ''}`} className="text-xs text-blue-600 hover:underline break-all">
+                          {item.email || 'No Email'}
+                        </a>
+                      </div>
+                      <p className="text-xs text-slate-500 whitespace-nowrap">
+                        {new Date(item.created_at || item.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 rounded-lg bg-slate-50 border border-slate-100 p-3">
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">{item.message || 'No message'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -290,7 +154,7 @@ function SidebarItem({ href, icon, label, open, active = false }: any) {
     <Link
       href={href}
       className={`block px-4 py-3 rounded-lg transition flex items-center gap-3 ${
-        active ? 'bg-gray-800' : 'hover:bg-gray-800'
+        active ? 'bg-white/18 text-white' : 'text-blue-50/80 hover:bg-white/12 hover:text-white'
       }`}
     >
       <span className="text-xl">{icon}</span>

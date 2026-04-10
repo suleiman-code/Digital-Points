@@ -66,6 +66,7 @@ class ServiceBase(BaseModel):
     business_hours: Optional[dict[str, str]] = None # e.g. {"Monday": "9am-6pm", "Tuesday": "Closed"}
     google_maps_url: Optional[str] = Field(default=None, max_length=2048)
     country: str = Field(default="USA", max_length=120) # Added default USA
+    timezone: Optional[str] = Field(default=None, max_length=120)
     sub_services: Optional[list[str]] = None # Custom Inner Page links defined by Admin
     reviews: list[dict] = Field(default_factory=list) # User feedback: [{user, rating, comment, date}]
     gallery: Optional[list[str]] = Field(default_factory=list)
@@ -92,6 +93,7 @@ class ServiceUpdate(BaseModel):
     business_hours: Optional[dict[str, str]] = None
     google_maps_url: Optional[str] = Field(default=None, max_length=2048)
     country: Optional[str] = Field(default=None, max_length=120)
+    timezone: Optional[str] = Field(default=None, max_length=120)
     sub_services: Optional[list[str]] = None
     gallery: Optional[list[str]] = None
     avg_rating: Optional[float] = None

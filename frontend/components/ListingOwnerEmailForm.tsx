@@ -44,7 +44,7 @@ export default function ListingOwnerEmailForm({ serviceId, serviceName }: Listin
         message: form.message,
       });
 
-      toast.success('Inquiry sent to listing owner.');
+      toast.success('Inquiry sent to business owner.');
       setForm({ name: '', email: '', phone: '', city: '', message: '' });
     } catch {
       toast.error('Failed to send inquiry. Please try again.');
@@ -55,8 +55,8 @@ export default function ListingOwnerEmailForm({ serviceId, serviceName }: Listin
 
   return (
     <div className="mt-10 bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
-      <h3 className="text-2xl font-black text-slate-800 mb-2">Email Listing Owner</h3>
-      <p className="text-slate-500 text-sm mb-6">Send a quick message directly to this listing owner.</p>
+      <h3 className="text-2xl font-black text-slate-800 mb-2">Email Business Owner</h3>
+      <p className="text-slate-500 text-sm mb-6">Send a quick message directly to this business owner.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,7 +99,7 @@ export default function ListingOwnerEmailForm({ serviceId, serviceName }: Listin
           value={form.message}
           onChange={handleChange}
           rows={4}
-          placeholder="Write your message for listing owner"
+          placeholder="Write your message for business owner"
           required
         />
 

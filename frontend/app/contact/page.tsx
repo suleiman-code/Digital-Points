@@ -49,7 +49,7 @@ export default function ContactPage() {
           <div className="container-max relative z-10 text-center">
             <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight drop-shadow-md bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">Get In Touch</h1>
             <p className="text-blue-100/90 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed">
-              We're here to help! Reach out to us for any queries or support.
+              We&apos;re here to help! Reach out to us for any queries or support.
             </p>
           </div>
         </section>

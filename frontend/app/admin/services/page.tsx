@@ -99,8 +99,19 @@ function AdminServicesContent() {
 
   const currentCategory = categoryFilter || 'all';
 
-  if (isLoading || !isAuthenticated) {
-    return null;
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-slate-600 font-semibold">Loading services panel...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm max-w-md w-full">
+          <p className="text-slate-700 font-semibold">Please login to access services management.</p>
+          <Link href="/admin/login" className="inline-block mt-4 btn-primary">Go to Admin Login</Link>
+        </div>
+      </div>
+    );
   }
 
   // Keep master category order, then append any legacy categories already present in data.
@@ -114,12 +125,12 @@ function AdminServicesContent() {
   const uniqueCategories = [...BUSINESS_CATEGORIES, ...dynamicCategories];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 text-slate-900">
+    <div className="flex min-h-screen bg-[linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)] text-slate-900">
       {/* Sidebar - Same as before */}
       <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[linear-gradient(180deg,_#1d4c83_0%,_#274f87_55%,_#2f6fb1_100%)] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-white/10">
           <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
             {sidebarOpen ? 'SH Admin' : 'SA'}
           </Link>
@@ -128,6 +139,8 @@ function AdminServicesContent() {
         <nav className="mt-8 space-y-2 p-4">
           <SidebarItem href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
           <SidebarItem href="/admin/services" icon="🛠️" label="Services" open={sidebarOpen} active />
+          <SidebarItem href="/admin/bookings" icon="📅" label="Bookings" open={sidebarOpen} />
+          <SidebarItem href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
         </nav>
 
         <div className="absolute bottom-4 left-4 right-4">
@@ -148,12 +161,12 @@ function AdminServicesContent() {
 
       {/* Main Content */}
       <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
-        <div className="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-30">
+        <div className="bg-white shadow-md p-4 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30">
           <div className="flex items-center gap-2">
             <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hidden md:block" aria-label="Toggle sidebar">☰</button>
           </div>
-          <div className="text-slate-500 font-black uppercase tracking-widest text-[10px]">Management Control</div>
+          <div className="text-slate-500 font-black uppercase tracking-widest text-[10px] text-right">Management Control</div>
         </div>
 
         <div className="p-4 sm:p-6 md:p-8">
@@ -186,9 +199,9 @@ function AdminServicesContent() {
 
             <Link
               href="/admin/add-listing"
-              className="w-full md:w-auto px-6 md:px-10 py-4 md:py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg hover:shadow-green-500/20 active:scale-95 transition-all text-center"
+              className="w-full md:w-auto px-6 md:px-10 py-4 md:py-5 bg-[linear-gradient(135deg,_#1f5aa0,_#2f74c8)] text-white border border-[#2f74c8] font-black text-xs uppercase tracking-widest rounded-2xl shadow-[0_10px_24px_rgba(47,116,200,0.18)] hover:brightness-105 active:scale-95 transition-all text-center"
             >
-              + Create New Listing
+              + Create New Business
             </Link>
           </div>
 
@@ -367,7 +380,7 @@ function SidebarItem({ href, icon, label, open, active = false }: any) {
   return (
     <Link
       href={href}
-      className={`block px-4 py-3 rounded-lg transition flex items-center gap-3 ${active ? 'bg-gray-800' : 'hover:bg-gray-800'
+      className={`block px-4 py-3 rounded-lg transition flex items-center gap-3 ${active ? 'bg-white/18 text-white' : 'text-blue-50/80 hover:bg-white/12 hover:text-white'
         }`}
     >
       <span className="text-xl">{icon}</span>

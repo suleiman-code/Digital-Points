@@ -51,14 +51,17 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-600 to-blue-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Reset Password</h1>
-        <p className="text-center text-gray-600 mb-8">Set a new password for your admin account</p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_35%),linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)] flex items-center justify-center p-4">
+      <div className="bg-white rounded-[2rem] shadow-2xl p-8 max-w-md w-full border border-blue-100">
+        <div className="mb-6 text-center">
+          <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 border border-blue-100">Admin Security</span>
+          <h1 className="mt-4 text-3xl font-black text-center text-slate-900">Reset Password</h1>
+          <p className="text-center text-slate-500 mt-2">Set a new password for your admin account</p>
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {!urlToken ? (
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
               Reset link token missing in URL. Paste token below or request a new reset link.
             </div>
           ) : null}
@@ -99,7 +102,7 @@ function ResetPasswordContent() {
               <button
                 type="button"
                 onClick={() => setShowNewPassword((prev) => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-50 hover:text-blue-700"
                 aria-label={showNewPassword ? 'Hide password' : 'Show password'}
               >
                 <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -143,7 +146,7 @@ function ResetPasswordContent() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-50 hover:text-blue-700"
                 aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
               >
                 <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -177,14 +180,14 @@ function ResetPasswordContent() {
           </button>
         </form>
 
-        <div className="mt-6 pt-4 border-t border-gray-200 text-center text-sm space-y-2">
+        <div className="mt-6 pt-4 border-t border-blue-100 text-center text-sm space-y-2">
           <p>
-            <Link href="/admin/forgot-password" className="text-blue-600 hover:underline">
+            <Link href="/admin/forgot-password" className="text-blue-700 hover:underline">
               Request New Reset Link
             </Link>
           </p>
           <p>
-            <Link href="/admin/login" className="text-blue-600 hover:underline">
+            <Link href="/admin/login" className="text-blue-700 hover:underline">
               Back to Admin Login
             </Link>
           </p>

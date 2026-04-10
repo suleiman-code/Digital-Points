@@ -16,6 +16,97 @@ ALLOWED_REVIEW_STATUSES = {"pending", "approved", "rejected"}
 
 ALLOWED_COUNTRIES = {"USA", "Canada"}
 
+USA_STATE_TIMEZONES = {
+    "AL": "America/Chicago",
+    "AK": "America/Anchorage",
+    "AZ": "America/Phoenix",
+    "AR": "America/Chicago",
+    "CA": "America/Los_Angeles",
+    "CO": "America/Denver",
+    "CT": "America/New_York",
+    "DE": "America/New_York",
+    "FL": "America/New_York",
+    "GA": "America/New_York",
+    "HI": "Pacific/Honolulu",
+    "ID": "America/Denver",
+    "IL": "America/Chicago",
+    "IN": "America/Indiana/Indianapolis",
+    "IA": "America/Chicago",
+    "KS": "America/Chicago",
+    "KY": "America/New_York",
+    "LA": "America/Chicago",
+    "ME": "America/New_York",
+    "MD": "America/New_York",
+    "MA": "America/New_York",
+    "MI": "America/Detroit",
+    "MN": "America/Chicago",
+    "MS": "America/Chicago",
+    "MO": "America/Chicago",
+    "MT": "America/Denver",
+    "NE": "America/Chicago",
+    "NV": "America/Los_Angeles",
+    "NH": "America/New_York",
+    "NJ": "America/New_York",
+    "NM": "America/Denver",
+    "NY": "America/New_York",
+    "NC": "America/New_York",
+    "ND": "America/Chicago",
+    "OH": "America/New_York",
+    "OK": "America/Chicago",
+    "OR": "America/Los_Angeles",
+    "PA": "America/New_York",
+    "RI": "America/New_York",
+    "SC": "America/New_York",
+    "SD": "America/Chicago",
+    "TN": "America/Chicago",
+    "TX": "America/Chicago",
+    "UT": "America/Denver",
+    "VT": "America/New_York",
+    "VA": "America/New_York",
+    "WA": "America/Los_Angeles",
+    "WV": "America/New_York",
+    "WI": "America/Chicago",
+    "WY": "America/Denver",
+    "DC": "America/New_York",
+}
+
+CANADA_PROVINCE_TIMEZONES = {
+    "AB": "America/Edmonton",
+    "BC": "America/Vancouver",
+    "MB": "America/Winnipeg",
+    "NB": "America/Moncton",
+    "NL": "America/St_Johns",
+    "NS": "America/Halifax",
+    "NT": "America/Yellowknife",
+    "NU": "America/Iqaluit",
+    "ON": "America/Toronto",
+    "PE": "America/Halifax",
+    "QC": "America/Toronto",
+    "SK": "America/Regina",
+    "YT": "America/Whitehorse",
+}
+
+USA_STATE_NAME_TO_CODE = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA",
+    "colorado": "CO", "connecticut": "CT", "delaware": "DE", "florida": "FL", "georgia": "GA",
+    "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA",
+    "kansas": "KS", "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD",
+    "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS", "missouri": "MO",
+    "montana": "MT", "nebraska": "NE", "nevada": "NV", "new hampshire": "NH", "new jersey": "NJ",
+    "new mexico": "NM", "new york": "NY", "north carolina": "NC", "north dakota": "ND", "ohio": "OH",
+    "oklahoma": "OK", "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC",
+    "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT",
+    "virginia": "VA", "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY",
+    "district of columbia": "DC",
+}
+
+CANADA_PROVINCE_NAME_TO_CODE = {
+    "alberta": "AB", "british columbia": "BC", "manitoba": "MB", "new brunswick": "NB",
+    "newfoundland and labrador": "NL", "newfoundland": "NL", "nova scotia": "NS",
+    "northwest territories": "NT", "nunavut": "NU", "ontario": "ON", "prince edward island": "PE",
+    "quebec": "QC", "saskatchewan": "SK", "yukon": "YT",
+}
+
 def normalize_country(country: str | None) -> str:
     value = (country or "").strip().lower()
     if value in {"usa", "us", "united states", "united states of america", "u.s.", "u.s.a."}:
@@ -23,6 +114,74 @@ def normalize_country(country: str | None) -> str:
     if value in {"canada", "ca"}:
         return "Canada"
     return (country or "").strip() or "USA"
+
+def normalize_region_code(country: str, state: str | None) -> str:
+    raw = (state or "").strip().lower().replace(".", "")
+    if not raw:
+        return ""
+
+    if country == "USA":
+        if len(raw) == 2:
+            return raw.upper()
+        return USA_STATE_NAME_TO_CODE.get(raw, "")
+
+    if country == "Canada":
+        if len(raw) == 2:
+            return raw.upper()
+        return CANADA_PROVINCE_NAME_TO_CODE.get(raw, "")
+
+    return ""
+
+def resolve_listing_timezone(country: str, state: str | None) -> str:
+    normalized_country = normalize_country(country)
+    region_code = normalize_region_code(normalized_country, state)
+
+    if normalized_country == "Canada":
+        return CANADA_PROVINCE_TIMEZONES.get(region_code, "America/Toronto")
+
+    return USA_STATE_TIMEZONES.get(region_code, "America/New_York")
+
+def apply_timezone_for_response(service_doc: dict) -> dict:
+    if not service_doc:
+        return service_doc
+    country = service_doc.get("country") or "USA"
+    state = service_doc.get("state")
+    service_doc["timezone"] = resolve_listing_timezone(country, state)
+    return service_doc
+
+def _is_local_upload_path(path: str) -> bool:
+    value = (path or "").strip().replace("\\", "/")
+    return value.startswith("/static/uploads/") or value.startswith("static/uploads/")
+
+def _local_upload_exists(path: str) -> bool:
+    value = (path or "").strip().replace("\\", "/")
+    if not value:
+        return False
+    if not _is_local_upload_path(value):
+        return True
+
+    relative = value[1:] if value.startswith("/") else value
+    abs_path = os.path.join(".", relative)
+    return os.path.isfile(abs_path)
+
+def sanitize_media_for_response(service_doc: dict) -> dict:
+    if not service_doc:
+        return service_doc
+
+    image_url = str(service_doc.get("image_url") or "").strip()
+    if image_url and not _local_upload_exists(image_url):
+        service_doc["image_url"] = ""
+
+    gallery = service_doc.get("gallery")
+    if isinstance(gallery, list):
+        service_doc["gallery"] = [img for img in gallery if _local_upload_exists(str(img or ""))]
+
+    return service_doc
+
+def normalize_service_for_response(service_doc: dict) -> dict:
+    service_doc = apply_timezone_for_response(service_doc)
+    service_doc = sanitize_media_for_response(service_doc)
+    return service_doc
 
 def normalize_phone_number(phone: str) -> str:
     phone = (phone or "").strip()
@@ -127,6 +286,7 @@ async def get_all_services(
         query["avg_rating"] = {"$gte": min_rating}
         
     services = await db.db["services"].find(query).sort([("featured", -1), ("created_at", -1), ("_id", -1)]).to_list(100)
+    services = [normalize_service_for_response(item) for item in services]
     return services
 
 # 2. GET SINGLE SERVICE (Public)
@@ -138,8 +298,8 @@ async def get_service(id: str):
     service = await db.db["services"].find_one({"_id": ObjectId(id)})
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
-        
-    return service
+
+    return normalize_service_for_response(service)
 
 # 3. CREATE SERVICE (Admin Only)
 @router.post("/", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
@@ -155,12 +315,13 @@ async def create_service(service: ServiceCreate, admin: dict = Depends(get_admin
     service_dict["category"] = normalize_category(service_dict.get("category", ""))
     service_dict["country"] = normalized_country
     service_dict["contact_phone"] = format_phone_for_country(service.contact_phone, normalized_country)
+    service_dict["timezone"] = resolve_listing_timezone(normalized_country, service.state)
     service_dict["created_at"] = datetime.now(timezone.utc)
     service_dict["updated_at"] = datetime.now(timezone.utc)
     
     new_service = await db.db["services"].insert_one(service_dict)
     created_service = await db.db["services"].find_one({"_id": new_service.inserted_id})
-    return created_service
+    return normalize_service_for_response(created_service)
 
 # 4. UPDATE SERVICE (Admin Only)
 @router.put("/{id}", response_model=ServiceResponse)
@@ -189,6 +350,10 @@ async def update_service(id: str, service_data: ServiceUpdate, admin: dict = Dep
     if "category" in update_data:
         update_data["category"] = normalize_category(update_data["category"])
 
+    effective_country = normalize_country(update_data.get("country") or existing_service.get("country") or "USA")
+    effective_state = update_data.get("state") if "state" in update_data else existing_service.get("state")
+    update_data["timezone"] = resolve_listing_timezone(effective_country, effective_state)
+
     update_data["updated_at"] = datetime.now(timezone.utc)
     
     result = await db.db["services"].update_one(
@@ -199,7 +364,7 @@ async def update_service(id: str, service_data: ServiceUpdate, admin: dict = Dep
         raise HTTPException(status_code=404, detail="Service not found")
         
     updated_service = await db.db["services"].find_one({"_id": ObjectId(id)})
-    return updated_service
+    return normalize_service_for_response(updated_service)
 
 # 5. DELETE SERVICE (Admin Only)
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -318,7 +483,27 @@ async def update_review_status(review_id: str, new_status: str, admin: dict = De
         updated_review["status"] = "approved"
     return updated_review
 
-# 11. UPLOAD IMAGE (Admin Only)
+
+# 11. DELETE REJECTED REVIEW PERMANENTLY (Admin Only)
+@router.delete("/reviews/moderation/{review_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_review_permanently(review_id: str, admin: dict = Depends(get_admin_user)):
+    if not ObjectId.is_valid(review_id):
+        raise HTTPException(status_code=400, detail="Invalid Review ID")
+
+    existing_review = await db.db["reviews"].find_one({"_id": ObjectId(review_id)})
+    if not existing_review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    if str(existing_review.get("status", "pending")).lower() != "rejected":
+        raise HTTPException(status_code=400, detail="Only rejected reviews can be permanently deleted")
+
+    result = await db.db["reviews"].delete_one({"_id": ObjectId(review_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    return None
+
+# 12. UPLOAD IMAGE (Admin Only)
 @router.post("/upload/", status_code=status.HTTP_201_CREATED)
 async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_admin_user)):
     allowed_extensions = {"jpg", "jpeg", "png", "webp", "gif"}

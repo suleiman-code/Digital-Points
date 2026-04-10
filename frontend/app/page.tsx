@@ -79,7 +79,7 @@ export default function Home() {
     <>
       <Header />
 
-      <main>
+      <main className="bg-[linear-gradient(180deg,_#eaf4ff_0%,_#f3f9ff_35%,_#f8fcff_100%)]">
         {/* Hero Section */}
         <section
           className="relative overflow-hidden text-white py-16 sm:py-24 min-h-[70vh] sm:min-h-[85vh] flex items-center"
@@ -95,13 +95,13 @@ export default function Home() {
 
           <div className="container-max relative z-10">
             <motion.div
-              initial={{ opacity: 0, y: 50 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="max-w-4xl mx-auto text-center"
             >
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={false}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
@@ -110,18 +110,18 @@ export default function Home() {
                 </span>
               </motion.div>
 
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black leading-tight mb-5 sm:mb-6 text-white drop-shadow-sm">
-                Book Skilled Pros Without the Hassle.
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black leading-tight mb-5 sm:mb-6 text-white drop-shadow-sm">
+                Where Quality Businesses Meet Qualified Customers
               </h1>
 
               <p className="text-base sm:text-xl md:text-2xl text-white/90 mb-8 sm:mb-10 max-w-3xl mx-auto font-light leading-relaxed px-1">
-                Connect with trusted professionals, compare transparent prices, and book your service instantly.
+                We bridge the gap between customers and businesses, making it easier than ever to find exactly what you're looking for.
               </p>
 
 
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
                 className="flex flex-col sm:flex-row gap-3 sm:gap-5 justify-center mb-10 sm:mb-16"
@@ -135,7 +135,7 @@ export default function Home() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.8 }}
                 className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
@@ -161,10 +161,10 @@ export default function Home() {
         </section>
 
         {/* Featured Services */}
-        <section className="py-24 bg-slate-50/50 relative">
+        <section className="py-24 bg-[#eef6ff] relative">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-            <div className="absolute top-40 right-10 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
-            <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+            <div className="absolute top-40 right-10 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40"></div>
+            <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-sky-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40"></div>
           </div>
 
           <div className="container-max relative z-10">
@@ -222,7 +222,7 @@ export default function Home() {
         </section>
 
         {/* Popular Categories */}
-        <section className="py-24 bg-white">
+        <section className="py-24 bg-[#f6faff]">
           <div className="container-max">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

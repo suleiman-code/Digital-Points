@@ -328,14 +328,27 @@ export default function AddListing() {
     }
   };
 
-  if (!isAdmin || isEditLoading) return null;
+  if (isEditLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-slate-600 font-semibold">Loading listing form...</div>;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm max-w-md w-full">
+          <p className="text-slate-700 font-semibold">Admin access required for this page.</p>
+          <Link href="/admin/login" className="inline-block mt-4 btn-primary">Go to Admin Login</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)]">
       <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[linear-gradient(180deg,_#1d4c83_0%,_#274f87_55%,_#2f6fb1_100%)] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-white/10">
           <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
             {sidebarOpen ? 'SH Admin' : 'SA'}
           </Link>
@@ -344,6 +357,7 @@ export default function AddListing() {
         <nav className="mt-8 space-y-2 p-4">
           <SidebarItem href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
           <SidebarItem href="/admin/services" icon="🛠️" label="Services" open={sidebarOpen} active />
+          <SidebarItem href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
         </nav>
 
         <div className="absolute bottom-4 left-4 right-4">
@@ -635,7 +649,7 @@ function SidebarItem({ href, icon, label, open, active = false }: any) {
   return (
     <Link
       href={href}
-      className={`block px-4 py-3 rounded-lg transition flex items-center gap-3 ${active ? 'bg-gray-800' : 'hover:bg-gray-800'
+      className={`block px-4 py-3 rounded-lg transition flex items-center gap-3 ${active ? 'bg-white/18 text-white' : 'text-blue-50/80 hover:bg-white/12 hover:text-white'
         }`}
     >
       <span className="text-xl">{icon}</span>

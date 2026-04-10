@@ -93,28 +93,12 @@ function ServiceDetailContent({ params }: { params: any }) {
 
     setIsPosting(true);
     try {
-      const res = await servicesAPI.postReview(serviceId, reviewForm);
+      await servicesAPI.postReview(serviceId, reviewForm);
       toast.success('Review submitted. It will be visible after admin approval.');
-
-      const newRating = Number(reviewForm.rating);
-      const currentCount = Number(service.reviews_count || 0);
-      const currentAvg = Number(service.avg_rating || 0);
-
-      const newCount = currentCount + 1;
-      const newAvg = ((currentAvg * currentCount) + newRating) / newCount;
-
-      // Update local state immediately for real-time feel
-      setService((prev: any) => prev ? {
-        ...prev,
-        avg_rating: newAvg,
-        reviews_count: newCount
-      } : null);
-
-      setReviews(prev => [res.data, ...prev]);
       setReviewForm({ user_name: '', user_email: '', rating: 5, comment: '' });
 
-      // Optionally still fetch for ultimate consistency
-      // fetchServiceData(serviceId); 
+      // Public page only shows approved reviews.
+      await fetchServiceData(serviceId);
     } catch (error: any) {
       toast.error('Error posting review');
     } finally {
@@ -161,10 +145,6 @@ function ServiceDetailContent({ params }: { params: any }) {
 
   const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.country || ''}`.trim();
   const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
-  const serviceHighlights = String(service.service_details || '')
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean);
   const rawContactPhone = String(service.contact_phone || '').trim();
   const normalizedPhone = rawContactPhone.startsWith('+')
     ? `+${rawContactPhone.slice(1).replace(/\D/g, '')}`
@@ -364,40 +344,6 @@ function ServiceDetailContent({ params }: { params: any }) {
                     )}
                   </div>
                 </div>
-
-                {allImages.length > 1 && (
-                  <div className="mb-10 md:mb-12 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <p className="text-xs sm:text-sm font-bold text-slate-600">
-                        This listing has {allImages.length - 1} extra gallery photo{allImages.length - 1 > 1 ? 's' : ''}.
-                      </p>
-                      <Link
-                        href={`/services/${serviceId}/details`}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider hover:bg-slate-800 transition-colors"
-                      >
-                        Open Gallery
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-
-                {serviceHighlights.length > 0 && (
-                  <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm mb-8 md:mb-12">
-                    <h2 className="text-xl sm:text-2xl font-black text-[#0f2340] mb-5 flex items-center gap-3">
-                      <span className="w-1.5 h-7 bg-emerald-500 rounded-full" />
-                      Service Highlights
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {serviceHighlights.map((point, index) => (
-                        <div key={`${point}-${index}`} className="flex items-start gap-3 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100">
-                          <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">✓</span>
-                          <p className="text-sm font-semibold text-slate-700 leading-relaxed">{point}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </section>
 
                           </div>
@@ -509,7 +455,7 @@ function ServiceDetailContent({ params }: { params: any }) {
                           <svg key={star} className={`w-5 h-5 ${star <= Math.round(rev.rating || 0) ? 'text-amber-400' : 'text-slate-200'} fill-current`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                         ))}
                       </div>
-                      <p className="text-slate-600 text-[12px] font-medium leading-relaxed mb-8 flex-grow">"{rev.comment}"</p>
+                      <p className="text-slate-600 text-[12px] font-medium leading-relaxed mb-8 flex-grow">&quot;{rev.comment}&quot;</p>
                       
                       <div className="flex items-center gap-3 mt-auto pt-6 border-t border-slate-100">
                         <div>

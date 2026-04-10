@@ -3,6 +3,7 @@ import { Manrope, Sora } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
+import IgnoreExtensionErrors from "@/components/IgnoreExtensionErrors";
 
 const headingFont = Sora({
   subsets: ["latin"],
@@ -52,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${bodyFont.variable} ${headingFont.variable} bg-white`}>
+        <IgnoreExtensionErrors />
         {children}
         <Toaster position="top-center" />
       </body>

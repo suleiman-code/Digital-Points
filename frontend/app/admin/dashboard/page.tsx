@@ -15,8 +15,6 @@ export default function AdminDashboard() {
   
   // State for metrics and data
   const [services, setServices] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [reviewActionId, setReviewActionId] = useState<string>('');
   const [stats, setStats] = useState({
     activeListings: 0,
     activeCategories: 0,
@@ -37,18 +35,15 @@ export default function AdminDashboard() {
   const fetchStats = useCallback(async () => {
     try {
       const { contactAPI } = await import('@/lib/api');
-      const [servicesRes, inquiriesRes, reviewsRes] = await Promise.all([
+      const [servicesRes, inquiriesRes] = await Promise.all([
         servicesAPI.getAll(),
         contactAPI.getAll(),
-        servicesAPI.getAllReviewsAdmin(),
       ]);
       
       const fetchedServices = servicesRes?.data || [];
       const inquiries = inquiriesRes?.data || [];
-      const moderationReviews = reviewsRes?.data || [];
       
       setServices(fetchedServices);
-      setReviews(moderationReviews);
       
       const activeListings = fetchedServices.length;
       const activeCategories = new Set(
@@ -93,11 +88,18 @@ export default function AdminDashboard() {
   }, [isAuthenticated, fetchStats]);
 
   if (isLoading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-slate-600 font-semibold">Loading admin dashboard...</div>;
   }
 
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm max-w-md w-full">
+          <p className="text-slate-700 font-semibold">Session not found. Please login to continue.</p>
+          <Link href="/admin/login" className="inline-block mt-4 btn-primary">Go to Admin Login</Link>
+        </div>
+      </div>
+    );
   }
 
   const listedCategoryCounts = services.reduce((acc: Record<string, number>, service: any) => {
@@ -112,43 +114,25 @@ export default function AdminDashboard() {
     .map(([name, count]) => ({ name, count }));
 
   const selectedCategoryCount = selectedCategory ? listedCategoryCounts[selectedCategory] || 0 : 0;
-  const pendingReviews = reviews.filter((review: any) => String(review.status || '').toLowerCase() === 'pending');
-  const recentReviews = reviews.slice(0, 10);
-
-  const handleReviewStatusUpdate = async (reviewId: string, status: 'approved' | 'rejected') => {
-    try {
-      setReviewActionId(reviewId);
-      await servicesAPI.updateReviewStatus(reviewId, status);
-      toast.success(`Review ${status === 'approved' ? 'approved' : 'rejected'} successfully.`);
-      await fetchStats();
-    } catch (error) {
-      toast.error('Unable to update review status right now.');
-    } finally {
-      setReviewActionId('');
-    }
-  };
-
-  const getServiceTitle = (serviceId: string) => {
-    const found = services.find((service: any) => String(service._id) === String(serviceId));
-    return found?.title || 'Unknown Listing';
-  };
 
   return (
-    <div className="flex min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.08),_transparent_40%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)] text-slate-900">
+    <div className="flex min-h-screen bg-[linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)] text-slate-900">
       {/* Sidebar */}
       <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[linear-gradient(180deg,_#1d4c83_0%,_#274f87_55%,_#2f6fb1_100%)] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-white/10">
           <Link href="/admin/dashboard" className="text-2xl font-black tracking-tight truncate">
             {sidebarOpen ? 'SH Admin' : 'SA'}
           </Link>
-          {sidebarOpen && <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-1">Control Panel</p>}
+          {sidebarOpen && <p className="text-[10px] text-blue-100/80 uppercase tracking-[0.2em] mt-1">Control Panel</p>}
         </div>
 
         <nav className="mt-8 space-y-2 p-4">
           <SidebarLink href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
           <SidebarLink href="/admin/services" icon="🛠️" label="All Services" open={sidebarOpen} />
+          <SidebarLink href="/admin/bookings" icon="📅" label="Bookings" open={sidebarOpen} />
+          <SidebarLink href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
         </nav>
 
         <div className="absolute bottom-4 left-4 right-4">
@@ -222,11 +206,11 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-[2rem] shadow-xl p-6 sm:p-8 border border-slate-100 lg:col-span-2">
               <h2 className="text-2xl font-black mb-6 tracking-tight">Main Controls</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Link href="/admin/add-listing" className="w-full py-3 px-5 bg-slate-900 text-white border border-slate-900 font-bold text-xs uppercase tracking-[0.16em] rounded-xl hover:bg-slate-800 transition-all active:scale-95 inline-flex items-center justify-center gap-2">
+                <Link href="/admin/add-listing" className="w-full py-3 px-5 bg-[linear-gradient(135deg,_#1f5aa0,_#2f74c8)] text-white border border-[#2f74c8] font-bold text-xs uppercase tracking-[0.16em] rounded-xl hover:brightness-105 transition-all active:scale-95 inline-flex items-center justify-center gap-2 shadow-[0_10px_24px_rgba(47,116,200,0.18)]">
                   <span className="text-base leading-none">+</span>
-                  Create New Listing
+                  Create New Business
                 </Link>
-                <Link href="/admin/services" className="w-full py-3 px-5 bg-slate-900 text-white border border-slate-900 font-bold text-xs uppercase tracking-[0.16em] rounded-xl hover:bg-slate-800 transition-all active:scale-95 inline-flex items-center justify-center gap-2">
+                <Link href="/admin/services" className="w-full py-3 px-5 bg-[linear-gradient(135deg,_#1f5aa0,_#2f74c8)] text-white border border-[#2f74c8] font-bold text-xs uppercase tracking-[0.16em] rounded-xl hover:brightness-105 transition-all active:scale-95 inline-flex items-center justify-center gap-2 shadow-[0_10px_24px_rgba(47,116,200,0.18)]">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                   Manage Listings
                 </Link>
@@ -244,79 +228,20 @@ export default function AdminDashboard() {
           </div>
 
           <section className="mt-8 bg-white rounded-[2rem] shadow-xl p-5 sm:p-7 border border-slate-100">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
               <div>
-                <h2 className="text-2xl font-black tracking-tight text-slate-900">User Feedback Moderation</h2>
+                <h2 className="text-2xl font-black tracking-tight text-slate-900">Dashboard Overview</h2>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500 mt-1">
-                  Pending Reviews: {pendingReviews.length}
+                  Quick summary of your directory activity.
                 </p>
               </div>
-              <div className="text-xs font-bold text-slate-500">
-                Total Feedback: {reviews.length}
-              </div>
+              <Link href="/admin/feedback" className="inline-flex items-center justify-center rounded-xl px-4 py-2 bg-blue-50 text-blue-700 border border-blue-100 text-xs font-black uppercase tracking-[0.14em] hover:bg-blue-100 transition-colors">
+                Open Feedback Records
+              </Link>
             </div>
-
-            {recentReviews.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">No feedback submitted yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentReviews.map((review: any) => {
-                  const status = String(review.status || 'approved').toLowerCase();
-                  const statusBadge = status === 'approved'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : status === 'rejected'
-                      ? 'bg-rose-100 text-rose-700'
-                      : 'bg-amber-100 text-amber-700';
-
-                  return (
-                    <div key={review._id} className="rounded-2xl border border-slate-200 p-4 sm:p-5">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
-                          <p className="text-sm font-black text-slate-900">{review.user_name || 'User'}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {getServiceTitle(String(review.service_id || ''))}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {new Date(review.created_at || Date.now()).toLocaleDateString('en-US', {
-                              month: 'short', day: 'numeric', year: 'numeric',
-                            })}
-                          </p>
-                        </div>
-                        <span className={`inline-flex self-start px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${statusBadge}`}>
-                          {status}
-                        </span>
-                      </div>
-
-                      <p className="mt-3 text-sm text-slate-700 leading-relaxed">"{review.comment || ''}"</p>
-
-                      <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-bold text-amber-500">Rating: {Number(review.rating || 0).toFixed(1)} / 5</span>
-                        <div className="ml-auto flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleReviewStatusUpdate(String(review._id), 'approved')}
-                            disabled={reviewActionId === String(review._id)}
-                            className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-emerald-500 disabled:opacity-60"
-                          >
-                            Accept
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleReviewStatusUpdate(String(review._id), 'rejected')}
-                            disabled={reviewActionId === String(review._id)}
-                            className="px-3 py-2 rounded-lg bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-rose-500 disabled:opacity-60"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <p className="text-sm text-slate-600">
+              Feedback moderation has been moved to the dedicated Feedback page.
+            </p>
           </section>
         </div>
       </div>
@@ -329,7 +254,7 @@ function SidebarLink({ href, icon, label, open }: any) {
     <Link
       href={href}
       className={`block px-4 py-3 rounded-xl transition flex items-center gap-3 truncate ${
-        typeof window !== 'undefined' && window.location.pathname === href ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+        typeof window !== 'undefined' && window.location.pathname === href ? 'bg-[#1a3357] text-white' : 'text-blue-100/80 hover:bg-[#1a3357] hover:text-white'
       }`}
     >
       <span className="text-xl">{icon}</span>

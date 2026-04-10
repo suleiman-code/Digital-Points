@@ -31,10 +31,13 @@ export default function AdminForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-600 to-blue-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">Forgot Password</h1>
-        <p className="text-center text-gray-600 mb-8">Reset link existing admin login email par hi jayega</p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_35%),linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)] flex items-center justify-center p-4">
+      <div className="bg-white rounded-[2rem] shadow-2xl p-8 max-w-md w-full border border-blue-100">
+        <div className="mb-6 text-center">
+          <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 border border-blue-100">Admin Support</span>
+          <h1 className="mt-4 text-3xl font-black text-center text-slate-900">Forgot Password</h1>
+          <p className="text-center text-slate-500 mt-2">Reset link existing admin login email par hi jayega</p>
+        </div>
 
         {!submitted ? (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -60,11 +63,11 @@ export default function AdminForgotPasswordPage() {
           </form>
         ) : (
           <div className="space-y-3">
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
               If this admin account exists, a password reset link has been sent to your email.
             </div>
             {devResetUrl ? (
-              <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                 Development mode link:{' '}
                 <Link href={devResetUrl} className="underline font-medium">
                   Reset password now
@@ -74,8 +77,8 @@ export default function AdminForgotPasswordPage() {
           </div>
         )}
 
-        <div className="mt-6 pt-4 border-t border-gray-200 text-center text-sm">
-          <Link href="/admin/login" className="text-blue-600 hover:underline">
+        <div className="mt-6 pt-4 border-t border-blue-100 text-center text-sm">
+          <Link href="/admin/login" className="text-blue-700 hover:underline">
             Back to Admin Login
           </Link>
         </div>
