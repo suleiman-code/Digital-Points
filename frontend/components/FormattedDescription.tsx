@@ -37,12 +37,19 @@ export const stripDescriptionFormatting = (input: string) => {
 };
 
 const sanitizeHtml = (input: string) => {
-  return String(input || '')
+  let html = String(input || '')
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
     .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '')
     .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '')
     .replace(/\sjavascript:/gi, ' ');
+
+  // Add target="_blank" and rel="noopener noreferrer" to links, and a class for styling
+  html = html.replace(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/gi, (match, quote, url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-semibold hover:text-blue-800 transition-colors" `;
+  });
+
+  return html;
 };
 
 export default function FormattedDescription({ text, className }: FormattedDescriptionProps) {

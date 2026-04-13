@@ -8,7 +8,7 @@ export default function AboutPage() {
 
       <main className="min-h-screen bg-slate-50 relative pb-20">
         {/* Page Header */}
-        <section className="bg-gradient-to-br from-[#0f2340] via-blue-900 to-indigo-900 text-white pt-32 pb-20 relative overflow-hidden shadow-2xl">
+        <section className="bg-gradient-to-br from-[#0f2340] via-blue-900 to-indigo-900 text-white pt-44 pb-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 -mt-32 mix-blend-screen"></div>
           <div className="container-max relative z-10 text-center">
             <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight drop-shadow-md bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">About Digital Point</h1>

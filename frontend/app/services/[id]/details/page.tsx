@@ -74,7 +74,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
     <div className="bg-[#f4f9ff] min-h-screen flex flex-col font-sans">
       <Header />
 
-      <main className="flex-grow pt-[6.5rem] pb-20">
+      <main className="flex-grow pt-[11rem] pb-20">
         {/* HERO SECTION */}
         <div className="bg-[#2f74c8] relative overflow-hidden text-white pt-8 pb-12 px-4 rounded-b-[2rem] md:rounded-b-[3rem] mb-12 shadow-2xl">
           {/* Decorative Background Elements */}
@@ -82,13 +82,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-300/25 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
           
           <div className="container-max relative z-10 max-w-5xl mx-auto">
-            <Link
-              href={`/services/${serviceId}`}
-              className="inline-flex items-center gap-2 py-1.5 px-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 rounded-full text-white font-bold text-[10px] uppercase tracking-widest transition-all mb-4 shadow-sm active:scale-95"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
-              Go Back
-            </Link>
+            {/* GO BACK BUTTON REMOVED (Now in Header) */}
 
             <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight mb-3">{service.title}</h1>
             <p className="text-sky-100 font-medium tracking-wide text-base md:text-lg max-w-2xl">Dive deeper into what makes us different. Explore our portfolio, read our highlights, and get in touch.</p>

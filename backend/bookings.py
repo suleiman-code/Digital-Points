@@ -122,11 +122,11 @@ async def create_booking(request: Request, booking: BookingCreate, background_ta
     if not service_doc:
         raise HTTPException(status_code=404, detail="Service not found")
 
-    recipient_email = service_doc.get("contact_email")
+    recipient_email = service_doc.get("contact_email") or settings.ADMIN_CONTACT_EMAIL
     if not recipient_email:
         raise HTTPException(
             status_code=400,
-            detail="Listing owner email is missing. Please update service contact email first."
+            detail="No recipient email found for this inquiry. Please contact support."
         )
 
     booking_dict = booking.model_dump()

@@ -98,20 +98,21 @@ export default function Home() {
               initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="max-w-4xl mx-auto text-center"
+              className="max-w-5xl mx-auto text-center"
             >
               <motion.div
                 initial={false}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
-                <span className="inline-block py-1.5 px-3 sm:px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-cyan-50 font-medium text-xs sm:text-sm mb-5 sm:mb-6 tracking-wide shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
-                  Discover Premium Services
+                <span className="inline-block py-2 px-5 rounded-full bg-white/10 backdrop-blur-xl border border-white/30 text-white font-bold text-xs sm:text-sm mb-6 tracking-[0.15em] uppercase shadow-xl">
+                  ✦ Discover Premium Services
                 </span>
               </motion.div>
 
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black leading-tight mb-5 sm:mb-6 text-white drop-shadow-sm">
-                Where Quality Businesses Meet Qualified Customers
+              <h1 className="text-xl sm:text-2xl md:text-4xl font-black leading-[1.1] mb-6 text-white tracking-tighter drop-shadow-2xl uppercase" style={{ fontFamily: 'Arial, sans-serif' }}>
+                Where Quality Businesses Meet <br />
+                Qualified Customers
               </h1>
 
               <p className="text-base sm:text-xl md:text-2xl text-white/90 mb-8 sm:mb-10 max-w-3xl mx-auto font-light leading-relaxed px-1">

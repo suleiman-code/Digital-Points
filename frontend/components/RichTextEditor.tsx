@@ -79,6 +79,18 @@ export default function RichTextEditor({
     emitChange();
   };
 
+  const applyLink = () => {
+    const url = window.prompt('Enter the URL (e.g. https://google.com)');
+    if (url) {
+      // Basic URL normalization
+      let finalUrl = url.trim();
+      if (!/^https?:\/\//i.test(finalUrl) && !finalUrl.startsWith('/')) {
+        finalUrl = 'https://' + finalUrl;
+      }
+      runCommand('createLink', finalUrl);
+    }
+  };
+
   const applyQuote = () => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
@@ -99,6 +111,7 @@ export default function RichTextEditor({
         <button type="button" onClick={() => runCommand('bold')} className={toolbarBtn}>Bold</button>
         <button type="button" onClick={() => runCommand('italic')} className={toolbarBtn}>Italic</button>
         <button type="button" onClick={() => runCommand('underline')} className={toolbarBtn}>Underline</button>
+        <button type="button" onClick={applyLink} className={toolbarBtn}>Link</button>
         <button type="button" onClick={applyQuote} className={toolbarBtn}>Quotes</button>
       </div>
 
@@ -112,7 +125,7 @@ export default function RichTextEditor({
       />
 
       <p className="mt-1 text-[11px] text-slate-500 font-semibold">
-        Formatting enabled: bold, italic, underline, and quotes.
+        Formatting enabled: bold, italic, underline, links, and quotes.
       </p>
     </div>
   );

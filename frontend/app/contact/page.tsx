@@ -44,7 +44,7 @@ export default function ContactPage() {
 
       <main className="min-h-screen bg-slate-50 relative pb-20">
         {/* Page Header */}
-        <section className="bg-gradient-to-br from-[#0f2340] via-blue-900 to-indigo-900 text-white pt-32 pb-20 relative overflow-hidden shadow-2xl">
+        <section className="bg-gradient-to-br from-[#0f2340] via-blue-900 to-indigo-900 text-white pt-44 pb-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 -mt-32 mix-blend-screen"></div>
           <div className="container-max relative z-10 text-center">
             <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight drop-shadow-md bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">Get In Touch</h1>
@@ -61,25 +61,33 @@ export default function ContactPage() {
             <div>
               <h2 className="text-3xl font-bold mb-8">Get In Touch</h2>
 
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-xl font-bold mb-2">📧 Email</h3>
-                  <p className="text-gray-600">info@digitalpointllc.com</p>
+              <div className="space-y-10">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl shadow-sm">📧</div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 mb-1">Email</h3>
+                    <p className="text-slate-600 font-medium tracking-wide">info@digitalpointllc.com</p>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="text-xl font-bold mb-2">📞 Phone</h3>
-                  <p className="text-gray-600">+1 267 452 3317</p>
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl shadow-sm">📞</div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 mb-1">Phone</h3>
+                    <a href="tel:+12674523317" className="text-slate-600 hover:text-blue-600 transition-colors font-bold tracking-widest">+1 267 452 3317</a>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="text-xl font-bold mb-2">📍 Address</h3>
-                  <p className="text-gray-600">
-                    325 CHESTNUT ST SUITE 876 #232<br />
-                    PHILADELPHIA, PA 19106
-                  </p>
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-xl shadow-sm">📍</div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 mb-1">Address</h3>
+                    <p className="text-slate-600 font-medium leading-relaxed">
+                      325 CHESTNUT ST SUITE 876 #232<br />
+                      PHILADELPHIA, PA 19106
+                    </p>
+                  </div>
                 </div>
-
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Sora } from "next/font/google";
+import { Manrope, Sora, Outfit } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
@@ -9,6 +9,12 @@ const headingFont = Sora({
   subsets: ["latin"],
   variable: "--font-heading",
   weight: ["600", "700", "800"],
+});
+
+const outfitFont = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  weight: ["800", "900"],
 });
 
 const bodyFont = Manrope({
@@ -52,7 +58,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${bodyFont.variable} ${headingFont.variable} bg-white`}>
+      <body className={`${bodyFont.variable} ${headingFont.variable} ${outfitFont.variable} bg-white`}>
         <IgnoreExtensionErrors />
         {children}
         <Toaster position="top-center" />

@@ -47,7 +47,6 @@ Inquiry details:
 - Name: {sender_name}
 - Email: {sender_email}
 - Subject: {inquiry_subject}
-- Submitted At (UTC): {submitted_at_str}
 
 Message:
 {inquiry_message}
@@ -72,10 +71,6 @@ Tip: Use Reply in your email client to respond directly to this user.
         <tr>
             <td style=\"padding:8px;border:1px solid #e2e8f0;background:#f8fafc;\"><strong>Subject</strong></td>
             <td style=\"padding:8px;border:1px solid #e2e8f0;\">{inquiry_subject}</td>
-        </tr>
-        <tr>
-            <td style=\"padding:8px;border:1px solid #e2e8f0;background:#f8fafc;\"><strong>Submitted At (UTC)</strong></td>
-            <td style=\"padding:8px;border:1px solid #e2e8f0;\">{submitted_at_str}</td>
         </tr>
     </table>
 
