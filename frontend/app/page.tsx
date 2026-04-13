@@ -110,7 +110,7 @@ export default function Home() {
                 </span>
               </motion.div>
 
-              <h1 className="text-xl sm:text-2xl md:text-4xl font-black leading-[1.1] mb-6 text-white tracking-tighter drop-shadow-2xl uppercase" style={{ fontFamily: 'Arial, sans-serif' }}>
+              <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black leading-[1.1] mb-6 text-white tracking-tighter drop-shadow-2xl uppercase" style={{ fontFamily: 'Arial, sans-serif' }}>
                 Where Quality Businesses Meet <br />
                 Qualified Customers
               </h1>
@@ -139,7 +139,7 @@ export default function Home() {
                 initial={false}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.8 }}
-                className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
+                className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-8"
               >
                 {[
                   { metric: '10k+', label: 'Verified Services' },
@@ -150,10 +150,10 @@ export default function Home() {
                   <motion.div
                     whileHover={{ y: -5, backgroundColor: 'rgba(255,255,255,0.1)' }}
                     key={item.label}
-                    className="rounded-2xl px-4 py-5 bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl transition-all"
+                    className="rounded-xl sm:rounded-2xl px-3 py-4 sm:px-4 sm:py-5 bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl transition-all"
                   >
-                    <p className="text-2xl sm:text-3xl font-black text-white drop-shadow-md mb-1">{item.metric}</p>
-                    <p className="text-white/80 text-[11px] sm:text-sm font-medium uppercase tracking-wider">{item.label}</p>
+                    <p className="text-xl sm:text-2xl md:text-3xl font-black text-white drop-shadow-md mb-1">{item.metric}</p>
+                    <p className="text-white/80 text-[9px] sm:text-xs md:text-sm font-medium uppercase tracking-wider">{item.label}</p>
                   </motion.div>
                 ))}
               </motion.div>

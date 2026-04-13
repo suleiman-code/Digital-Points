@@ -106,7 +106,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             </div>
 
             {allImages.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {allImages.map((img, i) => (
                   <motion.button
                     key={i}
@@ -139,21 +139,21 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
 
           {/* WHY CHOOSE US - HIGHLIGHTS */}
           <section>
-            <div className="flex flex-col md:flex-row items-center gap-10 bg-white p-10 md:p-14 rounded-[3rem] border border-slate-200 shadow-lg relative overflow-hidden">
+            <div className="flex flex-col md:flex-row items-center gap-10 bg-white p-6 sm:p-10 md:p-14 rounded-[2rem] md:rounded-[3rem] border border-slate-200 shadow-lg relative overflow-hidden">
               {/* Abstract decorative shape */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
               
-              <div className="md:w-1/3 relative z-10">
+              <div className="w-full md:w-1/3 relative z-10 text-center md:text-left">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-blue-100 text-blue-600 mb-6">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
                 </div>
-                <h2 className="text-4xl font-black text-slate-800 leading-tight mb-4 text-balance">The Highlights & Features</h2>
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-4 text-balance">The Highlights & Features</h2>
                 <p className="text-slate-500 font-medium">What makes our service stand out from the rest. Here is why you should pick us.</p>
               </div>
 
-              <div className="md:w-2/3 w-full relative z-10">
+              <div className="w-full md:w-2/3 relative z-10">
                 {featureTags.length > 0 && (
-                  <div className="mb-5 flex flex-wrap gap-2">
+                  <div className="mb-5 flex flex-wrap gap-2 justify-center md:justify-start">
                     {featureTags.map((tag, index) => (
                       <span
                         key={`${tag}-${index}`}

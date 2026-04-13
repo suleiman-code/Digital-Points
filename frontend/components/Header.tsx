@@ -26,9 +26,9 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[80] bg-white shadow-[0_6px_20px_rgba(15,23,42,0.08)] transition-all duration-300">
-      <nav className="container-max flex justify-between items-center py-5">
+      <nav className="container-max flex justify-between items-center py-4 sm:py-5">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-xl sm:text-2xl font-bold text-blue-700 tracking-tight hover:opacity-80 transition-opacity">
+          <Link href="/" className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700 tracking-tight hover:opacity-80 transition-opacity">
             Digital Point
           </Link>
         </div>
@@ -58,11 +58,18 @@ export default function Header() {
 
         {/* Mobile Menu Button */}
         <button
-          className="md:hidden p-2 rounded-lg border border-slate-200"
+          className="md:hidden p-2.5 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center gap-2 hover:bg-slate-50 active:scale-95 transition-all"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
         >
-          {mobileMenuOpen ? 'X' : 'Menu'}
+          {mobileMenuOpen ? (
+            <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+          ) : (
+            <>
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+              <span className="text-xs font-black uppercase tracking-widest text-slate-800">Menu</span>
+            </>
+          )}
         </button>
       </nav>
 
