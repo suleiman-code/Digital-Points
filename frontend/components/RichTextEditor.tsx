@@ -84,6 +84,7 @@ export default function RichTextEditor({
       div#rich-editor-area li { display: list-item !important; font-size: 12px !important; font-weight: 400 !important; margin: 0 0 2px !important; }
       div#rich-editor-area a { color: #2563eb !important; text-decoration: underline !important; }
       div#rich-editor-area strong, div#rich-editor-area b { font-weight: 700 !important; }
+      .editor-quote-style { font-weight: 600 !important; font-size: 13px !important; color: #0f172a !important; display: inline !important; }
     `;
     document.head.appendChild(style);
   }, []);
@@ -142,8 +143,8 @@ export default function RichTextEditor({
     const selected = selection.toString();
     focusEditor();
     if (selected) {
-      // Very slightly bold (500) + curly quotes
-      const html = `<span style="font-weight:500;">\u201c${selected}\u201d</span>`;
+      // Balanced highlight: weight 600, size 13px, and dark slate color
+      const html = `<span class="editor-quote-style" style="font-weight:600;font-size:13px;color:#0f172a;">\u201c${selected}\u201d</span>`;
       document.execCommand('insertHTML', false, html);
     } else {
       document.execCommand('insertText', false, '\u201c\u201d');

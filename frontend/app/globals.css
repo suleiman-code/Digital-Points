@@ -183,11 +183,9 @@ textarea:focus-visible {
   font-family: Arial, sans-serif;
 }
 
-/* Force-reset any lingering bold from old pasted content */
-.formatted-description span,
-.formatted-description div,
-.formatted-description p {
-  font-weight: 400 !important;
+/* Reset container weight */
+.formatted-description {
+  font-weight: 400;
 }
 
 .formatted-description p {
@@ -243,6 +241,13 @@ textarea:focus-visible {
 
 .formatted-description strong,
 .formatted-description b {
-  font-weight: 600;
-  color: #1e293b;
+  font-weight: 700 !important;
+  color: #0f172a;
+}
+
+.formatted-description .editor-quote-style {
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  color: #0f172a !important;
+  display: inline !important;
 }
