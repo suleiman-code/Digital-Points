@@ -157,6 +157,7 @@ function ServiceDetailContent({ params }: { params: any }) {
     if (!service.business_hours || typeof service.business_hours !== 'object') return null;
 
     const stateToTz: { [key: string]: string } = {
+      // --- USA STATES ---
       'AL': 'America/Chicago', 'AK': 'America/Anchorage', 'AZ': 'America/Phoenix', 'AR': 'America/Chicago',
       'CA': 'America/Los_Angeles', 'CO': 'America/Denver', 'CT': 'America/New_York', 'DE': 'America/New_York',
       'FL': 'America/New_York', 'GA': 'America/New_York', 'HI': 'Pacific/Honolulu', 'ID': 'America/Boise',
@@ -169,7 +170,13 @@ function ServiceDetailContent({ params }: { params: any }) {
       'OR': 'America/Los_Angeles', 'PA': 'America/New_York', 'RI': 'America/New_York', 'SC': 'America/New_York',
       'SD': 'America/Chicago', 'TN': 'America/Chicago', 'TX': 'America/Chicago', 'UT': 'America/Denver',
       'VT': 'America/New_York', 'VA': 'America/New_York', 'WA': 'America/Los_Angeles', 'WV': 'America/New_York',
-      'WI': 'America/Chicago', 'WY': 'America/Denver', 'DC': 'America/New_York'
+      'WI': 'America/Chicago', 'WY': 'America/Denver', 'DC': 'America/New_York',
+      
+      // --- CANADA PROVINCES ---
+      'ON': 'America/Toronto', 'QC': 'America/Toronto', 'NS': 'America/Halifax', 'NB': 'America/Moncton',
+      'MB': 'America/Winnipeg', 'BC': 'America/Vancouver', 'PE': 'America/Halifax', 'SK': 'America/Regina',
+      'AB': 'America/Edmonton', 'NL': 'America/St_Johns', 'YT': 'America/Whitehorse', 'NT': 'America/Yellowknife',
+      'NU': 'America/Iqaluit'
     };
 
     const stateCode = service.state?.trim().toUpperCase();

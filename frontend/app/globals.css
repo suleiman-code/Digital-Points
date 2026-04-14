@@ -173,3 +173,76 @@ textarea:focus-visible {
     transform: translateY(0);
   }
 }
+
+/* ─── FORMATTED DESCRIPTION (Service Detail Page) ─── */
+.formatted-description {
+  font-size: 15px;
+  font-weight: 400;
+  color: #334155;
+  line-height: 1.65;
+  font-family: Arial, sans-serif;
+}
+
+/* Force-reset any lingering bold from old pasted content */
+.formatted-description span,
+.formatted-description div,
+.formatted-description p {
+  font-weight: 400 !important;
+}
+
+.formatted-description p {
+  margin-bottom: 6px;
+}
+
+.formatted-description h1 {
+  font-size: 20px;
+  font-weight: 700 !important;
+  color: #0f172a;
+  margin: 14px 0 6px;
+}
+
+.formatted-description h2 {
+  font-size: 17px;
+  font-weight: 700 !important;
+  color: #1e293b;
+  margin: 12px 0 4px;
+}
+
+.formatted-description h3 {
+  font-size: 15px;
+  font-weight: 600 !important;
+  color: #334155;
+  margin: 10px 0 3px;
+}
+
+.formatted-description ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 6px 0 10px;
+}
+
+.formatted-description ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin: 6px 0 10px;
+}
+
+.formatted-description li {
+  display: list-item;
+  font-size: 15px;
+  font-weight: 400;
+  margin-bottom: 3px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.formatted-description a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.formatted-description strong,
+.formatted-description b {
+  font-weight: 600;
+  color: #1e293b;
+}

@@ -6,8 +6,11 @@ Digital Points is a robust, premium-designed business directory platform that al
 
 *   **Advanced search & discovery:** Powerful sidebar filters for Category, Price Range, and star-based Ratings.
 *   **Service Gallery (Lightbox):** Admin can upload multiple images (up to 8) to showcase their work, which clients can view in a beautiful fullscreen lightbox.
+*   **Live Business Status:** Timezone-aware "Open Now" status for all 50 USA states and Canadian provinces based on specific business hours.
+*   **Premium Location UI:** Integrated Google Maps with a modern, interactive card design and direct "View Full Map" navigation.
 *   **Real-time Rating Logic:** Automatic calculation of average ratings and total review counts when a client submits a review.
 *   **Lead Inquiry System:** Secure contact forms for clients to request quotes or details directly from the business owner, including mandatory city field verification.
+*   **Fully Responsive:** Professional and premium UI optimized for mobile, tablet, and desktop devices with modern micro-animations.
 *   **Advanced Admin Dashboard:** A comprehensive UI for administrators to add, edit, or remove listings with local image upload support.
 *   **Modern Tech Stack:** Built with performance and SEO in mind.
 

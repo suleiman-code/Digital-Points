@@ -44,9 +44,24 @@ const sanitizeHtml = (input: string) => {
     .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '')
     .replace(/\sjavascript:/gi, ' ');
 
+  // Strip bold font-weight from ALL inline styles (covers auto-bold from paste)
+  html = html.replace(/style="([^"]*)"/gi, (match, styleContent) => {
+    let cleaned = styleContent
+      // Remove font-weight bold/700/800/900
+      .replace(/font-weight\s*:\s*(bold|[6-9]\d{2})\s*;?\s*/gi, '')
+      // Remove large font-size overrides from spans (keep heading sizes via CSS class)
+      .replace(/font-size\s*:\s*(\d+(?:\.\d+)?(?:px|pt|em|rem))\s*;?\s*/gi, (_m: string, size: string) => {
+        const px = parseFloat(size);
+        // Only strip if size is from execCommand (1-7 scale fonts become large)
+        return px > 18 ? '' : _m;
+      });
+    cleaned = cleaned.trim();
+    return cleaned ? `style="${cleaned}"` : '';
+  });
+
   // Add target="_blank" and rel="noopener noreferrer" to links, and a class for styling
   html = html.replace(/<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1/gi, (match, quote, url) => {
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-semibold hover:text-blue-800 transition-colors" `;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-medium hover:text-blue-800 transition-colors" `;
   });
 
   return html;
@@ -61,7 +76,12 @@ export default function FormattedDescription({ text, className }: FormattedDescr
 
   if (HTML_TAG_PATTERN.test(content)) {
     const safeHtml = sanitizeHtml(content);
-    return <div className={className} dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+    return (
+      <div 
+        className={`formatted-description ${className || ''}`}
+        dangerouslySetInnerHTML={{ __html: safeHtml }} 
+      />
+    );
   }
 
   const lines = content.split('\n');
