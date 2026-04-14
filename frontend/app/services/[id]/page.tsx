@@ -32,7 +32,7 @@ function ServiceDetailContent({ params }: { params: any }) {
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(INITIAL_REVIEWS_COUNT);
 
   // Inquiry Form States
-  const [bookingForm, setBookingForm] = useState({ name: '', email: '', phone: '', city: '', message: '' });
+  const [bookingForm, setBookingForm] = useState({ name: '', email: '', phone: '', city: '', postalCode: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
@@ -114,8 +114,8 @@ function ServiceDetailContent({ params }: { params: any }) {
       return;
     }
 
-    if (!bookingForm.name || !bookingForm.email || !bookingForm.phone || !bookingForm.city || !bookingForm.message) {
-      return toast.error('Please fill all inquiry fields.');
+    if (!bookingForm.name || !bookingForm.email || !bookingForm.phone || !bookingForm.city || !bookingForm.postalCode || !bookingForm.message) {
+      return toast.error('Please fill all inquiry fields (including postal code).');
     }
 
     setSubmitting(true);
@@ -127,11 +127,12 @@ function ServiceDetailContent({ params }: { params: any }) {
         user_email: bookingForm.email,
         user_phone: bookingForm.phone,
         user_city: bookingForm.city,
+        user_postal_code: bookingForm.postalCode,
         message: bookingForm.message
       };
       await inquiriesAPI.create(bookingData);
-      toast.success('Inquiry sent successfully!');
-      setBookingForm({ name: '', email: '', phone: '', city: '', message: '' });
+      toast.success('Inquiry sent directly to the business owner!');
+      setBookingForm({ name: '', email: '', phone: '', city: '', postalCode: '', message: '' });
       setIsModalOpen(false);
     } catch (error) {
       toast.error('Failed to send inquiry.');
@@ -143,7 +144,7 @@ function ServiceDetailContent({ params }: { params: any }) {
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center font-bold text-slate-300 animate-pulse text-xs uppercase tracking-widest">Digital Points...</div>;
   if (!service) return <div className="min-h-screen flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
-  const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.country || ''}`.trim();
+  const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.postal_code || ''} ${service.country || ''}`.trim();
   const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
   const rawContactPhone = String(service.contact_phone || '').trim();
   const normalizedPhone = rawContactPhone.replace(/[^\d+]/g, '');
@@ -572,11 +573,7 @@ function ServiceDetailContent({ params }: { params: any }) {
               </button>
 
               <h2 className="text-2xl font-black text-[#0f2340] mb-2 uppercase tracking-tight">Direct Inquiry</h2>
-              <p className="text-sm text-slate-500 mb-8 font-medium">Send a direct message to {service.title}</p>
-              <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-                <p className="text-[11px] font-black uppercase tracking-widest text-blue-700">Recipient Email</p>
-                <p className="text-sm font-semibold text-blue-900 mt-1 break-all">{contactEmail || 'Digital Point Support'}</p>
-              </div>
+              <p className="text-sm text-slate-500 mb-8 font-medium">Send a professional message to <span className="text-blue-600 font-bold">{service.title}</span></p>
 
               <form onSubmit={handleBookingSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -584,6 +581,7 @@ function ServiceDetailContent({ params }: { params: any }) {
                   <input required type="email" placeholder="Your Email Address *" value={bookingForm.email} onChange={e => setBookingForm({ ...bookingForm, email: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
                   <input required placeholder="Your Phone Number *" value={bookingForm.phone} onChange={e => setBookingForm({ ...bookingForm, phone: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
                   <input required placeholder="Your City *" value={bookingForm.city} onChange={e => setBookingForm({ ...bookingForm, city: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
+                  <input required placeholder="Postal Code *" value={bookingForm.postalCode} onChange={e => setBookingForm({ ...bookingForm, postalCode: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
                 </div>
                 <div className="relative">
                   <textarea required placeholder="Write your message (min 30, max 500 words) *" value={bookingForm.message} onChange={e => setBookingForm({ ...bookingForm, message: e.target.value })} className="w-full border border-slate-200 rounded-xl p-4 text-sm h-32 focus:border-blue-500 outline-none resize-none transition-all focus:ring-4 focus:ring-blue-100" />
@@ -591,10 +589,12 @@ function ServiceDetailContent({ params }: { params: any }) {
                     {bookingForm.message.trim().split(/\s+/).filter(Boolean).length} words
                   </div>
                 </div>
-                <button disabled={submitting} className="w-full py-4 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 transition-all text-sm uppercase tracking-widest shadow-md disabled:opacity-70">
-                  {submitting ? 'Sending...' : 'Send Message'}
+                <button disabled={submitting} className="w-full py-4 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 transition-all text-sm uppercase tracking-widest shadow-lg disabled:opacity-70 group flex items-center justify-center gap-2">
+                  {submitting ? 'Sending Message...' : 'Send Inquiry Now'}
+                  {!submitting && <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7-7 7M5 12h16"/></svg>}
                 </button>
               </form>
+
             </motion.div>
           </motion.div>
         )}

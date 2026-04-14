@@ -30,25 +30,25 @@ export default function AdminBookingsPage() {
   const fetchDirectEmails = async () => {
     try {
       setLoading(true);
-      const response = await contactAPI.getAll();
+      const response = await inquiriesAPI.getAll();
       setDirectEmails(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       setDirectEmails([]);
-      toast.error('Error fetching direct admin emails');
+      toast.error('Error fetching service inquiries');
     } finally {
       setLoading(false);
     }
   };
 
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-slate-600 font-semibold">Loading bookings panel...</div>;
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-slate-600 font-semibold">Loading inquiries panel...</div>;
   }
 
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm max-w-md w-full">
-          <p className="text-slate-700 font-semibold">Please login to access bookings messages.</p>
+          <p className="text-slate-700 font-semibold">Please login to access service inquiries.</p>
           <Link href="/admin/login" className="inline-block mt-4 btn-primary">Go to Admin Login</Link>
         </div>
       </div>
@@ -70,7 +70,7 @@ export default function AdminBookingsPage() {
         <nav className="mt-8 space-y-2 p-4">
           <SidebarItem href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
           <SidebarItem href="/admin/services" icon="🛠️" label="Services" open={sidebarOpen} />
-          <SidebarItem href="/admin/bookings" icon="📅" label="Bookings" open={sidebarOpen} active />
+          <SidebarItem href="/admin/bookings" icon="📅" label="Inquiries" open={sidebarOpen} active />
           <SidebarItem href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
         </nav>
 
@@ -102,13 +102,13 @@ export default function AdminBookingsPage() {
             <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl text-gray-700 hidden md:block" aria-label="Toggle sidebar">☰</button>
           </div>
-          <h1 className="text-base sm:text-xl font-bold text-right">Direct Admin Contact Messages</h1>
+          <h1 className="text-base sm:text-xl font-bold text-right">Service Inquiries (Direct to Owners)</h1>
         </div>
 
         <div className="p-4 sm:p-6 md:p-8">
           <div className="mt-8">
             <div className="flex items-center justify-between gap-3 mb-4">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Contact Messages (Direct to Admin)</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">Recent Inquiries</h2>
               <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs font-semibold">
                 {directEmails.length} records
               </span>
@@ -116,7 +116,7 @@ export default function AdminBookingsPage() {
 
             {directEmails.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm border border-slate-100 p-6 text-center text-slate-600">
-                No direct contact messages found
+                No service inquiries found
               </div>
             ) : (
               <div className="space-y-3">
@@ -124,19 +124,40 @@ export default function AdminBookingsPage() {
                   <div key={item._id || item.id} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 sm:p-5">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-900 break-words">{item.subject || 'No Subject'}</p>
-                        <p className="text-xs text-slate-500 mt-1">From: {item.name || 'Unknown Sender'}</p>
-                        <a href={`mailto:${item.email || ''}`} className="text-xs text-blue-600 hover:underline break-all">
-                          {item.email || 'No Email'}
-                        </a>
+                        <p className="text-sm font-bold text-slate-900 break-words">
+                          <span className="text-blue-600 font-black">Listing:</span> {item.service_name || 'N/A'}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">Client: <span className="font-bold text-slate-700">{item.user_name || 'Unknown'}</span></p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                          <a href={`mailto:${item.user_email || ''}`} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                            📧 {item.user_email || 'No Email'}
+                          </a>
+                          <span className="text-xs text-slate-500 flex items-center gap-1">
+                            📞 {item.user_phone || 'No Phone'}
+                          </span>
+                          <span className="text-xs text-slate-500 flex items-center gap-1 font-semibold uppercase tracking-widest bg-slate-100 px-1.5 rounded">
+                            📍 {item.user_city || 'N/A'}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-500 whitespace-nowrap">
-                        {new Date(item.created_at || item.createdAt).toLocaleString()}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black uppercase text-slate-400">Received On</p>
+                        <p className="text-xs text-slate-600 font-bold whitespace-nowrap">
+                           {new Date(item.created_at || item.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                        <span className={`inline-block mt-2 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${
+                          item.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                          item.status === 'contacted' ? 'bg-blue-100 text-blue-700' :
+                          'bg-amber-100 text-amber-700'
+                        }`}>
+                          {item.status || 'pending'}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="mt-3 rounded-lg bg-slate-50 border border-slate-100 p-3">
-                      <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">{item.message || 'No message'}</p>
+                    <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-4 border-l-4 border-l-blue-500">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Message Content</p>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap break-words italic">&quot;{item.message || 'No message'}&quot;</p>
                     </div>
                   </div>
                 ))}
@@ -144,6 +165,7 @@ export default function AdminBookingsPage() {
             )}
           </div>
         </div>
+
       </div>
     </div>
   );

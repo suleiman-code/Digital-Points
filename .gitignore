@@ -19,3 +19,7 @@ node_modules/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Project Specific
+backend/static/uploads/
+.vscode/

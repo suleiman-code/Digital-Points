@@ -70,6 +70,7 @@ export default function AddListing() {
     website_url: '',
     google_maps_url: '',
     country: 'USA',
+    postal_code: '',
   });
 
   const [mainImage, setMainImage] = useState<File | null>(null);
@@ -150,6 +151,7 @@ export default function AddListing() {
           website_url: svc.website_url || '',
           google_maps_url: svc.google_maps_url || '',
           country: normalizeCountry(svc.country || 'USA'),
+          postal_code: svc.postal_code || '',
         });
 
         setMainImagePreview(resolveMediaUrl(svc.image_url || svc.image || '') || null);
@@ -308,6 +310,7 @@ export default function AddListing() {
         ...(formData.contact_phone.trim() ? { contact_phone: formData.contact_phone.trim() } : {}),
         ...(Number.isFinite(parsedPrice) ? { price: parsedPrice } : {}),
         ...(formData.address.trim() ? { address: formData.address.trim() } : {}),
+        ...(formData.postal_code.trim() ? { postal_code: formData.postal_code.trim() } : {}),
         ...(formData.contact_email.trim() ? { contact_email: formData.contact_email.trim() } : {}),
         ...(formData.website_url.trim() ? { website_url: formData.website_url.trim() } : {}),
         ...(formData.google_maps_url.trim() ? { google_maps_url: formData.google_maps_url.trim() } : {})
@@ -513,6 +516,11 @@ export default function AddListing() {
                   <label className="block text-sm font-bold text-slate-700 mb-2">State *</label>
                   <input name="state" value={formData.state} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Postal Code</label>
+                  <input name="postal_code" value={formData.postal_code} onChange={handleChange} placeholder="e.g. 19106" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
+                </div>
 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Contact Number *</label>
@@ -532,8 +540,8 @@ export default function AddListing() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Business Email (Optional)</label>
-                  <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Business Owner Email (Required for Inquiries) *</label>
+                  <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} required placeholder="owner@example.com" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
 
                 <div className="md:col-span-2">
@@ -602,13 +610,11 @@ export default function AddListing() {
                 <h2 className="text-xl font-bold text-slate-800">Additional Service Details</h2>
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Bullet Points (One per line)</label>
-                <textarea 
+                <label className="block text-sm font-bold text-slate-700 mb-2">Rich Service Highlights</label>
+                <RichTextEditor 
                   value={serviceDetailsInput} 
-                  onChange={(e) => setServiceDetailsInput(e.target.value)} 
-                  rows={6} 
-                  placeholder="e.g. 24/7 Emergency Support&#10;Licensed & Insured Professionals&#10;Residential & Commercial"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-blue-500 outline-none"
+                  onChange={(next) => setServiceDetailsInput(next)} 
+                  placeholder="e.g. 24/7 Emergency Support, Licensed & Insured Professionals..."
                 />
               </div>
             </section>

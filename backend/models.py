@@ -55,6 +55,7 @@ class ServiceBase(BaseModel):
     price: Optional[float] = Field(default=0.0, ge=0)
     city: str = Field(..., min_length=1, max_length=120)
     state: str = Field(..., min_length=1, max_length=120)
+    postal_code: Optional[str] = Field(default=None, max_length=20)
     featured: bool = False
     image_url: Optional[str] = Field(default=None, max_length=2048)
     service_details: Optional[str] = Field(default=None, max_length=5000)
@@ -83,6 +84,7 @@ class ServiceUpdate(BaseModel):
     price: Optional[float] = None
     city: Optional[str] = Field(default=None, min_length=1, max_length=120)
     state: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    postal_code: Optional[str] = Field(default=None, max_length=20)
     featured: Optional[bool] = None
     image_url: Optional[str] = Field(default=None, max_length=2048)
     service_details: Optional[str] = Field(default=None, max_length=5000)
@@ -114,6 +116,7 @@ class BookingBase(BaseModel):
     user_email: EmailStr
     user_phone: str = Field(..., min_length=7, max_length=30)
     user_city: str = Field(..., min_length=1, max_length=120)
+    user_postal_code: str = Field(..., min_length=2, max_length=20)
     message: str = Field(..., min_length=10, max_length=3000)
     booking_date: Optional[datetime] = None
 

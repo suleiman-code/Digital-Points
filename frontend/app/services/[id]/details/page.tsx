@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FormattedDescription from '@/components/FormattedDescription';
 import ListingOwnerEmailForm from '@/components/ListingOwnerEmailForm';
 import { resolveMediaUrl, servicesAPI } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,24 +50,11 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
   if (!service) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
   const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
-  const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.country || ''}`.trim();
+  const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.postal_code || ''} ${service.country || ''}`.trim();
   const rawContactPhone = String(service.contact_phone || '').trim();
   const normalizedDialPhone = rawContactPhone.startsWith('+')
     ? `+${rawContactPhone.slice(1).replace(/\D/g, '')}`
     : rawContactPhone.replace(/\D/g, '');
-
-  const features = service.service_details ? service.service_details.split('\n').filter(Boolean) : [];
-  const featureTags = Array.from(
-    new Set(
-      [
-        service.category,
-        ...features,
-      ]
-        .flatMap((item: string) => String(item || '').split(/[,:/|\-]/g))
-        .map((part: string) => part.trim())
-        .filter((part: string) => part.length >= 3)
-    )
-  ).slice(0, 10);
 
   const phoneHref = normalizedDialPhone ? `tel:${normalizedDialPhone}` : '';
 
@@ -152,26 +140,12 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               </div>
 
               <div className="w-full md:w-2/3 relative z-10">
-                {featureTags.length > 0 && (
-                  <div className="mb-5 flex flex-wrap gap-2 justify-center md:justify-start">
-                    {featureTags.map((tag, index) => (
-                      <span
-                        key={`${tag}-${index}`}
-                        className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-blue-700"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {features.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {features.map((point: string, i: number) => (
-                      <div key={i} className="flex gap-4 p-5 rounded-2xl bg-blue-50/60 border border-blue-100/70 hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-black flex-shrink-0 text-sm mt-0.5 shadow-sm">✓</div>
-                        <p className="text-sm font-bold text-slate-700 leading-relaxed">{point.trim()}</p>
-                      </div>
-                    ))}
+                {service.service_details ? (
+                  <div className="bg-blue-50/60 p-6 sm:p-8 rounded-3xl border border-blue-100/70 hover:bg-white hover:shadow-xl transition-all duration-300">
+                    <FormattedDescription 
+                      text={service.service_details} 
+                      className="text-slate-700 font-medium text-lg leading-relaxed" 
+                    />
                   </div>
                 ) : (
                   <div className="text-center py-10 rounded-2xl border border-dashed border-slate-200">

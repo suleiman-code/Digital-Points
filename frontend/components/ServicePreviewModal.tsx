@@ -188,16 +188,11 @@ export default function ServicePreviewModal({ open, serviceId, serviceName, list
                       <FormattedDescription text={String(previewData.description || '')} className="text-slate-600 leading-7 space-y-2" />
                     </div>
 
-                    {previewData.details.length > 0 && (
+                    {service.service_details && (
                       <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-3">Highlights</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {previewData.details.map((item: string, index: number) => (
-                            <div key={index} className="flex gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                              <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs shrink-0">✓</div>
-                              <p className="text-sm font-medium text-slate-700 leading-relaxed">{item}</p>
-                            </div>
-                          ))}
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-3">Highlights & Services</h4>
+                        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                          <FormattedDescription text={service.service_details} className="text-slate-700 leading-relaxed" />
                         </div>
                       </div>
                     )}

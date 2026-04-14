@@ -70,6 +70,7 @@ def normalize_booking_document(booking_doc: dict) -> dict:
     booking_doc["user_email"] = _safe_email(booking_doc.get("user_email"))
     booking_doc["user_phone"] = _ensure_min_len(_safe_text(booking_doc.get("user_phone"), "0000000")[:30], 7, "0000000")
     booking_doc["user_city"] = _ensure_min_len(_safe_text(booking_doc.get("user_city"), "Unknown")[:120], 1, "Unknown")
+    booking_doc["user_postal_code"] = _ensure_min_len(_safe_text(booking_doc.get("user_postal_code"), "00000")[:20], 2, "00000")
     booking_doc["message"] = _ensure_min_len(_safe_text(booking_doc.get("message"), "No message provided")[:3000], 10, "No message provided")
     booking_doc["status"] = _safe_status(booking_doc.get("status"))
     booking_doc["created_at"] = _safe_created_at(booking_doc.get("created_at"))
@@ -91,6 +92,7 @@ BUSINESS/SERVICE: {booking_data['service_name']}
 CLIENT NAME: {booking_data['user_name']}
 CLIENT EMAIL: {booking_data['user_email']}
 CLIENT PHONE: {booking_data['user_phone']}
+CLIENT POSTAL CODE: {booking_data.get('user_postal_code', 'N/A')}
 -------------------------------------------------------------
 
 MESSAGE BODY:

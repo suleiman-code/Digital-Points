@@ -15,6 +15,7 @@ export default function ListingOwnerEmailForm({ serviceId, serviceName }: Listin
     email: '',
     phone: '',
     city: '',
+    postalCode: '',
     message: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -27,8 +28,8 @@ export default function ListingOwnerEmailForm({ serviceId, serviceName }: Listin
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.name || !form.email || !form.phone || !form.city || !form.message) {
-      toast.error('Please fill all fields.');
+    if (!form.name || !form.email || !form.phone || !form.city || !form.postalCode || !form.message) {
+      toast.error('Please fill all fields (including postal code).');
       return;
     }
 
@@ -41,11 +42,12 @@ export default function ListingOwnerEmailForm({ serviceId, serviceName }: Listin
         user_email: form.email,
         user_phone: form.phone,
         user_city: form.city,
+        user_postal_code: form.postalCode,
         message: form.message,
       });
 
       toast.success('Inquiry sent to business owner.');
-      setForm({ name: '', email: '', phone: '', city: '', message: '' });
+      setForm({ name: '', email: '', phone: '', city: '', postalCode: '', message: '' });
     } catch {
       toast.error('Failed to send inquiry. Please try again.');
     } finally {
@@ -90,6 +92,15 @@ export default function ListingOwnerEmailForm({ serviceId, serviceName }: Listin
             onChange={handleChange}
             type="text"
             placeholder="Your city"
+            required
+          />
+          <input
+            name="postalCode"
+            value={form.postalCode}
+            onChange={handleChange}
+            type="text"
+            placeholder="Postal Code"
+            className="md:col-span-2"
             required
           />
         </div>
