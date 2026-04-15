@@ -110,7 +110,7 @@ export default function Home() {
                 </span>
               </motion.div>
 
-              <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black leading-[1.1] mb-6 text-white tracking-tighter drop-shadow-2xl uppercase" style={{ fontFamily: 'Arial, sans-serif' }}>
+              <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black leading-[1.1] mb-6 text-white tracking-tighter drop-shadow-2xl uppercase font-heading">
                 Where Quality Businesses Meet <br />
                 Qualified Customers
               </h1>
@@ -212,8 +212,10 @@ export default function Home() {
                 className="mt-12 text-center"
               >
                 <button 
+                  type="button"
                   onClick={() => setVisibleCount(prev => prev + 8)}
                   className="px-8 py-3 bg-white border-2 border-blue-600 text-blue-600 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-lg hover:shadow-blue-200"
+                  aria-label="Load more business listings"
                 >
                   More Listings
                 </button>
@@ -247,12 +249,14 @@ export default function Home() {
                   ))}
                 </select>
                 <button
+                  type="button"
                   onClick={() => {
                     if (!selectedHomepageCategory) return;
                     router.push(`/services?category=${encodeURIComponent(selectedHomepageCategory)}`);
                   }}
                   className="px-6 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   disabled={!selectedHomepageCategory}
+                  aria-label="Browse services in selected category"
                 >
                   Browse
                 </button>

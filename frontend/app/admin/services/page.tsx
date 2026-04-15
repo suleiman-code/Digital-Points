@@ -139,7 +139,7 @@ function AdminServicesContent() {
         <nav className="mt-8 space-y-2 p-4">
           <SidebarItem href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
           <SidebarItem href="/admin/services" icon="🛠️" label="Services" open={sidebarOpen} active />
-          <SidebarItem href="/admin/bookings" icon="📅" label="Bookings" open={sidebarOpen} />
+          <SidebarItem href="/admin/bookings" icon="📅" label="Inquiries" open={sidebarOpen} />
           <SidebarItem href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
         </nav>
 

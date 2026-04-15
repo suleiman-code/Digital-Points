@@ -74,14 +74,14 @@ export default function RichTextEditor({
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
-      div#rich-editor-area { font-family: Arial, sans-serif !important; font-size: 12px !important; font-weight: 400 !important; line-height: 1.6 !important; color: #334155 !important; }
-      div#rich-editor-area h1 { font-family: Arial, sans-serif !important; font-size: 20px !important; font-weight: 700 !important; margin: 10px 0 5px !important; color: #0f172a !important; line-height: 1.3 !important; display: block !important; }
-      div#rich-editor-area h2 { font-family: Arial, sans-serif !important; font-size: 16px !important; font-weight: 700 !important; margin: 8px 0 4px !important; color: #1e293b !important; line-height: 1.3 !important; display: block !important; }
+      div#rich-editor-area { font-family: Arial, sans-serif !important; font-size: 14px !important; font-weight: 400 !important; line-height: 1.6 !important; color: #334155 !important; }
+      div#rich-editor-area h1 { font-family: Arial, sans-serif !important; font-size: 18px !important; font-weight: 600 !important; margin: 10px 0 5px !important; color: #0f172a !important; line-height: 1.3 !important; display: block !important; }
+      div#rich-editor-area h2 { font-family: Arial, sans-serif !important; font-size: 16px !important; font-weight: 600 !important; margin: 8px 0 4px !important; color: #1e293b !important; line-height: 1.3 !important; display: block !important; }
       div#rich-editor-area h3 { font-family: Arial, sans-serif !important; font-size: 14px !important; font-weight: 600 !important; margin: 6px 0 3px !important; color: #334155 !important; line-height: 1.3 !important; display: block !important; }
-      div#rich-editor-area p { font-size: 12px !important; margin: 0 0 4px !important; }
+      div#rich-editor-area p { font-size: 14px !important; margin: 0 0 6px !important; font-weight: 400 !important; }
       div#rich-editor-area ul { list-style-type: disc !important; list-style-position: outside !important; padding-left: 20px !important; margin: 4px 0 8px !important; display: block !important; }
       div#rich-editor-area ol { list-style-type: decimal !important; list-style-position: outside !important; padding-left: 20px !important; margin: 4px 0 8px !important; display: block !important; }
-      div#rich-editor-area li { display: list-item !important; font-size: 12px !important; font-weight: 400 !important; margin: 0 0 2px !important; }
+      div#rich-editor-area li { display: list-item !important; font-size: 14px !important; font-weight: 400 !important; margin: 0 0 4px !important; }
       div#rich-editor-area a { color: #2563eb !important; text-decoration: underline !important; }
       div#rich-editor-area strong, div#rich-editor-area b { font-weight: 700 !important; }
       .editor-quote-style { font-weight: 600 !important; font-size: 13px !important; color: #0f172a !important; display: inline !important; }

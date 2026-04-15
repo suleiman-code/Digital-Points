@@ -1,8 +1,11 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { formatUsd } from '@/lib/api';
+
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80";
 
 interface ServiceCardProps {
   id: string;
@@ -32,9 +35,11 @@ export default function ServiceCard(props: ServiceCardProps) {
   } = props;
 
   const [imgSrc, setImgSrc] = useState<string | undefined>(image);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     setImgSrc(image);
+    setLoadError(false);
   }, [image]);
 
   const displayPrice = typeof price === 'number' ? formatUsd(price) : price;
@@ -49,27 +54,41 @@ export default function ServiceCard(props: ServiceCardProps) {
       whileHover={{ y: -8 }}
       className="group flex flex-col h-full overflow-hidden rounded-2xl bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_48px_rgba(0,100,255,0.1)] hover:border-blue-200/50 transition-all duration-500"
     >
-      <div className="relative h-48 w-full overflow-hidden bg-slate-100/50 flex items-center justify-center border-b border-white/50">
-        {imgSrc ? (
-          <div className="w-full h-full p-2 flex items-center justify-center">
-             <img src={imgSrc} alt={title} onError={() => setImgSrc(undefined)} className="w-full h-full object-cover rounded-xl shadow-sm border border-black/5 group-hover:scale-105 transition-transform duration-700 ease-out" />
+      <div className="relative h-48 w-full overflow-hidden bg-slate-50 flex items-center justify-center border-b border-white/50">
+        {imgSrc && !loadError ? (
+          <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-700 ease-out">
+             <Image 
+               src={imgSrc} 
+               alt={title} 
+               fill 
+               className="object-cover"
+               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+               onError={() => setLoadError(true)} 
+             />
           </div>
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-blue-200">
-             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <div className="w-full h-full relative">
+             <Image 
+               src={FALLBACK_IMAGE} 
+               alt="Service Placeholder" 
+               fill 
+               className="object-cover opacity-60 grayscale-[0.5]"
+               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+             />
+             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 backdrop-blur-[2px] flex items-center justify-center">
+                <svg className="w-12 h-12 text-slate-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+             </div>
           </div>
         )}
         
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 left-4 z-10">
           <span className="bg-white/80 backdrop-blur-md text-blue-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm border border-white/50">
             {category || 'Service'}
           </span>
         </div>
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      </div>
+        </div>
       
-      <div className="p-6 flex flex-col flex-grow relative z-10 bg-gradient-to-b from-transparent to-white/50">
+      <div className="p-6 flex flex-col flex-grow relative z-10 bg-white">
         <div className="flex justify-between items-start mb-1">
           <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{category}</span>
           <div className="flex items-center text-amber-500 bg-amber-50/50 px-2 py-0.5 rounded-md border border-amber-100/50">

@@ -55,9 +55,14 @@ class ServiceBase(BaseModel):
     price: Optional[float] = Field(default=0.0, ge=0)
     city: str = Field(..., min_length=1, max_length=120)
     state: str = Field(..., min_length=1, max_length=120)
-    postal_code: Optional[str] = Field(default=None, max_length=20)
+    postal_code: str = Field(default="", max_length=20)
     featured: bool = False
     image_url: Optional[str] = Field(default=None, max_length=2048)
+    image_zoom: Optional[int] = Field(default=100, ge=10, le=300)
+    image_position: Optional[str] = Field(default="center", max_length=50)
+    cover_image: Optional[str] = Field(default=None, max_length=2048)
+    cover_zoom: Optional[int] = Field(default=100, ge=10, le=300)
+    cover_position: Optional[str] = Field(default="center", max_length=50)
     service_details: Optional[str] = Field(default=None, max_length=5000)
     # --- New Business Directory Fields ---
     address: Optional[str] = Field(default=None, max_length=300)
@@ -75,7 +80,7 @@ class ServiceBase(BaseModel):
     reviews_count: int = 0
 
 class ServiceCreate(ServiceBase):
-    pass
+    postal_code: str = Field(..., min_length=2, max_length=20)
 
 class ServiceUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=2, max_length=120)
@@ -87,6 +92,11 @@ class ServiceUpdate(BaseModel):
     postal_code: Optional[str] = Field(default=None, max_length=20)
     featured: Optional[bool] = None
     image_url: Optional[str] = Field(default=None, max_length=2048)
+    image_zoom: Optional[int] = Field(default=None, ge=10, le=300)
+    image_position: Optional[str] = Field(default=None, max_length=50)
+    cover_image: Optional[str] = Field(default=None, max_length=2048)
+    cover_zoom: Optional[int] = Field(default=None, ge=10, le=300)
+    cover_position: Optional[str] = Field(default=None, max_length=50)
     service_details: Optional[str] = Field(default=None, max_length=5000)
     address: Optional[str] = Field(default=None, max_length=300)
     contact_phone: Optional[str] = Field(default=None, max_length=30)
@@ -116,7 +126,7 @@ class BookingBase(BaseModel):
     user_email: EmailStr
     user_phone: str = Field(..., min_length=7, max_length=30)
     user_city: str = Field(..., min_length=1, max_length=120)
-    user_postal_code: str = Field(..., min_length=2, max_length=20)
+    user_postal_code: Optional[str] = Field(default=None, max_length=20)
     message: str = Field(..., min_length=10, max_length=3000)
     booking_date: Optional[datetime] = None
 

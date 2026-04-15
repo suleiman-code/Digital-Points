@@ -176,60 +176,62 @@ textarea:focus-visible {
 
 /* ─── FORMATTED DESCRIPTION (Service Detail Page) ─── */
 .formatted-description {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 400;
   color: #334155;
-  line-height: 1.65;
-  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  font-family: var(--font-body), sans-serif;
 }
 
 /* Reset container weight */
 .formatted-description {
   font-weight: 400;
+  text-transform: none;
 }
 
 .formatted-description p {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-weight: 400;
 }
 
 .formatted-description h1 {
-  font-size: 20px;
-  font-weight: 700 !important;
+  font-size: 18px;
+  font-weight: 600 !important;
   color: #0f172a;
-  margin: 14px 0 6px;
+  margin: 16px 0 8px;
 }
 
 .formatted-description h2 {
-  font-size: 17px;
-  font-weight: 700 !important;
+  font-size: 16px;
+  font-weight: 600 !important;
   color: #1e293b;
-  margin: 12px 0 4px;
+  margin: 14px 0 6px;
 }
 
 .formatted-description h3 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600 !important;
   color: #334155;
-  margin: 10px 0 3px;
+  margin: 12px 0 4px;
 }
 
 .formatted-description ul {
   list-style-type: disc;
   padding-left: 20px;
-  margin: 6px 0 10px;
+  margin: 8px 0 12px;
 }
 
 .formatted-description ol {
   list-style-type: decimal;
   padding-left: 20px;
-  margin: 6px 0 10px;
+  margin: 8px 0 12px;
 }
 
 .formatted-description li {
   display: list-item;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 400;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   color: #334155;
   line-height: 1.6;
 }

@@ -5,7 +5,7 @@ from database import db
 from config import settings
 from auth import get_admin_user
 from rate_limit import limiter
-import resend
+from mail_utils import send_email
 from datetime import datetime, timezone
 from typing import List
 import logging
@@ -14,10 +14,6 @@ import re
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/bookings", tags=["Inquiries"])
-
-# Set Resend API key if available
-if settings.RESEND_API_KEY:
-    resend.api_key = settings.RESEND_API_KEY
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -30,8 +26,8 @@ def _safe_email(value) -> str:
     return text if EMAIL_RE.match(text) else "unknown@example.com"
 
 def _safe_status(value) -> str:
-    text = _safe_text(value, "pending").lower()
-    return text if text in {"pending", "contacted", "completed", "cancelled"} else "pending"
+    text = _safe_text(value, "received").lower()
+    return text if text in {"received", "contacted", "completed", "cancelled"} else "received"
 
 def _ensure_min_len(value: str, minimum: int, fallback: str) -> str:
     text = value.strip()
@@ -78,11 +74,7 @@ def normalize_booking_document(booking_doc: dict) -> dict:
 
     return booking_doc
 
-def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: str):
-    if not settings.RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not configured, skipping email")
-        return
-    
+async def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: str):
     try:
         email_body = f"""Hello,
 
@@ -100,47 +92,52 @@ MESSAGE BODY:
 
 Note: You can reply directly to this email to contact the client."""
         
-        email_params = {
-            "from": f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>",
-            "to": [recipient_email],
-            "reply_to": booking_data['user_email'],
-            "subject": f"NEW INQUIRY: {booking_data['user_name']} is interested in '{booking_data['service_name']}'",
-            "text": email_body,
-        }
-        
-        response = resend.Emails.send(email_params)
-        logger.info(f"Booking inquiry email sent to {recipient_email}. Response: {response}")
+        await send_email(
+            to=[recipient_email],
+            subject=f"NEW INQUIRY: {booking_data['user_name']} is interested in '{booking_data['service_name']}'",
+            html_content=f"<div style='font-family:sans-serif;white-space:pre-wrap;'>{email_body}</div>",
+            text_content=email_body,
+            reply_to=booking_data['user_email']
+        )
     except Exception as e:
-        logger.error(f"Failed to send listing inquiry email: {e}", exc_info=True)
+        logger.error(f"Failed to trigger listing inquiry email: {e}", exc_info=True)
 
 # 1. POST /api/bookings (Public - User submits a booking/inquiry)
 @router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit(settings.RATE_LIMIT_BOOKING)
 async def create_booking(request: Request, booking: BookingCreate, background_tasks: BackgroundTasks):
-    if not ObjectId.is_valid(booking.service_id):
-        raise HTTPException(status_code=400, detail="Invalid Service ID")
+    try:
+        service_id_obj = ObjectId(booking.service_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid Service ID format")
 
-    service_doc = await db.db["services"].find_one({"_id": ObjectId(booking.service_id)})
+    service_doc = await db.db["services"].find_one({"_id": service_id_obj})
     if not service_doc:
         raise HTTPException(status_code=404, detail="Service not found")
 
-    recipient_email = service_doc.get("contact_email") or settings.ADMIN_CONTACT_EMAIL
-    if not recipient_email:
-        raise HTTPException(
-            status_code=400,
-            detail="No recipient email found for this inquiry. Please contact support."
-        )
-
+    business_email = service_doc.get("contact_email") or service_doc.get("email")
+    admin_email = settings.ADMIN_CONTACT_EMAIL
+    
     booking_dict = booking.model_dump()
     booking_dict["created_at"] = datetime.now(timezone.utc)
-    booking_dict["status"] = "pending"
+    booking_dict["status"] = "received"
     
+    # Save to history first
     new_booking = await db.db["bookings"].insert_one(booking_dict)
     created_booking = await db.db["bookings"].find_one({"_id": new_booking.inserted_id})
     
-    # Send email in background so user doesn't wait
-    background_tasks.add_task(send_listing_owner_inquiry_email, booking_dict, recipient_email)
+    # DETERMINE RECIPIENT
+    # 1. Primary: The Business Owner of this listing
+    # 2. Fallback: Site Admin
+    target_recipient = business_email if business_email else admin_email
+
+    if target_recipient:
+        # Send the inquiry email to the target recipient (Business Owner OR Admin fallback)
+        background_tasks.add_task(send_listing_owner_inquiry_email, booking_dict, target_recipient)
     
+    # NOTE: Inquiries are always saved to the DB so Admin can view them in the Admin Panel
+    # but we no longer send a duplicate 'Platform Notification' email to Admin 
+    # to avoid cluttering their inbox when a business owner receives it directly.
+
     return normalize_booking_document(created_booking)
 
 # 2. GET /api/bookings (Admin Only)
@@ -156,7 +153,7 @@ async def update_booking_status(id: str, new_status: str, admin: dict = Depends(
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail="Invalid Booking ID")
     
-    valid_statuses = ["pending", "contacted", "completed", "cancelled"]
+    valid_statuses = ["received", "contacted", "completed", "cancelled"]
     if new_status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Choose from: {valid_statuses}")
 

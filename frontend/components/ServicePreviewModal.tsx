@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatUsd, resolveMediaUrl, servicesAPI } from '@/lib/api';
 import FormattedDescription from '@/components/FormattedDescription';
 
+const isVideoUrl = (url: string) => {
+  const ext = String(url || '').split('.').pop()?.toLowerCase();
+  return ['mp4', 'webm', 'ogg', 'mov'].includes(ext || '');
+};
+
 interface ServicePreviewModalProps {
   open: boolean;
   serviceId?: string | null;
@@ -150,11 +155,22 @@ export default function ServicePreviewModal({ open, serviceId, serviceName, list
                 <div className="xl:col-span-8 bg-white rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden">
                   <div className="relative">
                     <div className="aspect-[16/9] bg-slate-100 overflow-hidden">
-                      <img
-                        src={previewData.allImages[0] || ''}
-                        alt={previewData.title}
-                        className="w-full h-full object-cover"
-                      />
+                      {isVideoUrl(previewData.allImages[0]) ? (
+                        <video
+                          src={previewData.allImages[0] || ''}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={previewData.allImages[0] || ''}
+                          alt={previewData.title}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                     {previewData.featured && (
                       <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-amber-400 text-slate-900 text-[10px] font-black uppercase tracking-[0.3em] shadow-lg">
@@ -203,7 +219,18 @@ export default function ServicePreviewModal({ open, serviceId, serviceName, list
                         <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                           {previewData.allImages.slice(1, 6).map((image: string, index: number) => (
                             <div key={index} className="aspect-square rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
-                              <img src={image} alt={`${previewData.title} ${index + 2}`} className="w-full h-full object-cover" />
+                              {isVideoUrl(image) ? (
+                                <video
+                                  src={image}
+                                  className="w-full h-full object-cover"
+                                  autoPlay
+                                  muted
+                                  loop
+                                  playsInline
+                                />
+                              ) : (
+                                <img src={image} alt={`${previewData.title} ${index + 2}`} className="w-full h-full object-cover" />
+                              )}
                             </div>
                           ))}
                         </div>

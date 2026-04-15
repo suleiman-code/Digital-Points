@@ -4,6 +4,8 @@ const FORCE_LOCAL_MODE = process.env.NEXT_PUBLIC_FORCE_LOCAL_MODE === '1';
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').trim().replace(/\/$/, '');
 const isBackendEnabled = !FORCE_LOCAL_MODE && API_URL.length > 0;
 
+export const DEFAULT_PLACEHOLDER = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80";
+
 export const formatUsd = (value: number | string | undefined | null) => {
   const amount = Number(value || 0);
   return new Intl.NumberFormat('en-US', {
@@ -17,6 +19,13 @@ export const resolveMediaUrl = (input?: string | null) => {
   const raw = String(input || '').trim();
   if (!raw) return '';
   if (raw.startsWith('data:')) return raw;
+
+  // Detect Unsplash webpage links and return a direct source instead
+  if (raw.includes('unsplash.com/photos/')) {
+    const parts = raw.split('/');
+    const id = parts[parts.length - 1];
+    return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
+  }
 
   const localOrigins = ['http://127.0.0.1:8000', 'http://localhost:8000', 'https://localhost:8000'];
   for (const origin of localOrigins) {
@@ -362,7 +371,7 @@ export const inquiriesAPI = {
     const newBooking = {
       ...data,
       _id: uid('bkg'),
-      status: 'pending',
+      status: 'received',
       created_at: new Date().toISOString(),
     };
     const bookings = [newBooking, ...getBookings()];
@@ -385,7 +394,7 @@ export const inquiriesAPI = {
   },
 
   // Used by Admin to update booking status.
-  // Backend: PUT /api/bookings/{id}/status?new_status=pending|contacted|completed|cancelled
+  // Backend: PUT /api/bookings/{id}/status?new_status=received|contacted|completed|cancelled
   updateStatus: (id: string, newStatus: string) => {
     if (api) return api.put(`/bookings/${id}/status/`, null, { params: { new_status: newStatus } });
 

@@ -5,9 +5,64 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FormattedDescription from '@/components/FormattedDescription';
 import ListingOwnerEmailForm from '@/components/ListingOwnerEmailForm';
-import { resolveMediaUrl, servicesAPI } from '@/lib/api';
+import { resolveMediaUrl, servicesAPI, DEFAULT_PLACEHOLDER } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
+
+const isVideoUrl = (url: string) => {
+  const ext = String(url || '').split('.').pop()?.toLowerCase();
+  return ['mp4', 'webm', 'ogg', 'mov'].includes(ext || '');
+};
+
+function GalleryItem({ img, i, setActiveImage }: { img: string, i: number, setActiveImage: (img: string) => void }) {
+  const [error, setError] = React.useState(false);
+  const isVideo = isVideoUrl(img);
+  
+  return (
+    <motion.button
+      type="button"
+      onClick={() => setActiveImage(img)}
+      initial={{ opacity: 0, y: 18, scale: 0.98 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.35, delay: i * 0.03, ease: 'easeOut' }}
+      className="group relative rounded-2xl overflow-hidden cursor-pointer bg-slate-100/60 shadow-sm border border-slate-200/60 transform transition-all duration-500 hover:-translate-y-1 hover:shadow-xl aspect-square flex items-center justify-center p-2 md:p-3"
+    >
+      <div className="relative w-full h-full">
+        {isVideo ? (
+          <video 
+            src={img} 
+            className="w-full h-full object-cover rounded-xl"
+            autoPlay
+            loop
+            muted 
+            playsInline
+          />
+        ) : (
+          <Image 
+            src={error ? DEFAULT_PLACEHOLDER : img} 
+            fill
+            className={`object-contain rounded-xl transition-transform duration-700 group-hover:scale-105 ${error ? 'opacity-30 grayscale' : ''}`} 
+            alt={`Portfolio item ${i + 1}`} 
+            onError={() => setError(true)}
+          />
+        )}
+      </div>
+      <div className="absolute inset-0 bg-blue-50/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end rounded-2xl">
+        <div className="p-4 w-full flex justify-end">
+          <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30">
+            {isVideo ? (
+               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.841z"/></svg>
+            ) : (
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.button>
+  );
+}
 
 function ServiceAdditionalDetailsContent({ params }: { params: any }) {
   const rawServiceId = params?.id;
@@ -64,10 +119,10 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
 
       <main className="flex-grow pt-[11rem] pb-20">
         {/* HERO SECTION */}
-        <div className="bg-[#2f74c8] relative overflow-hidden text-white pt-8 pb-12 px-4 rounded-b-[2rem] md:rounded-b-[3rem] mb-12 shadow-2xl">
-          {/* Decorative Background Elements */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-sky-300/35 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-300/25 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
+        <div className="bg-[#2f74c8] relative overflow-hidden text-white pt-8 pb-12 px-4 rounded-b-[2rem] md:rounded-b-[3.5rem] mb-12 shadow-xl border-b border-white/10">
+          {/* Decorative Background Elements - Cleaned Up */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-sky-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-200/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
           
           <div className="container-max relative z-10 max-w-5xl mx-auto">
             {/* GO BACK BUTTON REMOVED (Now in Header) */}
@@ -95,27 +150,11 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
 
             {allImages.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {allImages.map((img, i) => (
-                  <motion.button
-                    key={i}
-                    type="button"
-                    onClick={() => setActiveImage(img)}
-                    initial={{ opacity: 0, y: 18, scale: 0.98 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: true, margin: '-40px' }}
-                    transition={{ duration: 0.35, delay: i * 0.03, ease: 'easeOut' }}
-                    className="group relative rounded-2xl overflow-hidden cursor-pointer bg-slate-100/60 shadow-sm border border-slate-200/60 transform transition-all duration-500 hover:-translate-y-1 hover:shadow-xl aspect-square flex items-center justify-center p-2 md:p-3"
-                  >
-                    <img src={img} className="max-w-full max-h-full object-contain rounded-xl shadow-sm border border-black/5 transition-transform duration-700 group-hover:scale-105" alt={`Portfolio item ${i + 1}`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end rounded-2xl">
-                      <div className="p-4 w-full flex justify-end">
-                        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
+                {allImages.map((img, i) => {
+                  return (
+                    <GalleryItem key={i} img={img} i={i} setActiveImage={setActiveImage} />
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-200 border-dashed shadow-sm">
@@ -125,33 +164,46 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             )}
           </section>
 
-          {/* WHY CHOOSE US - HIGHLIGHTS */}
-          <section>
-            <div className="flex flex-col md:flex-row items-center gap-10 bg-white p-6 sm:p-10 md:p-14 rounded-[2rem] md:rounded-[3rem] border border-slate-200 shadow-lg relative overflow-hidden">
-              {/* Abstract decorative shape */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              
-              <div className="w-full md:w-1/3 relative z-10 text-center md:text-left">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-blue-100 text-blue-600 mb-6">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+          <section id="additional-services">
+            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-0">
+                <div className="bg-[#0f172a] p-10 md:p-14 text-white flex flex-col justify-center relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative z-10">
+                    <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Core Benefits</span>
+                    <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tight leading-none">Service Highlights</h2>
+                    <p className="text-slate-400 font-medium text-lg leading-relaxed">We pride ourselves on providing high-quality solutions tailored to your unique requirements. Explore our specialized features.</p>
+                  </div>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-4 text-balance">The Highlights & Features</h2>
-                <p className="text-slate-500 font-medium">What makes our service stand out from the rest. Here is why you should pick us.</p>
-              </div>
 
-              <div className="w-full md:w-2/3 relative z-10">
-                {service.service_details ? (
-                  <div className="bg-blue-50/60 p-6 sm:p-8 rounded-3xl border border-blue-100/70 hover:bg-white hover:shadow-xl transition-all duration-300">
-                    <FormattedDescription 
-                      text={service.service_details} 
-                      className="text-slate-700 font-medium text-lg leading-relaxed" 
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center py-10 rounded-2xl border border-dashed border-slate-200">
-                     <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No detailed highlights added yet</p>
-                  </div>
-                )}
+                <div className="p-10 md:p-14 bg-slate-50/50">
+                  {service.service_details ? (
+                    <div className="relative">
+                      <div className="absolute top-0 right-0 opacity-[0.05] pointer-events-none">
+                         <svg className="w-40 h-40 text-blue-900" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      </div>
+
+                      <div className="relative z-10 prose-lg prose-slate">
+                         <FormattedDescription 
+                           text={service.service_details} 
+                           className="text-slate-600 font-medium text-base sm:text-lg leading-[2] space-y-6 text-left 
+                           [&_p]:relative [&_p]:pl-10 
+                           [&_p]:before:content-[''] [&_p]:before:absolute [&_p]:before:left-0 [&_p]:before:top-1.5 
+                           [&_p]:before:w-6 [&_p]:before:h-6 [&_p]:before:bg-blue-600/10 [&_p]:before:rounded-lg 
+                           [&_p]:after:content-['✓'] [&_p]:after:absolute [&_p]:after:left-[5px] [&_p]:after:top-[2px] 
+                           [&_p]:after:text-blue-600 [&_p]:after:font-black [&_p]:after:text-xs" 
+                         />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                       <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                          <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                       </div>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Awaiting details from owner</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </section>
@@ -225,7 +277,11 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             )}
 
             {/* Simple Email Inquiry Form for all listings */}
-            <ListingOwnerEmailForm serviceId={serviceId} serviceName={service.title || 'Service'} />
+            <ListingOwnerEmailForm 
+              serviceId={serviceId} 
+              serviceName={service.title || 'Service'} 
+              ownerEmail={service.contact_email} 
+            />
           </section>
 
         </div>
@@ -251,7 +307,11 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               className="relative max-w-6xl w-full flex items-center justify-center"
               onClick={e => e.stopPropagation()}
             >
-              <img src={activeImage} className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl" alt="Fullscreen View" />
+              {activeImage && isVideoUrl(activeImage) ? (
+                <video src={activeImage} className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl bg-black" controls autoPlay playsInline />
+              ) : (
+                <img src={activeImage || ''} className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl" alt="Fullscreen View" />
+              )}
               
               {/* Controls */}
               {allImages.length > 1 && (

@@ -9,13 +9,11 @@ from auth import get_admin_user
 from typing import List
 import logging
 
+from mail_utils import send_email
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/contact", tags=["Contact"])
-
-# Set Resend API key if available
-if settings.RESEND_API_KEY:
-    resend.api_key = settings.RESEND_API_KEY
 
 class ContactForm(BaseModel):
     name: str
@@ -23,16 +21,10 @@ class ContactForm(BaseModel):
     subject: str
     message: str
 
-def send_admin_contact_email(form_data: dict):
-    """Send contact form submission to admin using Resend"""
-    if not settings.RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not configured, skipping email")
-        return
-    
+async def send_admin_contact_email(form_data: dict):
+    """Send contact form submission to admin using the unified mail utility"""
     try:
         admin_recipient = settings.ADMIN_CONTACT_EMAIL or settings.MAIL_FROM or "noreply@digitalpoints.com"
-        submitted_at = form_data.get("created_at")
-        submitted_at_str = submitted_at.isoformat() if submitted_at else datetime.now(timezone.utc).isoformat()
         sender_name = form_data.get("name", "Unknown")
         sender_email = form_data.get("email", "unknown@example.com")
         inquiry_subject = form_data.get("subject", "No subject")
@@ -82,21 +74,16 @@ Tip: Use Reply in your email client to respond directly to this user.
     <p style=\"margin:16px 0 0;color:#475569;\">Tip: Use your email client's Reply button to respond directly to this user.</p>
 </div>
 """
-        
-        email_params = {
-            "from": f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>",
-            "to": [admin_recipient],
-            "reply_to": sender_email,
-            "subject": f"New Contact Inquiry: {inquiry_subject} ({sender_name})",
-            "text": email_body,
-            "html": html_body,
-        }
-        
-        response = resend.Emails.send(email_params)
-        logger.info(f"Contact email sent successfully. Response: {response}")
+        await send_email(
+            to=[admin_recipient],
+            subject=f"New Contact Inquiry: {inquiry_subject} ({sender_name})",
+            html_content=html_body,
+            text_content=email_body,
+            reply_to=sender_email
+        )
         
     except Exception as e:
-        logger.error(f"Failed to send contact email: {e}", exc_info=True)
+        logger.error(f"Failed to trigger contact email: {e}", exc_info=True)
 
 @router.get("/", response_model=List[dict])
 async def get_all_inquiries(admin: dict = Depends(get_admin_user)):
@@ -107,7 +94,6 @@ async def get_all_inquiries(admin: dict = Depends(get_admin_user)):
     return messages
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-@limiter.limit(settings.RATE_LIMIT_CONTACT)
 async def submit_contact_form(request: Request, form: ContactForm, background_tasks: BackgroundTasks):
     form_dict = form.model_dump()
     form_dict["created_at"] = datetime.now(timezone.utc)

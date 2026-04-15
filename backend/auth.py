@@ -5,7 +5,7 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field, EmailStr
-import resend
+from mail_utils import send_email
 from config import settings
 from rate_limit import limiter
 from database import db
@@ -19,9 +19,7 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 # Password Hashing Settings
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-# Set Resend API key if available
-if settings.RESEND_API_KEY:
-    resend.api_key = settings.RESEND_API_KEY
+
 
 
 def get_users_collection():
@@ -53,10 +51,6 @@ def create_password_reset_token(email: str):
 
 
 async def send_reset_password_email(email: str, token: str):
-    if not settings.RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not configured, skipping email")
-        return
-
     reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/admin/reset-password?token={token}"
     email_body = (
         "<div style='font-family:Arial,sans-serif;line-height:1.6;color:#111827'>"
@@ -69,16 +63,13 @@ async def send_reset_password_email(email: str, token: str):
     )
     
     try:
-        email_params = {
-            "from": f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM}>",
-            "to": [email],
-            "subject": "Reset your Digital Point admin password",
-            "html": email_body,
-        }
-        response = resend.Emails.send(email_params)
-        logger.info(f"Password reset email sent to {email}. Response: {response}")
+        await send_email(
+            to=[email],
+            subject="Reset your Digital Point admin password",
+            html_content=email_body
+        )
     except Exception as exc:
-        logger.error(f"Failed to send password reset email: {exc}", exc_info=True)
+        logger.error(f"Failed to trigger password reset email: {exc}", exc_info=True)
 
 
 async def get_admin_account():
@@ -162,7 +153,6 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
 
 # 1. SIGNUP (Initial admin creation)
 @router.post("/signup", response_model=UserResponse)
-@limiter.limit("5/minute")
 async def signup(request: Request, user: UserCreate):
     users_collection = get_users_collection()
     # Check if user already exists
@@ -185,7 +175,6 @@ async def signup(request: Request, user: UserCreate):
 
 # 2. LOGIN
 @router.post("/login")
-@limiter.limit(settings.RATE_LIMIT_LOGIN)
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     users_collection = get_users_collection()
     user = await users_collection.find_one({"email": form_data.username})
@@ -204,7 +193,6 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
 
 
 @router.post("/forgot-password")
-@limiter.limit(settings.RATE_LIMIT_FORGOT_PASSWORD)
 async def forgot_password(request: Request, payload: ForgotPasswordRequest, background_tasks: BackgroundTasks):
     users_collection = get_users_collection()
     user = await users_collection.find_one({"email": payload.email})
@@ -223,7 +211,6 @@ async def forgot_password(request: Request, payload: ForgotPasswordRequest, back
 
 
 @router.post("/reset-password")
-@limiter.limit(settings.RATE_LIMIT_RESET_PASSWORD)
 async def reset_password(request: Request, payload: ResetPasswordRequest):
     normalized_token = payload.token.strip().replace(" ", "")
     try:

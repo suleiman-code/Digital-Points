@@ -77,15 +77,15 @@ export default function Header() {
       {isNotHome && (
         <div className="bg-slate-50/80 backdrop-blur-md border-t border-b border-slate-100 py-2.5">
           <div className="container-max flex items-center">
-            <Link
-              href="/"
+            <button
+              onClick={() => window.history.back()}
               className="group flex items-center gap-2 py-1.5 px-4 sm:py-2 sm:px-5 bg-white border border-slate-200 rounded-full text-slate-600 font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
             >
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
               </svg>
               <span>Back</span>
-            </Link>
+            </button>
           </div>
         </div>
       )}

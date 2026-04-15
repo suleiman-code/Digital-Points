@@ -44,6 +44,9 @@ const sanitizeHtml = (input: string) => {
     .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '')
     .replace(/\sjavascript:/gi, ' ');
 
+  // Strip out empty paragraphs (with whitespace, <br> or &nbsp;) to prevent empty bullet points
+  html = html.replace(/<p[^>]*>(\s*|<br\s*\/?>|&nbsp;)*<\/p>/gi, '');
+
   // Strip bold font-weight from ALL inline styles (covers auto-bold from paste)
   html = html.replace(/style="([^"]*)"/gi, (match, styleContent) => {
     let cleaned = styleContent

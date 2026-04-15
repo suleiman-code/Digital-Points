@@ -503,18 +503,24 @@ async def delete_review_permanently(review_id: str, admin: dict = Depends(get_ad
 
     return None
 
-# 12. UPLOAD IMAGE (Admin Only)
+# 12. UPLOAD MEDIA (Admin Only — Images & Videos)
 @router.post("/upload/", status_code=status.HTTP_201_CREATED)
 async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_admin_user)):
-    allowed_extensions = {"jpg", "jpeg", "png", "webp", "gif"}
+    allowed_image_ext = {"jpg", "jpeg", "png", "webp", "gif"}
+    allowed_video_ext = {"mp4", "webm", "mov", "ogg"}
+    allowed_extensions = allowed_image_ext | allowed_video_ext
+
     filename = file.filename or "upload"
     file_extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
     if file_extension not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Only image files are allowed")
+        raise HTTPException(status_code=400, detail=f"File type '.{file_extension}' not allowed. Allowed: {', '.join(sorted(allowed_extensions))}")
 
-    if file.content_type and not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Only image files are allowed")
+    if file.content_type:
+        is_image = file.content_type.startswith("image/")
+        is_video = file.content_type.startswith("video/")
+        if not is_image and not is_video:
+            raise HTTPException(status_code=400, detail="Only image or video files are allowed")
 
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
     upload_dir = os.path.join("static", "uploads")

@@ -131,7 +131,7 @@ export default function AdminDashboard() {
         <nav className="mt-8 space-y-2 p-4">
           <SidebarLink href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
           <SidebarLink href="/admin/services" icon="🛠️" label="All Services" open={sidebarOpen} />
-          <SidebarLink href="/admin/bookings" icon="📅" label="Bookings" open={sidebarOpen} />
+          <SidebarLink href="/admin/bookings" icon="📅" label="Inquiries" open={sidebarOpen} />
           <SidebarLink href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
         </nav>
 

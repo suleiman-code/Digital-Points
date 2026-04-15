@@ -1,13 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, Suspense, useRef } from 'react';
+import Image from 'next/image';
 import FormattedDescription from '@/components/FormattedDescription';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { resolveMediaUrl, servicesAPI, inquiriesAPI } from '@/lib/api';
+import { resolveMediaUrl, servicesAPI, inquiriesAPI, DEFAULT_PLACEHOLDER } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+
+const isVideoUrl = (url: string) => {
+  const ext = String(url || '').split('.').pop()?.toLowerCase();
+  return ['mp4', 'webm', 'ogg', 'mov'].includes(ext || '');
+};
 
 const INITIAL_REVIEWS_COUNT = 8;
 
@@ -23,6 +29,8 @@ function ServiceDetailContent({ params }: { params: any }) {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [heroImageSrc, setHeroImageSrc] = useState<string>(DEFAULT_PLACEHOLDER);
+  const [heroError, setHeroError] = useState(false);
 
 
   // Review Form States
@@ -32,7 +40,7 @@ function ServiceDetailContent({ params }: { params: any }) {
   const [visibleReviewsCount, setVisibleReviewsCount] = useState(INITIAL_REVIEWS_COUNT);
 
   // Inquiry Form States
-  const [bookingForm, setBookingForm] = useState({ name: '', email: '', phone: '', city: '', postalCode: '', message: '' });
+  const [bookingForm, setBookingForm] = useState({ name: '', email: '', phone: '', city: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
@@ -109,13 +117,13 @@ function ServiceDetailContent({ params }: { params: any }) {
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactEmail) {
-      toast.error('Business email is not available for this listing right now.');
+      toast.error('Business owner email missing.');
       setIsModalOpen(false);
       return;
     }
 
-    if (!bookingForm.name || !bookingForm.email || !bookingForm.phone || !bookingForm.city || !bookingForm.postalCode || !bookingForm.message) {
-      return toast.error('Please fill all inquiry fields (including postal code).');
+    if (!bookingForm.name || !bookingForm.email || !bookingForm.phone || !bookingForm.city || !bookingForm.message) {
+      return toast.error('Please fill all inquiry fields.');
     }
 
     setSubmitting(true);
@@ -127,12 +135,11 @@ function ServiceDetailContent({ params }: { params: any }) {
         user_email: bookingForm.email,
         user_phone: bookingForm.phone,
         user_city: bookingForm.city,
-        user_postal_code: bookingForm.postalCode,
         message: bookingForm.message
       };
       await inquiriesAPI.create(bookingData);
       toast.success('Inquiry sent directly to the business owner!');
-      setBookingForm({ name: '', email: '', phone: '', city: '', postalCode: '', message: '' });
+      setBookingForm({ name: '', email: '', phone: '', city: '', message: '' });
       setIsModalOpen(false);
     } catch (error) {
       toast.error('Failed to send inquiry.');
@@ -141,8 +148,16 @@ function ServiceDetailContent({ params }: { params: any }) {
     }
   };
 
+  useEffect(() => {
+    if (service) {
+      const primaryImg = service.gallery?.[0] || service.image_url || DEFAULT_PLACEHOLDER;
+      setHeroImageSrc(primaryImg);
+      setHeroError(false);
+    }
+  }, [service]);
+
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center font-bold text-slate-300 animate-pulse text-xs uppercase tracking-widest">Digital Points...</div>;
-  if (!service) return <div className="min-h-screen flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
+  if (!service) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
   const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.postal_code || ''} ${service.country || ''}`.trim();
   const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
@@ -243,94 +258,163 @@ function ServiceDetailContent({ params }: { params: any }) {
     <div className="bg-gradient-to-b from-slate-50 via-white to-slate-50 min-h-screen flex flex-col font-sans">
       <Header />
 
-      <main className="flex-grow pt-[11rem] pb-20">
+      <main className="flex-grow pt-[8rem] pb-20">
+        
+        {/* --- PROFESSIONAL COVER PHOTO SECTION --- */}
+        <div className="w-full h-[300px] sm:h-[400px] md:h-[450px] relative overflow-hidden">
+          {service.cover_image ? (
+            <div className="w-full h-full relative">
+              <Image 
+                src={resolveMediaUrl(service.cover_image)} 
+                fill
+                className="object-cover" 
+                style={{ 
+                  transform: `scale(${service.cover_zoom / 100})`,
+                  objectPosition: service.cover_position || 'center'
+                }}
+                alt={`${service.title} Cover`}
+                priority
+              />
+            </div>
+          ) : (
+            <div className="w-full h-full bg-[linear-gradient(135deg,_#0f2340_0%,_#1e3a8a_100%)] flex items-center justify-center">
+              <div className="opacity-10 absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+            </div>
+          )}
+          {/* Clean Overlay Removing Gradients */}
+        </div>
+
         <div className="container-max px-4 relative">
           <div className="pointer-events-none absolute -top-10 right-0 w-72 h-72 bg-blue-100/50 rounded-full blur-3xl" />
 
-          {/* BACK BUTTON REMOVED (Now in Header) */}
-          {/* HEADER SECTION */}
-          <div className="mb-8 md:mb-10 relative z-10">
-            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[320px_1fr] gap-5 md:gap-8 items-start bg-white rounded-2xl border border-slate-200 shadow-[0_14px_40px_rgba(15,23,42,0.08)] overflow-hidden p-4 sm:p-5 md:p-6">
-              <div className="bg-slate-100 h-[200px] sm:h-[220px] w-full flex items-center justify-center overflow-hidden rounded-xl border border-slate-200">
-                {logoImage ? (
-                  <img src={logoImage} className="w-full h-full object-cover object-center bg-slate-100" alt={service.title} />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-center text-slate-700 bg-slate-100">
-                    <div>
-                      <svg className="w-28 h-28 mx-auto mb-2 text-slate-800/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7a2 2 0 012-2h2l1-1h8l1 1h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /><circle cx="12" cy="12" r="3" strokeWidth="1.5" /></svg>
-                      <p className="text-2xl font-black leading-tight">No Image<br />Available</p>
+          {/* --- HERO OVERLAP CARD --- */}
+          <div className="relative -mt-4 sm:-mt-6 md:-mt-8 z-20 mb-12">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr] gap-6 md:gap-10 items-end bg-white/95 backdrop-blur-md rounded-[2.5rem] border border-white/40 shadow-[0_30px_70px_rgba(15,23,42,0.15)] p-5 sm:p-7 md:p-8">
+              
+              {/* Logo / Main Image */}
+              <div className="relative group">
+                <div className="bg-white aspect-square w-full rounded-3xl border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center transform transition-transform group-hover:scale-[1.02]">
+                  {logoImage ? (
+                    <div className="w-full h-full relative">
+                      <Image 
+                        src={logoImage} 
+                        fill
+                        className="object-cover" 
+                        style={{ 
+                          transform: `scale(${service.image_zoom / 100})`,
+                          objectPosition: service.image_position || 'center'
+                        }}
+                        alt={service.title} 
+                      />
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-center text-slate-700 bg-slate-50">
+                      <div>
+                        <svg className="w-16 h-16 mx-auto mb-2 text-slate-800/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7a2 2 0 012-2h2l1-1h8l1 1h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" /><circle cx="12" cy="12" r="3" strokeWidth="1.5" /></svg>
+                        <p className="text-sm font-black uppercase tracking-widest text-slate-400">No Logo</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="pt-1 pr-0">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800 mb-4 leading-tight">{service.title}</h1>
+              {/* Info & Actions */}
+              <div className="pb-2 md:pb-4">
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                   <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-500/30">Verified Business</span>
+                   <span className="px-4 py-1.5 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-full">{service.category}</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-5 leading-[1.1] tracking-tight">{service.title}</h1>
 
-                <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <p className="text-xl md:text-2xl font-semibold text-slate-800 leading-none">Rating {Number(service.avg_rating || 0).toFixed(1)}</p>
-                  <div className="flex items-center gap-1 text-amber-400">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className={`w-6 h-6 md:w-7 md:h-7 ${i < Math.round(service.avg_rating || 0) ? 'fill-current' : 'fill-slate-200'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                    ))}
+                <div className="flex flex-wrap items-center gap-6 mb-8 mt-2">
+                  <div className="flex items-center gap-2 bg-amber-50 px-3 py-2 rounded-xl border border-amber-100">
+                    <div className="flex items-center gap-0.5 text-amber-500">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className={`w-4 h-4 ${i < Math.round(service.avg_rating || 0) ? 'fill-current' : 'fill-slate-200'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
+                      ))}
+                    </div>
+                    <span className="text-sm font-black text-amber-700">{Number(service.avg_rating || 0).toFixed(1)} <span className="text-amber-400 font-bold ml-0.5">({service.reviews_count || 0})</span></span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-400 font-bold text-sm">
+                    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    {service.city}, {service.state}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mt-6">
-                  <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className={actionBtnBase}>
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    <span>Add Review</span>
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 max-w-2xl">
                   <button
                     type="button"
                     onClick={() => {
-                      if (!hasCallablePhone) {
-                        toast.error('Phone number is not available for this listing right now.');
-                        return;
-                      }
+                      if (!hasCallablePhone) return toast.error('Phone number not available');
                       window.location.href = `tel:${normalizedPhone}`;
                     }}
                     className={hasCallablePhone ? actionBtnBase : actionBtnDisabled}
                   >
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                    <span>Call Now</span>
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                    <span>Contact Phone</span>
                   </button>
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className={`${actionBtnBase} sm:col-span-2 lg:col-span-1`}
+                    className={`${actionBtnBase} sm:col-span-1`}
                   >
-                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l8.89 5.26a2 2 0 002.22 0L23 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                    <span>Send Email</span>
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l8.89 5.26a2 2 0 002.22 0L23 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    <span>Send Message</span>
+                  </button>
+                  <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className={`${actionBtnBase} hidden lg:flex`}>
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    <span>Write Review</span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 relative z-10">
 
             <div className="lg:col-span-8 space-y-12">
 
-              {/* MAIN BUSINESS PHOTO */}
-              <section>
-                <div className="bg-white p-6 sm:p-8 md:p-10 rounded-3xl border border-slate-100 shadow-sm mb-8 md:mb-12">
-                  <h2 className="text-2xl font-black text-[#0f2340] mb-6 flex items-center gap-3">
-                    <span className="w-1.5 h-8 bg-blue-600 rounded-full" />
-                    Business Description
+              {/* MAIN CONTENT SECTION */}
+              <section className="space-y-10">
+                <div className="bg-white p-6 sm:p-8 md:p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C20.1216 16 21.017 16.8954 21.017 18V21C21.017 22.1046 20.1216 23 19.017 23H16.017C14.9124 23 14.017 22.1046 14.017 21ZM3 21L3 18C3 16.8954 3.89543 16 5 16H8C9.10457 16 10 16.8954 10 18V21C10 22.1046 9.10457 23 8 23H5C3.89543 23 3 22.1046 3 21ZM16.017 16C16.017 12.134 19.151 9 23.017 9V5C16.942 5 12.017 9.925 12.017 16H16.017ZM5 16C5 12.134 8.13401 9 12 9V5C5.92487 5 1 9.925 1 16H5Z" /></svg>
+                  </div>
+                  <h2 className="text-2xl font-black text-[#0f2340] mb-8 flex items-center gap-4">
+                    <span className="w-2 h-10 bg-blue-600 rounded-full" />
+                    Business Overview
                   </h2>
-                  <FormattedDescription text={String(service.description || '')} className="text-slate-600 font-medium text-lg space-y-2" />
+                  <FormattedDescription text={String(service.description || '')} className="text-slate-600 font-normal text-sm sm:text-base leading-relaxed space-y-4" />
                 </div>
 
-                <div className="relative group rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-lg mb-6">
-                  <div className="h-[260px] sm:h-[360px] md:h-[550px] w-full relative overflow-hidden">
-                    <img
-                      src={activeImage || ''}
-                      className="w-full h-full object-cover"
-                      alt={service.title}
-                    />
+                {/* SHOW GALLERY IMAGE INSTEAD OF LOGO (User Request) */}
+                <div className="relative group rounded-[2.5rem] overflow-hidden bg-white border border-slate-200 shadow-2xl">
+                  <div className="h-[280px] sm:h-[400px] md:h-[580px] w-full relative overflow-hidden">
+                    {isVideoUrl(heroImageSrc) ? (
+                      <video 
+                        src={heroImageSrc} 
+                        className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                        autoPlay 
+                        muted 
+                        loop 
+                        playsInline
+                      />
+                    ) : (
+                      <Image
+                        src={heroError ? DEFAULT_PLACEHOLDER : heroImageSrc}
+                        fill
+                        className={`object-cover transition-transform duration-[1.5s] group-hover:scale-105 ${heroError ? 'opacity-50 grayscale' : ''}`}
+                        alt={`${service.title} Highlight`}
+                        onError={() => setHeroError(true)}
+                      />
+                    )}
+                    {/* Clean Overlay Removing Gradients */}
+                    <div className="absolute bottom-10 left-10 text-white">
+                       <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-blue-400">Featured Gallery Work</p>
+                       <h3 className="text-2xl font-black leading-tight max-w-md">Professional Service & Quality Guaranteed</h3>
+                    </div>
                     {allImages.length > 1 && (
-                      <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                        +{allImages.length - 1} more photos
+                      <div className="absolute top-8 right-8 bg-black/40 backdrop-blur-xl border border-white/20 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-full">
+                        {allImages.length} High-Res Photos
                       </div>
                     )}
                   </div>
@@ -580,14 +664,10 @@ function ServiceDetailContent({ params }: { params: any }) {
                   <input required placeholder="Your Name *" value={bookingForm.name} onChange={e => setBookingForm({ ...bookingForm, name: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
                   <input required type="email" placeholder="Your Email Address *" value={bookingForm.email} onChange={e => setBookingForm({ ...bookingForm, email: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
                   <input required placeholder="Your Phone Number *" value={bookingForm.phone} onChange={e => setBookingForm({ ...bookingForm, phone: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
-                  <input required placeholder="Your City *" value={bookingForm.city} onChange={e => setBookingForm({ ...bookingForm, city: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
-                  <input required placeholder="Postal Code *" value={bookingForm.postalCode} onChange={e => setBookingForm({ ...bookingForm, postalCode: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
+                  <input required placeholder="Your City *" value={bookingForm.city} onChange={e => setBookingForm({ ...bookingForm, city: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100 md:col-span-2" />
                 </div>
                 <div className="relative">
-                  <textarea required placeholder="Write your message (min 30, max 500 words) *" value={bookingForm.message} onChange={e => setBookingForm({ ...bookingForm, message: e.target.value })} className="w-full border border-slate-200 rounded-xl p-4 text-sm h-32 focus:border-blue-500 outline-none resize-none transition-all focus:ring-4 focus:ring-blue-100" />
-                  <div className={`absolute bottom-3 right-4 text-[10px] font-bold ${bookingForm.message.trim().split(/\s+/).filter(Boolean).length < 30 || bookingForm.message.trim().split(/\s+/).filter(Boolean).length > 500 ? 'text-rose-500' : 'text-slate-400'}`}>
-                    {bookingForm.message.trim().split(/\s+/).filter(Boolean).length} words
-                  </div>
+                  <textarea required placeholder="Write your message here *" value={bookingForm.message} onChange={e => setBookingForm({ ...bookingForm, message: e.target.value })} className="w-full border border-slate-200 rounded-xl p-4 text-sm h-32 focus:border-blue-500 outline-none resize-none transition-all focus:ring-4 focus:ring-blue-100" />
                 </div>
                 <button disabled={submitting} className="w-full py-4 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 transition-all text-sm uppercase tracking-widest shadow-lg disabled:opacity-70 group flex items-center justify-center gap-2">
                   {submitting ? 'Sending Message...' : 'Send Inquiry Now'}

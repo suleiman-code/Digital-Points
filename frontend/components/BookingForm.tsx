@@ -15,7 +15,6 @@ type BookingFormData = {
   email: string;
   phone: string;
   city: string;
-  postal_code: string;
   date: string;
   message: string;
 };
@@ -34,7 +33,6 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
         user_email: data.email,
         user_phone: data.phone,
         user_city: data.city,
-        user_postal_code: data.postal_code,
         message: data.message,
         booking_date: data.date,
       });
@@ -101,17 +99,7 @@ export default function BookingForm({ serviceName, serviceId }: BookingFormProps
           />
         </div>
 
-        <div>
-          <label htmlFor="postal_code">Postal Code</label>
-          <input
-            id="postal_code"
-            type="text"
-            placeholder="Postal Code"
-            maxLength={20}
-            {...register('postal_code', { required: 'Postal code is required' })}
-            required
-          />
-        </div>
+
 
         <div>
           <label htmlFor="date">Preferred Date</label>
