@@ -76,6 +76,7 @@ class ServiceBase(BaseModel):
     sub_services: Optional[list[str]] = None # Custom Inner Page links defined by Admin
     reviews: list[dict] = Field(default_factory=list) # User feedback: [{user, rating, comment, date}]
     gallery: Optional[list[str]] = Field(default_factory=list)
+    video_url: Optional[str] = Field(default=None, max_length=2048)
     avg_rating: float = 0.0
     reviews_count: int = 0
 
@@ -108,6 +109,7 @@ class ServiceUpdate(BaseModel):
     timezone: Optional[str] = Field(default=None, max_length=120)
     sub_services: Optional[list[str]] = None
     gallery: Optional[list[str]] = None
+    video_url: Optional[str] = Field(default=None, max_length=2048)
     avg_rating: Optional[float] = None
     reviews_count: Optional[int] = None
 
@@ -155,5 +157,6 @@ class ReviewResponse(ReviewBase):
     
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     service_id: Optional[str] = None
+    service_name: Optional[str] = None
     status: str = "pending"  # pending, approved, rejected
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

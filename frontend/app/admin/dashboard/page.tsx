@@ -8,6 +8,8 @@ import { servicesAPI } from '@/lib/api';
 import { normalizeCategory } from '@/lib/businessCategories';
 import toast from 'react-hot-toast';
 
+import AdminSidebar from '@/components/AdminSidebar';
+
 export default function AdminDashboard() {
   const REFRESH_INTERVAL_MS = 5000;
   const { isAuthenticated, isLoading, logout } = useAuth();
@@ -117,42 +119,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-[linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)] text-slate-900">
-      {/* Sidebar */}
-      <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[linear-gradient(180deg,_#1d4c83_0%,_#274f87_55%,_#2f6fb1_100%)] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
-      >
-        <div className="p-4 border-b border-white/10">
-          <Link href="/admin/dashboard" className="text-2xl font-black tracking-tight truncate">
-            {sidebarOpen ? 'SH Admin' : 'SA'}
-          </Link>
-          {sidebarOpen && <p className="text-[10px] text-blue-100/80 uppercase tracking-[0.2em] mt-1">Control Panel</p>}
-        </div>
-
-        <nav className="mt-8 space-y-2 p-4">
-          <SidebarLink href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
-          <SidebarLink href="/admin/services" icon="🛠️" label="All Services" open={sidebarOpen} />
-          <SidebarLink href="/admin/bookings" icon="📅" label="Inquiries" open={sidebarOpen} />
-          <SidebarLink href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
-        </nav>
-
-        <div className="absolute bottom-4 left-4 right-4">
-          <button
-            onClick={logout}
-            className="w-full btn-danger text-sm py-2 truncate"
-          >
-            {sidebarOpen ? 'Logout' : '🚪'}
-          </button>
-        </div>
-      </div>
-
-      {mobileMenuOpen && (
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 bg-black/40 z-30 md:hidden"
-          aria-label="Close menu"
-        />
-      )}
+      <AdminSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+      />
 
       {/* Main Content */}
       <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
@@ -246,20 +218,6 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
-  );
-}
-
-function SidebarLink({ href, icon, label, open }: any) {
-  return (
-    <Link
-      href={href}
-      className={`block px-4 py-3 rounded-xl transition flex items-center gap-3 truncate ${
-        typeof window !== 'undefined' && window.location.pathname === href ? 'bg-[#1a3357] text-white' : 'text-blue-100/80 hover:bg-[#1a3357] hover:text-white'
-      }`}
-    >
-      <span className="text-xl">{icon}</span>
-      {open && <span className="font-bold text-sm">{label}</span>}
-    </Link>
   );
 }
 

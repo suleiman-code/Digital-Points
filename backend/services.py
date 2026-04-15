@@ -9,7 +9,7 @@ from database import db
 from auth import get_admin_user
 from config import settings
 from bson import ObjectId
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 router = APIRouter(prefix="/api/services", tags=["Services"])
 ALLOWED_REVIEW_STATUSES = {"pending", "approved", "rejected"}
@@ -285,7 +285,7 @@ async def get_all_services(
     if min_rating is not None:
         query["avg_rating"] = {"$gte": min_rating}
         
-    services = await db.db["services"].find(query).sort([("featured", -1), ("created_at", -1), ("_id", -1)]).to_list(100)
+    services = await db.db["services"].find(query).sort([("featured", -1), ("created_at", -1), ("_id", -1)]).to_list(1000)
     services = [normalize_service_for_response(item) for item in services]
     return services
 
@@ -384,12 +384,17 @@ async def delete_service(id: str, admin: dict = Depends(get_admin_user)):
 async def get_dashboard_stats(admin: dict = Depends(get_admin_user)):
     total_services = await db.db["services"].count_documents({})
     total_bookings = await db.db["bookings"].count_documents({})
-    pending_bookings = await db.db["bookings"].count_documents({"status": "pending"})
+    
+    # Notifications/Badges counts (only count items that are NOT viewed)
+    # We now count 'contact_messages' instead of 'bookings' for the Admin Inquiry badge
+    pending_bookings = await db.db["contact_messages"].count_documents({"viewed": {"$ne": True}})
+    pending_reviews = await db.db["reviews"].count_documents({"status": "pending", "viewed": {"$ne": True}})
     
     return {
         "total_services": total_services,
         "total_bookings": total_bookings,
-        "pending_bookings": pending_bookings
+        "pending_bookings": pending_bookings,
+        "pending_reviews": pending_reviews
     }
 
 # 7. ADD REVIEW TO SERVICE (Public)
@@ -405,6 +410,7 @@ async def create_review(id: str, review: ReviewCreate):
 
     review_dict = review.model_dump()
     review_dict["service_id"] = id
+    review_dict["service_name"] = service.get("title", "Unknown Service")
     review_dict["status"] = "pending"
     review_dict["created_at"] = datetime.now(timezone.utc)
     
@@ -441,8 +447,20 @@ async def get_reviews(id: str):
 
 # 9. LIST ALL REVIEWS FOR MODERATION (Admin Only)
 @router.get("/reviews/moderation/all", response_model=List[ReviewResponse])
-async def get_reviews_for_moderation(admin: dict = Depends(get_admin_user)):
-    reviews = await db.db["reviews"].find({}).sort("created_at", -1).to_list(500)
+async def get_reviews_for_moderation(
+    status: Optional[str] = None,
+    days: Optional[int] = None,
+    admin: dict = Depends(get_admin_user)
+):
+    query = {}
+    if status and status.lower() in ALLOWED_REVIEW_STATUSES:
+        query["status"] = status.lower()
+    
+    if days and days > 0:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        query["created_at"] = {"$gte": cutoff}
+
+    reviews = await db.db["reviews"].find(query).sort("created_at", -1).to_list(500)
     for review in reviews:
         if review.get("status") not in ALLOWED_REVIEW_STATUSES:
             review["status"] = "approved"
@@ -502,6 +520,18 @@ async def delete_review_permanently(review_id: str, admin: dict = Depends(get_ad
         raise HTTPException(status_code=404, detail="Review not found")
 
     return None
+
+# 12. MARK REVIEW AS VIEWED (Admin Only)
+@router.put("/reviews/moderation/{review_id}/view", status_code=status.HTTP_200_OK)
+async def mark_review_viewed(review_id: str, admin: dict = Depends(get_admin_user)):
+    if not ObjectId.is_valid(review_id):
+        raise HTTPException(status_code=400, detail="Invalid Review ID")
+    
+    await db.db["reviews"].update_one(
+        {"_id": ObjectId(review_id)},
+        {"$set": {"viewed": True}}
+    )
+    return {"message": "Review marked as viewed"}
 
 # 12. UPLOAD MEDIA (Admin Only — Images & Videos)
 @router.post("/upload/", status_code=status.HTTP_201_CREATED)

@@ -6,8 +6,8 @@ from config import settings
 from auth import get_admin_user
 from rate_limit import limiter
 from mail_utils import send_email
-from datetime import datetime, timezone
-from typing import List
+from datetime import datetime, timezone, timedelta
+from typing import List, Optional
 import logging
 import re
 
@@ -67,7 +67,7 @@ def normalize_booking_document(booking_doc: dict) -> dict:
     booking_doc["user_phone"] = _ensure_min_len(_safe_text(booking_doc.get("user_phone"), "0000000")[:30], 7, "0000000")
     booking_doc["user_city"] = _ensure_min_len(_safe_text(booking_doc.get("user_city"), "Unknown")[:120], 1, "Unknown")
     booking_doc["user_postal_code"] = _ensure_min_len(_safe_text(booking_doc.get("user_postal_code"), "00000")[:20], 2, "00000")
-    booking_doc["message"] = _ensure_min_len(_safe_text(booking_doc.get("message"), "No message provided")[:3000], 10, "No message provided")
+    booking_doc["message"] = _ensure_min_len(_safe_text(booking_doc.get("message"), "No message provided")[:3000], 1, "No message provided")
     booking_doc["status"] = _safe_status(booking_doc.get("status"))
     booking_doc["created_at"] = _safe_created_at(booking_doc.get("created_at"))
     booking_doc["booking_date"] = _safe_optional_datetime(booking_doc.get("booking_date"))
@@ -142,10 +142,61 @@ async def create_booking(request: Request, booking: BookingCreate, background_ta
 
 # 2. GET /api/bookings (Admin Only)
 @router.get("/", response_model=List[BookingResponse])
-async def get_all_bookings(admin: dict = Depends(get_admin_user)):
-    bookings = await db.db["bookings"].find().to_list(100)
+async def get_all_bookings(
+    status: Optional[str] = None,
+    days: Optional[int] = None,
+    admin: dict = Depends(get_admin_user)
+):
+    query = {}
+    if status:
+        query["status"] = status.lower()
+        
+    if days and days > 0:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        # Use $or to support both BSON Date objects and ISO strings from legacy data
+        query["$or"] = [
+            {"created_at": {"$gte": cutoff}},
+            {"created_at": {"$gte": cutoff.isoformat().replace("+00:00", "Z")}}
+        ]
+
+    bookings = await db.db["bookings"].find(query).sort("created_at", -1).to_list(1000)
     bookings = [normalize_booking_document(item) for item in bookings]
     return bookings
+
+# 6. POST /api/bookings/{id}/reply (Admin Only)
+@router.post("/{id}/reply")
+async def send_reply(id: str, reply_msg: str, admin: dict = Depends(get_admin_user)):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid Booking ID")
+    
+    booking = await db.db["bookings"].find_one({"_id": ObjectId(id)})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Inquiry not found")
+
+    client_email = booking.get("user_email")
+    if not client_email:
+        raise HTTPException(status_code=400, detail="Client email address not found")
+
+    subject = f"Re: Inquiry for {booking.get('service_name', 'Digital Points')}"
+    
+    try:
+        await send_email(
+            to=[client_email],
+            subject=subject,
+            html_content=f"<div style='font-family:sans-serif;white-space:pre-wrap;'>{reply_msg}</div>",
+            text_content=reply_msg
+        )
+        
+        # Mark as contacted/read
+        await db.db["bookings"].update_one(
+            {"_id": ObjectId(id)},
+            {"$set": {"status": "contacted", "viewed": True, "replied_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"message": "Reply sent successfully"}
+    except Exception as e:
+        logger.error(f"Failed to send reply email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send email reply")
 
 # 3. PUT /api/bookings/{id}/status (Admin Only)
 @router.put("/{id}/status", response_model=BookingResponse)
@@ -180,3 +231,15 @@ async def delete_booking(id: str, admin: dict = Depends(get_admin_user)):
         raise HTTPException(status_code=404, detail="Booking not found")
     
     return None
+
+# 5. MARK BOOKING AS VIEWED (Admin Only)
+@router.put("/{id}/view", status_code=status.HTTP_200_OK)
+async def mark_booking_viewed(id: str, admin: dict = Depends(get_admin_user)):
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid Booking ID")
+    
+    await db.db["bookings"].update_one(
+        {"_id": ObjectId(id)},
+        {"$set": {"viewed": True}}
+    )
+    return {"message": "Booking marked as viewed"}

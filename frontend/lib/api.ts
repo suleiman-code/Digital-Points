@@ -317,12 +317,23 @@ export const servicesAPI = {
     setStoredReviews(reviews);
     return makeResponse(created, 201);
   },
-  getAllReviewsAdmin: () => {
-    if (api) return api.get('/services/reviews/moderation/all');
-    const reviews = getStoredReviews().sort(
-      (a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-    );
-    return makeResponse(reviews);
+  getAllReviewsAdmin: (filters?: { status?: string; days?: number }) => {
+    if (api) return api.get('/services/reviews/moderation/all', { params: filters });
+    let reviews = getStoredReviews();
+    
+    if (filters) {
+      if (filters.status) {
+        const targetStatus = filters.status.toLowerCase();
+        reviews = reviews.filter(r => String(r.status || 'pending').toLowerCase() === targetStatus);
+      }
+      if (filters.days) {
+        const days = filters.days;
+        const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+        reviews = reviews.filter(r => new Date(r.created_at || 0).getTime() >= cutoff);
+      }
+    }
+
+    return makeResponse(reviews.sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()));
   },
   updateReviewStatus: (reviewId: string, newStatus: 'pending' | 'approved' | 'rejected') => {
     if (api) {
@@ -362,6 +373,30 @@ export const servicesAPI = {
     });
     return response.data;
   },
+  getStats: () => {
+    if (api) return api.get('/services/dashboard/stats');
+    const bookings = getBookings();
+    const reviews = getStoredReviews();
+    const contacts = readStorage<any[]>(STORAGE_KEYS.contact, []);
+
+    return makeResponse({
+      total_services: getServices().length,
+      total_bookings: bookings.length,
+      pending_bookings: bookings.filter(b => b.status === 'received' && !b.viewed).length,
+      pending_reviews: reviews.filter(r => r.status === 'pending' && !r.viewed).length,
+      pending_contacts: contacts.filter(c => !c.viewed).length
+    });
+  },
+  markReviewViewed: (reviewId: string) => {
+    if (api) return api.put(`/services/reviews/moderation/${reviewId}/view`);
+    const reviews = getStoredReviews();
+    const index = reviews.findIndex((r: any) => r._id === reviewId);
+    if (index !== -1) {
+      reviews[index].viewed = true;
+      setStoredReviews(reviews);
+    }
+    return makeResponse({ success: true });
+  },
 };
 
 export const inquiriesAPI = {
@@ -378,19 +413,39 @@ export const inquiriesAPI = {
     setBookings(bookings);
     return makeResponse(newBooking, 201);
   },
-  getAll: async () => {
+  getAll: async (filters?: { status?: string; days?: number }) => {
     if (api) {
       try {
-        return await api.get('/bookings/');
+        return await api.get('/bookings/', { params: filters });
       } catch (error: any) {
         // If backend is unreachable (network error), keep admin usable with local fallback.
         if (!error?.response) {
-          return makeResponse(getBookings());
+          let bookings = getBookings();
+          if (filters) {
+             if (filters.status) {
+               bookings = bookings.filter(b => String(b.status || '').toLowerCase() === filters.status?.toLowerCase());
+             }
+             if (filters.days) {
+                const cutoff = Date.now() - (filters.days * 24 * 60 * 60 * 1000);
+                bookings = bookings.filter(b => new Date(b.created_at || b.createdAt || 0).getTime() >= cutoff);
+             }
+          }
+          return makeResponse(bookings);
         }
         throw error;
       }
     }
-    return makeResponse(getBookings());
+    let bookings = getBookings();
+    if (filters) {
+       if (filters.status) {
+         bookings = bookings.filter(b => String(b.status || '').toLowerCase() === filters.status?.toLowerCase());
+       }
+       if (filters.days) {
+          const cutoff = Date.now() - (filters.days * 24 * 60 * 60 * 1000);
+          bookings = bookings.filter(b => new Date(b.created_at || b.createdAt || 0).getTime() >= cutoff);
+       }
+    }
+    return makeResponse(bookings);
   },
 
   // Used by Admin to update booking status.
@@ -426,6 +481,20 @@ export const inquiriesAPI = {
     setBookings(next);
     return makeResponse({ success: true });
   },
+  markViewed: (id: string) => {
+    if (api) return api.put(`/bookings/${id}/view`);
+    const bookings = getBookings();
+    const index = bookings.findIndex((item: any) => item._id === id);
+    if (index !== -1) {
+      bookings[index].viewed = true;
+      setBookings(bookings);
+    }
+    return makeResponse({ success: true });
+  },
+  sendReply: (id: string, message: string) => {
+    if (api) return api.post(`/bookings/${id}/reply`, null, { params: { reply_msg: message } });
+    return makeResponse({ message: 'Mock reply sent' });
+  },
 };
 
 // Backward compatibility for existing admin pages/components.
@@ -440,18 +509,44 @@ export const contactAPI = {
     writeStorage(STORAGE_KEYS.contact, messages);
     return makeResponse({ success: true }, 201);
   },
-  getAll: async () => {
+  getAll: async (filters?: { days?: number }) => {
     if (api) {
       try {
-        return await api.get('/contact/');
+        return await api.get('/contact/', { params: filters });
       } catch (error: any) {
         if (!error?.response) {
-          return makeResponse(readStorage<any[]>(STORAGE_KEYS.contact, []));
+          const messages = readStorage<any[]>(STORAGE_KEYS.contact, []);
+          if (filters && filters.days) {
+             const days = filters.days;
+             const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+             return makeResponse(messages.filter(m => new Date(m.createdAt || m.created_at || 0).getTime() >= cutoff));
+          }
+          return makeResponse(messages);
         }
         throw error;
       }
     }
-    return makeResponse(readStorage<any[]>(STORAGE_KEYS.contact, []));
+    const messages = readStorage<any[]>(STORAGE_KEYS.contact, []);
+    if (filters && filters.days) {
+       const days = filters.days;
+       const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+       return makeResponse(messages.filter(m => new Date(m.createdAt || m.created_at || 0).getTime() >= cutoff));
+    }
+    return makeResponse(messages);
+  },
+  markViewed: (id: string) => {
+    if (api) return api.put(`/contact/${id}/view`);
+    const messages = readStorage<any[]>(STORAGE_KEYS.contact, []);
+    const index = messages.findIndex((m: any) => m._id === id);
+    if (index !== -1) {
+      messages[index].viewed = true;
+      writeStorage(STORAGE_KEYS.contact, messages);
+    }
+    return makeResponse({ success: true });
+  },
+  sendReply: (id: string, message: string) => {
+    if (api) return api.post(`/contact/${id}/reply`, null, { params: { reply_msg: message } });
+    return makeResponse({ message: 'Reply sent' });
   },
 };
 

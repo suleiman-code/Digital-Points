@@ -8,6 +8,7 @@ import { formatUsd, servicesAPI } from '@/lib/api';
 import { BUSINESS_CATEGORIES, normalizeCategory } from '@/lib/businessCategories';
 import Link from 'next/link';
 import ServicePreviewModal from '@/components/ServicePreviewModal';
+import AdminSidebar from '@/components/AdminSidebar';
 
 export default function AdminServicesPage() {
   return (
@@ -126,38 +127,12 @@ function AdminServicesContent() {
 
   return (
     <div className="flex min-h-screen bg-[linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)] text-slate-900">
-      {/* Sidebar - Same as before */}
-      <div
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-[linear-gradient(180deg,_#1d4c83_0%,_#274f87_55%,_#2f6fb1_100%)] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-40 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
-      >
-        <div className="p-4 border-b border-white/10">
-          <Link href="/admin/dashboard" className="text-2xl font-bold truncate">
-            {sidebarOpen ? 'SH Admin' : 'SA'}
-          </Link>
-        </div>
-
-        <nav className="mt-8 space-y-2 p-4">
-          <SidebarItem href="/admin/dashboard" icon="📊" label="Dashboard" open={sidebarOpen} />
-          <SidebarItem href="/admin/services" icon="🛠️" label="Services" open={sidebarOpen} active />
-          <SidebarItem href="/admin/bookings" icon="📅" label="Inquiries" open={sidebarOpen} />
-          <SidebarItem href="/admin/feedback" icon="💬" label="Feedback" open={sidebarOpen} />
-        </nav>
-
-        <div className="absolute bottom-4 left-4 right-4">
-          <button onClick={logout} className="w-full btn-danger text-sm py-2">
-            {sidebarOpen ? 'Logout' : '🚪'}
-          </button>
-        </div>
-      </div>
-
-      {mobileMenuOpen && (
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 bg-black/40 z-30 md:hidden"
-          aria-label="Close menu"
-        />
-      )}
+      <AdminSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+      />
 
       {/* Main Content */}
       <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
@@ -373,18 +348,5 @@ function AdminServicesContent() {
         onClose={() => setPreviewService(null)}
       />
     </div>
-  );
-}
-
-function SidebarItem({ href, icon, label, open, active = false }: any) {
-  return (
-    <Link
-      href={href}
-      className={`block px-4 py-3 rounded-lg transition flex items-center gap-3 ${active ? 'bg-white/18 text-white' : 'text-blue-50/80 hover:bg-white/12 hover:text-white'
-        }`}
-    >
-      <span className="text-xl">{icon}</span>
-      {open && <span>{label}</span>}
-    </Link>
   );
 }

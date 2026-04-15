@@ -281,17 +281,12 @@ function ServiceDetailContent({ params }: { params: any }) {
               <div className="opacity-10 absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
             </div>
           )}
-          {/* Clean Overlay Removing Gradients */}
         </div>
 
         <div className="container-max px-4 relative">
           <div className="pointer-events-none absolute -top-10 right-0 w-72 h-72 bg-blue-100/50 rounded-full blur-3xl" />
-
-          {/* --- HERO OVERLAP CARD --- */}
           <div className="relative -mt-4 sm:-mt-6 md:-mt-8 z-20 mb-12">
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[340px_1fr] gap-6 md:gap-10 items-end bg-white/95 backdrop-blur-md rounded-[2.5rem] border border-white/40 shadow-[0_30px_70px_rgba(15,23,42,0.15)] p-5 sm:p-7 md:p-8">
-              
-              {/* Logo / Main Image */}
               <div className="relative group">
                 <div className="bg-white aspect-square w-full rounded-3xl border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center transform transition-transform group-hover:scale-[1.02]">
                   {logoImage ? (
@@ -317,15 +312,12 @@ function ServiceDetailContent({ params }: { params: any }) {
                   )}
                 </div>
               </div>
-
-              {/* Info & Actions */}
               <div className="pb-2 md:pb-4">
                 <div className="flex flex-wrap items-center gap-3 mb-4">
                    <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-500/30">Verified Business</span>
                    <span className="px-4 py-1.5 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-full">{service.category}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-5 leading-[1.1] tracking-tight">{service.title}</h1>
-
                 <div className="flex flex-wrap items-center gap-6 mb-8 mt-2">
                   <div className="flex items-center gap-2 bg-amber-50 px-3 py-2 rounded-xl border border-amber-100">
                     <div className="flex items-center gap-0.5 text-amber-500">
@@ -340,23 +332,12 @@ function ServiceDetailContent({ params }: { params: any }) {
                     {service.city}, {service.state}
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 max-w-2xl">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!hasCallablePhone) return toast.error('Phone number not available');
-                      window.location.href = `tel:${normalizedPhone}`;
-                    }}
-                    className={hasCallablePhone ? actionBtnBase : actionBtnDisabled}
-                  >
+                  <button type="button" onClick={() => { if (!hasCallablePhone) return toast.error('Phone number not available'); window.location.href = `tel:${normalizedPhone}`; }} className={hasCallablePhone ? actionBtnBase : actionBtnDisabled}>
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                     <span>Contact Phone</span>
                   </button>
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className={`${actionBtnBase} sm:col-span-1`}
-                  >
+                  <button onClick={() => setIsModalOpen(true)} className={`${actionBtnBase} sm:col-span-1`}>
                     <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l8.89 5.26a2 2 0 002.22 0L23 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                     <span>Send Message</span>
                   </button>
@@ -370,10 +351,7 @@ function ServiceDetailContent({ params }: { params: any }) {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 relative z-10">
-
             <div className="lg:col-span-8 space-y-12">
-
-              {/* MAIN CONTENT SECTION */}
               <section className="space-y-10">
                 <div className="bg-white p-6 sm:p-8 md:p-10 rounded-[2.5rem] border border-slate-200/60 shadow-sm relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -385,47 +363,18 @@ function ServiceDetailContent({ params }: { params: any }) {
                   </h2>
                   <FormattedDescription text={String(service.description || '')} className="text-slate-600 font-normal text-sm sm:text-base leading-relaxed space-y-4" />
                 </div>
-
-                {/* SHOW GALLERY IMAGE INSTEAD OF LOGO (User Request) */}
                 <div className="relative group rounded-[2.5rem] overflow-hidden bg-white border border-slate-200 shadow-2xl">
                   <div className="h-[280px] sm:h-[400px] md:h-[580px] w-full relative overflow-hidden">
                     {isVideoUrl(heroImageSrc) ? (
-                      <video 
-                        src={heroImageSrc} 
-                        className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
-                        autoPlay 
-                        muted 
-                        loop 
-                        playsInline
-                      />
+                      <video src={heroImageSrc} className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105" autoPlay muted loop playsInline />
                     ) : (
-                      <Image
-                        src={heroError ? DEFAULT_PLACEHOLDER : heroImageSrc}
-                        fill
-                        className={`object-cover transition-transform duration-[1.5s] group-hover:scale-105 ${heroError ? 'opacity-50 grayscale' : ''}`}
-                        alt={`${service.title} Highlight`}
-                        onError={() => setHeroError(true)}
-                      />
-                    )}
-                    {/* Clean Overlay Removing Gradients */}
-                    <div className="absolute bottom-10 left-10 text-white">
-                       <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2 text-blue-400">Featured Gallery Work</p>
-                       <h3 className="text-2xl font-black leading-tight max-w-md">Professional Service & Quality Guaranteed</h3>
-                    </div>
-                    {allImages.length > 1 && (
-                      <div className="absolute top-8 right-8 bg-black/40 backdrop-blur-xl border border-white/20 text-white text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-full">
-                        {allImages.length} High-Res Photos
-                      </div>
+                      <Image src={heroError ? DEFAULT_PLACEHOLDER : heroImageSrc} fill className={`object-cover transition-transform duration-[1.5s] group-hover:scale-105 ${heroError ? 'opacity-50 grayscale' : ''}`} alt={`${service.title} Highlight`} onError={() => setHeroError(true)} />
                     )}
                   </div>
                 </div>
               </section>
-
             </div>
-
-            {/* SIDEBAR */}
             <div className="lg:col-span-4 space-y-10">
-
               <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_10px_35px_rgba(15,23,42,0.06)] overflow-hidden">
                 <div className="p-6 pb-4 border-b border-slate-50 flex items-center justify-between">
                   <div>
@@ -434,74 +383,25 @@ function ServiceDetailContent({ params }: { params: any }) {
                   </div>
                   <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-inner border border-blue-100/50">📍</div>
                 </div>
-
                 <div className="p-4">
                   <div className="h-60 bg-slate-100 rounded-[2.2rem] overflow-hidden relative group border border-slate-100 shadow-inner">
                     {(() => {
                       const rawUrl = String(service.google_maps_url || '').trim();
-                      if (!rawUrl) return (
-                        <div className="h-full flex items-center justify-center px-5 text-center bg-slate-50">
-                          <div className="opacity-40">
-                            <svg className="w-10 h-10 mx-auto mb-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                            <p className="text-slate-500 font-bold text-xs">Map not available</p>
-                          </div>
-                        </div>
-                      );
-
-                      let embedUrl = '';
-                      if (rawUrl.includes('<iframe')) {
-                        const match = rawUrl.match(/src=["']([^"']+)["']/i);
-                        embedUrl = match?.[1] || '';
-                      } else if (rawUrl.includes('pb=') || rawUrl.includes('output=embed')) {
-                        embedUrl = rawUrl;
-                      } else {
-                        embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(rawUrl)}&output=embed`;
-                      }
-
-                      return (
-                        <>
-                          <iframe
-                            src={embedUrl}
-                            className="w-full h-full border-0 grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700 opacity-90 group-hover:opacity-100"
-                            allowFullScreen
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                          />
-                          <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                             <a 
-                               href={rawUrl.includes('http') && !rawUrl.includes('<iframe') ? rawUrl : `https://www.google.com/maps/search/${encodeURIComponent(addressString)}`}
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               className="bg-white/95 backdrop-blur-md border border-white text-slate-900 font-black text-[9px] uppercase tracking-widest px-5 py-2.5 rounded-full shadow-2xl hover:bg-blue-600 hover:text-white transition-all scale-95 group-hover:scale-100 origin-right"
-                             >
-                               View Full Map
-                             </a>
-                          </div>
-                        </>
-                      );
+                      if (!rawUrl) return <div className="h-full flex items-center justify-center px-5 text-center bg-slate-50"><div className="opacity-40"><svg className="w-10 h-10 mx-auto mb-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg><p className="text-slate-500 font-bold text-xs">Map not available</p></div></div>;
+                      let embedUrl = rawUrl.includes('<iframe') ? (rawUrl.match(/src=["']([^"']+)["']/i)?.[1] || '') : (rawUrl.includes('pb=') || rawUrl.includes('output=embed') ? rawUrl : `https://maps.google.com/maps?q=${encodeURIComponent(rawUrl)}&output=embed`);
+                      return <iframe src={embedUrl} className="w-full h-full border-0 grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700 opacity-90 group-hover:opacity-100" allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />;
                     })()}
                   </div>
-
                   <div className="mt-6 flex items-start gap-4 p-5 bg-blue-50/30 rounded-[1.8rem] border border-blue-100/40 group/addr hover:bg-white transition-all duration-300">
-                    <div className="w-10 h-10 rounded-xl bg-white text-blue-500 flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-100 group-hover/addr:bg-blue-600 group-hover/addr:text-white transition-all">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    </div>
-                    <div>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-none">Official Address</p>
-                       <p className="text-xs font-bold text-slate-700 leading-relaxed">{addressString || 'Address Unlisted'}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-white text-blue-500 flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-100 group-hover/addr:bg-blue-600 group-hover/addr:text-white transition-all"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div>
+                    <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 shadow-none">Official Address</p><p className="text-xs font-bold text-slate-700 leading-relaxed">{addressString || 'Address Unlisted'}</p></div>
                   </div>
                 </div>
               </div>
-
               <div className="border-2 border-blue-600 rounded-3xl bg-white overflow-hidden shadow-[0_20px_50px_rgba(37,99,235,0.1)]">
                 <div className="bg-blue-600 px-5 py-4 flex justify-between items-center group">
                   <span className="font-black text-[10px] text-white uppercase tracking-[0.2em]">Live Business Status</span>
-                  {businessStatus && (
-                    <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full bg-white shadow-lg ${businessStatus.color}`}>
-                      ● {businessStatus.status}
-                    </span>
-                  )}
+                  {businessStatus && <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full bg-white shadow-lg ${businessStatus.color}`}>● {businessStatus.status}</span>}
                 </div>
                 <div className="p-6 space-y-4">
                   {businessHoursEntries.length > 0 ? businessHoursEntries.map(([day, time]: any) => {
@@ -523,13 +423,12 @@ function ServiceDetailContent({ params }: { params: any }) {
                   }) : (
                     <div className="text-center py-6">
                       <p className="text-slate-500 font-semibold text-sm">Business hours not updated yet</p>
-                      <p className="text-slate-400 text-xs mt-1">Please contact the business for opening hours.</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* ─── MORE DETAILS LINK ─── */}
+              {/* MORE DETAILS LINK */}
               <Link
                 href={`/services/${serviceId}/details`}
                 className="w-full flex items-center justify-between px-6 py-5 bg-gradient-to-r from-[#0f2340] to-indigo-900 text-white rounded-3xl hover:shadow-lg transition-all group border border-slate-200"
@@ -544,95 +443,141 @@ function ServiceDetailContent({ params }: { params: any }) {
                   </svg>
                 </span>
               </Link>
-
             </div>
           </div>
 
-          <div className='mt-16 w-full'>
-            {/* REVIEWS DISPLAY */}
-            <section className="space-y-12 pt-16 border-t border-slate-100">
-              <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mb-2">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
-                </div>
-                <h2 className="text-4xl font-black text-slate-800 tracking-tight">Real Experiences</h2>
-                <p className="text-slate-500 font-medium text-lg max-w-xl">Hear straight from our community. We pride ourselves on delivering exactly what we promise.</p>
+          {/* BROAD CINEMA VIDEO SECTION */}
+          {service.video_url && (
+            <div className="max-w-6xl mx-auto mt-20 mb-20 space-y-8">
+              <div className="flex flex-col items-center text-center gap-2 mb-10">
+                 <div className="w-16 h-16 rounded-[2rem] bg-indigo-50 text-indigo-500 flex items-center justify-center text-2xl shadow-inner border border-indigo-100/50 mb-3 hover:scale-110 transition-transform">🎥</div>
+                 <h2 className="text-4xl font-black text-slate-800 tracking-tight">Experience Our Business</h2>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Watch a high-definition presentation of our excellence</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {reviews.length > 0 ? visibleReviews.map((rev: any, i: number) => (
-                  <div key={i} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                    <div className="flex gap-1 mb-6">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <svg key={star} className={`w-5 h-5 ${star <= Math.round(rev.rating || 0) ? 'text-amber-400' : 'text-slate-200'} fill-current`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                      ))}
-                    </div>
-                    <p className="text-slate-600 text-[12px] font-medium leading-relaxed mb-8 flex-grow">&quot;{rev.comment}&quot;</p>
-
-                    <div className="flex items-center gap-3 mt-auto pt-6 border-t border-slate-100">
-                      <div>
-                        <h4 className="font-bold text-slate-800">{rev.user_name || 'Verified User'}</h4>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                          {new Date(rev.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </p>
+              <div 
+                  className="relative w-full rounded-[4rem] overflow-hidden bg-slate-900 border-[12px] border-white shadow-[0_50px_120px_rgba(15,23,42,0.25)] group/video cursor-pointer"
+                  onMouseEnter={(e) => {
+                    const video = e.currentTarget.querySelector('video');
+                    if (video) video.play().catch(() => {});
+                  }}
+                  onMouseLeave={(e) => {
+                    const video = e.currentTarget.querySelector('video');
+                    if (video) video.pause();
+                  }}
+              >
+                <div className="aspect-[21/9] sm:aspect-[16/7] w-full relative">
+                  <video 
+                    src={resolveMediaUrl(service.video_url)} 
+                    className="w-full h-full object-cover brightness-90 group-hover/video:brightness-105 transition-all duration-1000"
+                    muted 
+                    loop 
+                    playsInline
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 group-hover/video:opacity-0 transition-opacity duration-700 pointer-events-none" />
+                  
+                  <div className="absolute inset-0 flex items-center justify-center group-hover/video:opacity-0 transition-all duration-500">
+                    <div className="flex flex-col items-center gap-6">
+                      <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center animate-pulse shadow-2xl">
+                        <svg className="w-10 h-10 text-white fill-current translate-x-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                       </div>
+                      <span className="text-[10px] font-black text-white uppercase tracking-[0.5em] drop-shadow-lg">Hover to expand view</span>
                     </div>
                   </div>
-                )) : (
-                  <div className="lg:col-span-2 text-center py-16 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No reviews yet.</p>
-                    <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="mt-2 text-blue-600 font-bold text-xs uppercase tracking-widest">Be the first to review</button>
+
+                  <div className="absolute top-10 left-10 right-10 flex justify-between items-start opacity-0 group-hover/video:opacity-100 transition-all duration-700">
+                      <div className="flex items-center gap-3 bg-black/50 backdrop-blur-2xl border border-white/10 px-6 py-3 rounded-full shadow-2xl">
+                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+                        <span className="text-[11px] font-black text-white uppercase tracking-widest whitespace-nowrap">Cinematic Presentation Active</span>
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-2xl border border-white/20 p-3 rounded-2xl">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                      </div>
                   </div>
-                )}
-              </div>
-              {canShowMoreReviews && (
-                <button
-                  onClick={() => setVisibleReviewsCount(prev => prev + INITIAL_REVIEWS_COUNT)}
-                  className="mx-auto block px-8 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700 text-sm font-bold hover:bg-slate-50 hover:shadow transition-all"
-                >
-                  View More Reviews
-                </button>
-              )}
-              {canShowLessReviews && (
-                <button
-                  onClick={() => setVisibleReviewsCount(INITIAL_REVIEWS_COUNT)}
-                  className="mx-auto block px-8 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700 text-sm font-bold hover:bg-slate-50 hover:shadow transition-all"
-                >
-                  Show Less Reviews
-                </button>
-              )}
-            </section>
 
-            {/* POST REVIEW */}
-            <section ref={reviewFormRef} className="pt-10 border-t border-slate-100">
-              <h2 className="text-base font-bold text-slate-700 mb-2">Leave a review</h2>
-              <div className="flex gap-1 mb-4">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <button key={s} onClick={() => setReviewForm({ ...reviewForm, rating: s })} onMouseEnter={() => setHoverRating(s)} onMouseLeave={() => setHoverRating(0)}>
-                    <svg className={`w-6 h-6 ${(hoverRating || reviewForm.rating) >= s ? 'text-amber-400 fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                  </button>
-                ))}
-              </div>
-              <form onSubmit={handleReviewSubmit} className="space-y-4">
-                <textarea required placeholder="Write your feedback..." value={reviewForm.comment} onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })} className="w-full border border-slate-200 rounded p-4 text-sm focus:border-slate-400 outline-none h-24" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input required placeholder="Your Name" value={reviewForm.user_name} onChange={e => setReviewForm({ ...reviewForm, user_name: e.target.value })} className="border border-slate-200 rounded p-3 text-sm focus:border-slate-400 outline-none" />
-                  <input type="email" placeholder="Your Email (Optional)" value={reviewForm.user_email} onChange={e => setReviewForm({ ...reviewForm, user_email: e.target.value })} className="border border-slate-200 rounded p-3 text-sm focus:border-slate-400 outline-none" />
+                  <div className="absolute bottom-10 left-10 opacity-0 group-hover/video:opacity-100 transition-all duration-700 translate-y-4 group-hover/video:translate-y-0">
+                     <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1 italic">Exclusive Preview</p>
+                     <h4 className="text-white text-3xl font-black tracking-tight drop-shadow-md">{service.title}</h4>
+                  </div>
                 </div>
-                <button disabled={isPosting} className="px-10 py-3 bg-blue-600 text-white font-black text-sm uppercase tracking-widest rounded hover:bg-blue-700 shadow-md transition-all">
-                  {isPosting ? 'Posting...' : 'Post Review'}
+              </div>
+            </div>
+          )}
+
+          {/* REVIEWS SECTION */}
+          <section className="space-y-12 pt-16 border-t border-slate-100">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mb-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+              </div>
+              <h2 className="text-4xl font-black text-slate-800 tracking-tight">Real Experiences</h2>
+              <p className="text-slate-500 font-medium text-lg max-w-xl">Hear straight from our community. We pride ourselves on delivering exactly what we promise.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {reviews.length > 0 ? visibleReviews.map((rev: any, i: number) => (
+                <div key={i} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                  <div className="flex gap-1 mb-6">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <svg key={star} className={`w-5 h-5 ${star <= Math.round(rev.rating || 0) ? 'text-amber-400' : 'text-slate-200'} fill-current`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    ))}
+                  </div>
+                  <p className="text-slate-600 text-[12px] font-medium leading-relaxed mb-8 flex-grow">&quot;{rev.comment}&quot;</p>
+
+                  <div className="flex items-center gap-3 mt-auto pt-6 border-t border-slate-100">
+                    <div>
+                      <h4 className="font-bold text-slate-800">{rev.user_name || 'Verified User'}</h4>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                        {new Date(rev.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )) : (
+                <div className="col-span-full text-center py-16 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
+                  <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No reviews yet.</p>
+                  <button onClick={() => reviewFormRef.current?.scrollIntoView({ behavior: 'smooth' })} className="mt-2 text-blue-600 font-bold text-xs uppercase tracking-widest">Be the first to review</button>
+                </div>
+              )}
+            </div>
+
+            {canShowMoreReviews && (
+              <button
+                onClick={() => setVisibleReviewsCount(prev => prev + INITIAL_REVIEWS_COUNT)}
+                className="mx-auto block px-8 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-slate-700 text-sm font-bold hover:bg-slate-50 hover:shadow transition-all"
+              >
+                View More Reviews
+              </button>
+            )}
+          </section>
+
+          {/* POST REVIEW FORM */}
+          <section ref={reviewFormRef} className="pt-10 border-t border-slate-100">
+            <h2 className="text-base font-bold text-slate-700 mb-2">Leave a review</h2>
+            <div className="flex gap-1 mb-4">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <button key={s} onClick={() => setReviewForm({ ...reviewForm, rating: s })} onMouseEnter={() => setHoverRating(s)} onMouseLeave={() => setHoverRating(0)}>
+                  <svg className={`w-6 h-6 ${(hoverRating || reviewForm.rating) >= s ? 'text-amber-400 fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
                 </button>
-              </form>
-            </section>
-
-          </div>
-
+              ))}
+            </div>
+            <form onSubmit={handleReviewSubmit} className="space-y-4">
+              <textarea required placeholder="Write your feedback..." value={reviewForm.comment} onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })} className="w-full border border-slate-200 rounded p-4 text-sm focus:border-slate-400 outline-none h-24" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input required placeholder="Your Name" value={reviewForm.user_name} onChange={e => setReviewForm({ ...reviewForm, user_name: e.target.value })} className="border border-slate-200 rounded p-3 text-sm focus:border-slate-400 outline-none" />
+                <input type="email" placeholder="Your Email (Optional)" value={reviewForm.user_email} onChange={e => setReviewForm({ ...reviewForm, user_email: e.target.value })} className="border border-slate-200 rounded p-3 text-sm focus:border-slate-400 outline-none" />
+              </div>
+              <button disabled={isPosting} className="px-10 py-3 bg-blue-600 text-white font-black text-sm uppercase tracking-widest rounded hover:bg-blue-700 shadow-md transition-all">
+                {isPosting ? 'Posting...' : 'Post Review'}
+              </button>
+            </form>
+          </section>
         </div>
       </main>
 
       <Footer />
 
-      {/* EMAIL MODAL */}
+      {/* INQUIRY MODAL */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -649,10 +594,7 @@ function ServiceDetailContent({ params }: { params: any }) {
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative"
             >
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-6 right-6 text-slate-400 hover:text-red-500 transition-colors bg-slate-100 hover:bg-red-50 rounded-full p-2"
-              >
+              <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-red-500 bg-slate-100 rounded-full p-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
 
@@ -661,84 +603,20 @@ function ServiceDetailContent({ params }: { params: any }) {
 
               <form onSubmit={handleBookingSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input required placeholder="Your Name *" value={bookingForm.name} onChange={e => setBookingForm({ ...bookingForm, name: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
-                  <input required type="email" placeholder="Your Email Address *" value={bookingForm.email} onChange={e => setBookingForm({ ...bookingForm, email: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
-                  <input required placeholder="Your Phone Number *" value={bookingForm.phone} onChange={e => setBookingForm({ ...bookingForm, phone: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100" />
-                  <input required placeholder="Your City *" value={bookingForm.city} onChange={e => setBookingForm({ ...bookingForm, city: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:border-blue-500 outline-none transition-all focus:ring-4 focus:ring-blue-100 md:col-span-2" />
+                  <input required placeholder="Your Name *" value={bookingForm.name} onChange={e => setBookingForm({ ...bookingForm, name: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:ring-4 focus:ring-blue-100 outline-none" />
+                  <input required type="email" placeholder="Email Address *" value={bookingForm.email} onChange={e => setBookingForm({ ...bookingForm, email: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:ring-4 focus:ring-blue-100 outline-none" />
+                  <input required placeholder="Phone Number *" value={bookingForm.phone} onChange={e => setBookingForm({ ...bookingForm, phone: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:ring-4 focus:ring-blue-100 outline-none" />
+                  <input required placeholder="City *" value={bookingForm.city} onChange={e => setBookingForm({ ...bookingForm, city: e.target.value })} className="w-full border border-slate-200 rounded-xl p-3.5 text-sm focus:ring-4 focus:ring-blue-100 outline-none md:col-span-2" />
                 </div>
-                <div className="relative">
-                  <textarea required placeholder="Write your message here *" value={bookingForm.message} onChange={e => setBookingForm({ ...bookingForm, message: e.target.value })} className="w-full border border-slate-200 rounded-xl p-4 text-sm h-32 focus:border-blue-500 outline-none resize-none transition-all focus:ring-4 focus:ring-blue-100" />
-                </div>
-                <button disabled={submitting} className="w-full py-4 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 transition-all text-sm uppercase tracking-widest shadow-lg disabled:opacity-70 group flex items-center justify-center gap-2">
-                  {submitting ? 'Sending Message...' : 'Send Inquiry Now'}
-                  {!submitting && <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7-7 7M5 12h16"/></svg>}
+                <textarea required placeholder="Message *" value={bookingForm.message} onChange={e => setBookingForm({ ...bookingForm, message: e.target.value })} className="w-full border border-slate-200 rounded-xl p-4 text-sm h-32 outline-none" />
+                <button disabled={submitting} className="w-full py-4 bg-slate-900 text-white font-black rounded-xl hover:bg-slate-800 transition-all text-sm uppercase tracking-widest">
+                  {submitting ? 'Sending...' : 'Send Inquiry Now'}
                 </button>
               </form>
-
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* PHONE MODAL */}
-      <AnimatePresence>
-        {isPhoneModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsPhoneModalOpen(false)}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 14 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 14 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl p-5 w-full max-w-xs shadow-2xl border border-slate-100"
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Business Phone</p>
-                  {hasCallablePhone ? (
-                    <a
-                      href={`tel:${normalizedPhone}`}
-                      className="text-xl font-black text-slate-900 mt-1 break-words leading-tight hover:text-blue-600 transition-colors block"
-                    >
-                      {rawContactPhone || 'Not Available'}
-                    </a>
-                  ) : (
-                    <h3 className="text-xl font-black text-slate-900 mt-1 break-words leading-tight">{rawContactPhone || 'Not Available'}</h3>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsPhoneModalOpen(false)}
-                  className="text-slate-400 hover:text-rose-500 transition-colors bg-slate-100 hover:bg-rose-50 rounded-full p-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleCopyPhone}
-                  className="w-11 h-11 rounded-full border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all flex items-center justify-center"
-                  aria-label="Copy phone number"
-                  title="Copy phone number"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M8 7V5a2 2 0 012-2h9a2 2 0 012 2v9a2 2 0 01-2 2h-2" />
-                    <rect x="3" y="7" width="13" height="13" rx="2" ry="2" strokeWidth="1.8" />
-                  </svg>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }
@@ -746,3 +624,4 @@ function ServiceDetailContent({ params }: { params: any }) {
 export default function ServiceDetail({ params }: { params: any }) {
   return <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}><ServiceDetailContent params={params} /></Suspense>;
 }
+

@@ -1,12 +1,12 @@
-from fastapi import APIRouter, status, BackgroundTasks, Depends, Request
+from fastapi import APIRouter, status, BackgroundTasks, Depends, Request, HTTPException
 from pydantic import BaseModel, EmailStr
 from database import db
 from config import settings
 from rate_limit import limiter
 import resend
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from auth import get_admin_user
-from typing import List
+from typing import List, Optional
 import logging
 
 from mail_utils import send_email
@@ -86,8 +86,20 @@ Tip: Use Reply in your email client to respond directly to this user.
         logger.error(f"Failed to trigger contact email: {e}", exc_info=True)
 
 @router.get("/", response_model=List[dict])
-async def get_all_inquiries(admin: dict = Depends(get_admin_user)):
-    messages = await db.db["contact_messages"].find().sort("created_at", -1).to_list(1000)
+async def get_all_inquiries(
+    days: Optional[int] = None,
+    admin: dict = Depends(get_admin_user)
+):
+    query = {}
+    if days and days > 0:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        # Support both BSON Date and ISO Strings
+        query["$or"] = [
+            {"created_at": {"$gte": cutoff}},
+            {"created_at": {"$gte": cutoff.isoformat().replace("+00:00", "Z")}}
+        ]
+
+    messages = await db.db["contact_messages"].find(query).sort("created_at", -1).to_list(1000)
     # Convert ObjectId to string for JSON
     for msg in messages:
         msg["_id"] = str(msg["_id"])
@@ -105,3 +117,52 @@ async def submit_contact_form(request: Request, form: ContactForm, background_ta
     background_tasks.add_task(send_admin_contact_email, form_dict)
     
     return {"message": "Contact message sent successfully to Admin"}
+
+# 4. PUT /api/contact/{id}/view (Admin Only)
+@router.put("/{id}/view", status_code=status.HTTP_200_OK)
+async def mark_contact_viewed(id: str, admin: dict = Depends(get_admin_user)):
+    from bson import ObjectId
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid Contact ID")
+    
+    await db.db["contact_messages"].update_one(
+        {"_id": ObjectId(id)},
+        {"$set": {"viewed": True}}
+    )
+    return {"message": "Inquiry marked as viewed"}
+
+# 5. POST /api/contact/{id}/reply (Admin Only)
+@router.post("/{id}/reply")
+async def reply_to_contact_message(id: str, reply_msg: str, admin: dict = Depends(get_admin_user)):
+    from bson import ObjectId
+    if not ObjectId.is_valid(id):
+        raise HTTPException(status_code=400, detail="Invalid Contact ID")
+    
+    msg = await db.db["contact_messages"].find_one({"_id": ObjectId(id)})
+    if not msg:
+        raise HTTPException(status_code=404, detail="Inquiry not found")
+
+    client_email = msg.get("email")
+    if not client_email:
+        raise HTTPException(status_code=400, detail="User email not found")
+
+    subject = f"Re: {msg.get('subject', 'Website Inquiry')}"
+    
+    try:
+        await send_email(
+            to=[client_email],
+            subject=subject,
+            html_content=f"<div style='font-family:sans-serif;white-space:pre-wrap;'>{reply_msg}</div>",
+            text_content=reply_msg
+        )
+        
+        # Mark as read/responded
+        await db.db["contact_messages"].update_one(
+            {"_id": ObjectId(id)},
+            {"$set": {"viewed": True, "replied_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"message": "Reply sent successfully"}
+    except Exception as e:
+        logger.error(f"Failed to send contact reply: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
