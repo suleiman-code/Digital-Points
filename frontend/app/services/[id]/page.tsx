@@ -160,7 +160,12 @@ function ServiceDetailContent({ params }: { params: any }) {
   if (!service) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
   const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.postal_code || ''} ${service.country || ''}`.trim();
-  const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
+  const allMedia = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
+  const imagesOnly = allMedia.filter(url => !isVideoUrl(String(url)));
+  const videosOnly = allMedia.filter(url => isVideoUrl(String(url)));
+  if (service.video_url && !videosOnly.includes(service.video_url)) {
+    videosOnly.push(service.video_url);
+  }
   const rawContactPhone = String(service.contact_phone || '').trim();
   const normalizedPhone = rawContactPhone.replace(/[^\d+]/g, '');
   const hasCallablePhone = normalizedPhone.length >= 7;

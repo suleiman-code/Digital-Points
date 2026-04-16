@@ -103,7 +103,15 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
   if (loading) return <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-bold text-blue-500 animate-pulse text-sm uppercase tracking-widest"><div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>Loading Details...</div>;
   if (!service) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Service Not Found</div>;
 
-  const allImages = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
+  const allMedia = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
+  const imagesOnly = allMedia.filter(url => !isVideoUrl(String(url)));
+  const videosOnly = allMedia.filter(url => isVideoUrl(String(url)));
+  
+  // Also include the primary video_url field if it exists and isn't already in the list
+  if (service.video_url && !videosOnly.includes(service.video_url)) {
+    videosOnly.push(service.video_url);
+  }
+
   const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.postal_code || ''} ${service.country || ''}`.trim();
   const rawContactPhone = String(service.contact_phone || '').trim();
   const normalizedDialPhone = rawContactPhone.startsWith('+')
@@ -133,12 +141,8 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
 
         <div className="container-max px-4 max-w-5xl mx-auto space-y-24">
 
-          {/* PORTFOLIO / GALLERY */}
           <section id="gallery">
             <div className="flex items-center gap-4 mb-10 text-center justify-center">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-4 hidden">
-                 {/* icon if centered */}
-              </div>
               <h2 className="text-4xl font-black text-slate-800 relative z-10">
                 <span className="relative inline-block">
                   Photo Gallery
@@ -147,21 +151,45 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               </h2>
             </div>
 
-            {allImages.length > 0 ? (
+            {imagesOnly.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {allImages.map((img, i) => {
+                {imagesOnly.map((img, i) => {
                   return (
                     <GalleryItem key={i} img={img} i={i} setActiveImage={setActiveImage} />
                   );
                 })}
               </div>
             ) : (
-              <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-200 border-dashed shadow-sm">
-                <p className="text-6xl mb-6 opacity-30">🖼️</p>
-                <p className="text-sm font-black text-slate-400 uppercase tracking-widest">No visual portfolio available</p>
+              <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 border-dashed shadow-sm">
+                <p className="text-sm font-black text-slate-400 uppercase tracking-widest">No photos available</p>
               </div>
             )}
           </section>
+
+          {/* BROAD BUSINESS VIDEO SECTION */}
+          {videosOnly.length > 0 && (
+            <section id="business-video" className="pt-10">
+              <div className="flex flex-col items-center gap-2 mb-10 text-center">
+                 <h2 className="text-4xl font-black text-slate-800 tracking-tight">Business Video</h2>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Official Cinematic Presentation</p>
+              </div>
+              
+              <div className="space-y-12">
+                {videosOnly.map((videoUrl, idx) => (
+                  <div key={idx} className="relative w-full rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-black border-[8px] md:border-[12px] border-white shadow-2xl group/video">
+                    <div className="aspect-video w-full relative">
+                      <video 
+                        src={resolveMediaUrl(videoUrl)} 
+                        className="w-full h-full object-cover"
+                        controls
+                        playsInline
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section id="additional-services">
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden">
@@ -308,13 +336,13 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               )}
               
               {/* Controls */}
-              {allImages.length > 1 && (
+              {imagesOnly.length > 1 && (
                 <>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      const idx = allImages.indexOf(activeImage);
-                      setActiveImage(allImages[(idx - 1 + allImages.length) % allImages.length]);
+                      const idx = imagesOnly.indexOf(activeImage);
+                      setActiveImage(imagesOnly[(idx - 1 + imagesOnly.length) % imagesOnly.length]);
                     }}
                     className="absolute left-4 md:-left-16 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-10 border border-white/10 hover:scale-110"
                     aria-label="Previous image"
@@ -324,8 +352,8 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      const idx = allImages.indexOf(activeImage);
-                      setActiveImage(allImages[(idx + 1) % allImages.length]);
+                      const idx = imagesOnly.indexOf(activeImage);
+                      setActiveImage(imagesOnly[(idx + 1) % imagesOnly.length]);
                     }}
                     className="absolute right-4 md:-right-16 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all z-10 border border-white/10 hover:scale-110"
                     aria-label="Next image"
@@ -334,7 +362,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                   </button>
 
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-full tracking-widest border border-white/10">
-                    {allImages.indexOf(activeImage) + 1} / {allImages.length}
+                    {imagesOnly.indexOf(activeImage) + 1} / {imagesOnly.length}
                   </div>
                 </>
               )}
