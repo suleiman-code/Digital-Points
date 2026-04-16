@@ -231,7 +231,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
           </section>
 
           {/* BROAD BUSINESS VIDEO SECTION - JUST ONE VIDEO */}
-          {finalVideo && (
+          {finalVideo ? (
             <section id="business-video" className="pt-2">
               <div className="flex flex-col items-center gap-2 mb-10 text-center">
                  <h2 className="text-4xl font-black text-slate-800 tracking-tight">Business Video</h2>
@@ -239,6 +239,20 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               </div>
               
               <ProfessionalVideoPlayer src={finalVideo} />
+            </section>
+          ) : (
+            <section id="business-video" className="pt-2">
+              <div className="flex flex-col items-center gap-2 mb-8 text-center opacity-50">
+                 <h2 className="text-4xl font-black text-slate-800 tracking-tight grayscale">Business Video</h2>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Cinematic Experience</p>
+              </div>
+              <div className="bg-white/40 border-2 border-dashed border-slate-200 rounded-[2.5rem] md:rounded-[4rem] p-12 md:p-24 text-center">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                  <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                </div>
+                <h3 className="text-xl font-bold text-slate-400 mb-2">No Video Available</h3>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest leading-loose">The business owner hasn&apos;t provided a cinematic presentation yet.</p>
+              </div>
             </section>
           )}
 

@@ -342,6 +342,10 @@ export default function AddListing() {
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error("Image is too large. Max 1MB allowed.");
+        return;
+      }
       setMainImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -356,6 +360,10 @@ export default function AddListing() {
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error("Cover image is too large. Max 1MB allowed.");
+        return;
+      }
       setCoverImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -370,8 +378,8 @@ export default function AddListing() {
   const handleVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit suggestion
-        toast.error("Video file is too large. Max 50MB recommended.");
+      if (file.size > 15 * 1024 * 1024) { 
+        toast.error("Video file is too large. Max 15MB allowed.");
         return;
       }
       setIsVideoUploading(true);
@@ -400,6 +408,10 @@ export default function AddListing() {
 
     // BUG #8 FIX: keep file and preview together so index removal is always correct
     files.forEach((file) => {
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error(`File "${file.name}" is too large (> 1MB).`);
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setNewGalleryItems((prev) => [...prev, { file, preview: reader.result as string }]);
