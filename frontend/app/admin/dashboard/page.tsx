@@ -248,63 +248,6 @@ export default function AdminDashboard() {
               <p className="text-xs text-slate-400 mt-2 italic font-medium">Database: MongoDB Atlas</p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-10">
-            {/* Recent Activity */}
-            <section className="bg-white rounded-[2rem] shadow-xl p-6 sm:p-8 border border-slate-100 flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-black tracking-tight text-slate-900">Recent Emails</h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Last 5 messages from contact form</p>
-                </div>
-                <Link href="/admin/emails" className="text-[10px] font-black uppercase text-blue-600 hover:underline">View All</Link>
-              </div>
-
-              {recentEmails.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center py-10 opacity-40">
-                  <span className="text-4xl mb-4">💤</span>
-                  <p className="text-xs font-bold uppercase tracking-widest">No recent emails</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {recentEmails.map((item: any) => (
-                    <div key={item._id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between group hover:border-blue-100 transition-all">
-                      <div className="flex items-center gap-3">
-                        {!item.viewed && <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />}
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 truncate max-w-[140px] sm:max-w-[200px]">{item.name || item.user_name || 'User'}</p>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider truncate">
-                            🌐 Contact Email
-                          </p>
-                        </div>
-                      </div>
-                      <Link href="/admin/emails" className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-all">
-                        ➜
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Listed Categories Breakdown */}
-            <section className="bg-white rounded-[2rem] shadow-xl p-6 sm:p-8 border border-slate-100">
-              <h2 className="text-xl font-black tracking-tight text-slate-900 mb-6 font-black uppercase tracking-tight">Category Breakdown</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {listedCategoryOptions.slice(0, 8).map((cat) => (
-                  <div key={cat.name} className="p-3 bg-slate-50 rounded-xl flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-600 truncate mr-2">{cat.name}</span>
-                    <span className="text-[10px] bg-white px-2 py-0.5 rounded-full font-black border border-slate-100">{cat.count}</span>
-                  </div>
-                ))}
-                {listedCategoryOptions.length > 8 && (
-                  <div className="p-3 text-center border-2 border-dashed border-slate-100 rounded-xl text-[10px] font-bold text-slate-400">
-                    + {listedCategoryOptions.length - 8} more
-                  </div>
-                )}
-              </div>
-            </section>
-          </div>
         </div>
       </div>
     </div>
