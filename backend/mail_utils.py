@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import resend
 from config import settings
 from typing import List, Optional
@@ -20,6 +21,10 @@ async def send_email(
     Sends an email using Resend API.
     Note: To send more than 3 emails per day, you MUST verify your domain 
     in Resend and change the MAIL_FROM environment variable.
+
+    BUG #16 FIX: resend.Emails.send() is a blocking sync HTTP call.
+    We run it in a thread pool via run_in_executor() to avoid blocking
+    the entire async event loop while waiting for the HTTP response.
     """
     if not settings.RESEND_API_KEY:
         logger.error("RESEND_API_KEY not configured. Skipping email.")
@@ -38,7 +43,9 @@ async def send_email(
         if reply_to:
             email_params["reply_to"] = reply_to
 
-        response = resend.Emails.send(email_params)
+        # Run the blocking SDK call in a thread so the event loop stays free
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(None, resend.Emails.send, email_params)
         logger.info(f"Email sent successfully via Resend. Response: {response}")
         return True
     except Exception as e:

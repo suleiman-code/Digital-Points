@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FormattedDescription from '@/components/FormattedDescription';
-import ListingOwnerEmailForm from '@/components/ListingOwnerEmailForm';
 import { resolveMediaUrl, servicesAPI, DEFAULT_PLACEHOLDER } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -276,12 +275,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                </div>
             )}
 
-            {/* Simple Email Inquiry Form for all listings */}
-            <ListingOwnerEmailForm 
-              serviceId={serviceId} 
-              serviceName={service.title || 'Service'} 
-              ownerEmail={service.contact_email} 
-            />
+
           </section>
 
         </div>

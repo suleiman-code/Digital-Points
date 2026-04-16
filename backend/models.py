@@ -74,9 +74,11 @@ class ServiceBase(BaseModel):
     country: str = Field(default="USA", max_length=120) # Added default USA
     timezone: Optional[str] = Field(default=None, max_length=120)
     sub_services: Optional[list[str]] = None # Custom Inner Page links defined by Admin
-    reviews: list[dict] = Field(default_factory=list) # User feedback: [{user, rating, comment, date}]
+    # BUG #11 FIX: reviews removed from ServiceBase — moved to ServiceResponse only.
+    # This prevents the create/update payloads from accepting injected reviews.
     gallery: Optional[list[str]] = Field(default_factory=list)
     video_url: Optional[str] = Field(default=None, max_length=2048)
+    # avg_rating and reviews_count are computed server-side; kept on Base for read compatibility
     avg_rating: float = 0.0
     reviews_count: int = 0
 
@@ -119,6 +121,9 @@ class ServiceResponse(ServiceBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # BUG #11 FIX: reviews live on Response only — not on Create/Update — to prevent
+    # callers from injecting pre-approved reviews and bypassing the moderation flow.
+    reviews: list[dict] = Field(default_factory=list)
 
 # --- Booking (Inquiries) Models ---
 class BookingBase(BaseModel):
@@ -139,7 +144,8 @@ class BookingResponse(BookingBase):
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
     
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    status: str = "pending" # pending, contacted, completed
+    status: str = "received"
+    viewed: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # --- Review Models ---

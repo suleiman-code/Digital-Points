@@ -193,8 +193,17 @@ export default function AddListing() {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
 
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  // BUG #8 FIX: track existing DB gallery URLs and new file uploads separately.
+  // Previously both were mixed in galleryPreviews[], causing removeGalleryPhoto
+  // to delete the wrong File when the user removed an existing (HTTP) URL.
+  const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]);
+  const [newGalleryItems, setNewGalleryItems] = useState<{ file: File; preview: string }[]>([]);
+
+  // Derived combined list for display — existing first, then new uploads
+  const galleryPreviews = [
+    ...existingGalleryUrls,
+    ...newGalleryItems.map((item) => item.preview),
+  ];
 
   const [serviceDetailsInput, setServiceDetailsInput] = useState('');
 
@@ -278,11 +287,13 @@ export default function AddListing() {
 
         setMainImagePreview(resolveMediaUrl(svc.image_url || svc.image || '') || null);
         setCoverImagePreview(resolveMediaUrl(svc.cover_image || '') || null);
-        setGalleryPreviews(
+        // BUG #8 FIX: load existing gallery URLs into the separate existingGalleryUrls state
+        setExistingGalleryUrls(
           Array.isArray(svc.gallery)
             ? svc.gallery.map((img: any) => resolveMediaUrl(String(img || ''))).filter(Boolean)
             : []
         );
+        setNewGalleryItems([]);  // always start with no new uploads when editing
         setServiceDetailsInput(svc.service_details || '');
 
         if (svc.business_hours && typeof svc.business_hours === 'object') {
@@ -355,19 +366,21 @@ export default function AddListing() {
 
   const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    
-    if (galleryPreviews.length + files.length > 8) {
+    const currentTotal = existingGalleryUrls.length + newGalleryItems.length;
+
+    if (currentTotal + files.length > 8) {
       toast.error("Max 8 gallery items allowed.");
       return;
     }
 
     if (files.length === 0) return;
 
-    setGalleryFiles(prev => [...prev, ...files]);
-    
-    files.forEach(file => {
+    // BUG #8 FIX: keep file and preview together so index removal is always correct
+    files.forEach((file) => {
       const reader = new FileReader();
-      reader.onloadend = () => setGalleryPreviews(prev => [...prev, reader.result as string]);
+      reader.onloadend = () => {
+        setNewGalleryItems((prev) => [...prev, { file, preview: reader.result as string }]);
+      };
       reader.readAsDataURL(file);
     });
   };
@@ -377,8 +390,14 @@ export default function AddListing() {
   };
 
   const removeGalleryPhoto = (index: number) => {
-    setGalleryFiles(prev => prev.filter((_, i) => i !== index));
-    setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
+    // BUG #8 FIX: check whether the index falls in the existing-URLs section or
+    // the new-files section, and remove from the correct array.
+    if (index < existingGalleryUrls.length) {
+      setExistingGalleryUrls((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      const newIndex = index - existingGalleryUrls.length;
+      setNewGalleryItems((prev) => prev.filter((_, i) => i !== newIndex));
+    }
   };
 
   const getApiErrorMessage = (error: any) => {
@@ -394,6 +413,20 @@ export default function AddListing() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // BUG #14 FIX: run ALL validation BEFORE starting any file uploads.
+    // Previously, images were uploaded first then validation could reject the form—
+    // wasting the uploaded files and leaving orphaned files on the server.
+    const normalizedCountry = normalizeCountry(formData.country);
+    if (!isValidPhoneForCountry(formData.contact_phone, normalizedCountry)) {
+      toast.error(`Please enter a valid ${normalizedCountry} contact number.`);
+      return;
+    }
+    if (stripRichText(formData.description).length < 10) {
+      toast.error('Description must be at least 10 characters long.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -409,27 +442,15 @@ export default function AddListing() {
         finalCoverUrl = res.url;
       }
 
-      const uploadedGalleryUrls = [];
-      for (const file of galleryFiles) {
-        const res = await servicesAPI.uploadImage(file);
+      // BUG #8 FIX: upload only the new gallery files; existing URLs passed through directly
+      const uploadedGalleryUrls: string[] = [];
+      for (const item of newGalleryItems) {
+        const res = await servicesAPI.uploadImage(item.file);
         uploadedGalleryUrls.push(res.url);
       }
 
-      const normalizedCountry = normalizeCountry(formData.country);
-      if (!isValidPhoneForCountry(formData.contact_phone, normalizedCountry)) {
-        toast.error(`Please enter a valid ${normalizedCountry} contact number.`);
-        setLoading(false);
-        return;
-      }
-
-      if (stripRichText(formData.description).length < 10) {
-        toast.error('Description must be at least 10 characters long.');
-        setLoading(false);
-        return;
-      }
-
       const parsedPrice = parseFloat(formData.price);
-      const existingGalleryUrls = galleryPreviews.filter((url) => url.startsWith('http'));
+      // Merge: existing DB URLs + freshly uploaded URLs (deduped)
       const mergedGalleryUrls = Array.from(new Set([...existingGalleryUrls, ...uploadedGalleryUrls]));
 
       const payload = {

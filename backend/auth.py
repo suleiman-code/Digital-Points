@@ -153,6 +153,7 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
 
 # 1. SIGNUP (Initial admin creation)
 @router.post("/signup", response_model=UserResponse)
+@limiter.limit(settings.RATE_LIMIT_LOGIN)  # BUG #12 FIX: prevent mass account creation
 async def signup(request: Request, user: UserCreate):
     users_collection = get_users_collection()
     # Check if user already exists

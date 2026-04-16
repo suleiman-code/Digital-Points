@@ -21,14 +21,15 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   const { logout } = useAuth();
   const pathname = usePathname();
-  const [counts, setCounts] = useState({ inquiries: 0, reviews: 0 });
+  const [counts, setCounts] = useState({ inquiries: 0, reviews: 0, emails: 0 });
 
   useEffect(() => {
     const fetchCounts = async () => {
       try {
         const res = await servicesAPI.getStats();
         setCounts({
-          inquiries: res.data.pending_contacts ?? res.data.pending_bookings ?? 0,
+          inquiries: res.data.pending_bookings || 0,
+          emails: res.data.pending_contacts || 0,
           reviews: res.data.pending_reviews || 0
         });
       } catch (err) {
@@ -40,8 +41,8 @@ export default function AdminSidebar({
     const handleRefresh = () => fetchCounts();
     window.addEventListener('refresh-admin-counts', handleRefresh);
 
-    // Refresh counts every 30 seconds
-    const interval = setInterval(fetchCounts, 30000);
+    // Refresh counts every 5 seconds for near real-time badges
+    const interval = setInterval(fetchCounts, 5000);
     return () => {
       clearInterval(interval);
       window.removeEventListener('refresh-admin-counts', handleRefresh);
@@ -52,10 +53,10 @@ export default function AdminSidebar({
     { href: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
     { href: '/admin/services', icon: '🛠️', label: 'Services' },
     { 
-      href: '/admin/bookings', 
-      icon: '📅', 
-      label: 'Inquiries', 
-      badge: counts.inquiries > 0 ? counts.inquiries : null 
+      href: '/admin/emails', 
+      icon: '✉️', 
+      label: 'Emails', 
+      badge: counts.emails > 0 ? counts.emails : null 
     },
     { 
       href: '/admin/feedback', 
@@ -111,9 +112,9 @@ export default function AdminSidebar({
                 {/* Badge */}
                 {item.badge && (
                   <span className={`
-                    absolute flex items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white 
-                    ${sidebarOpen ? 'right-4 px-1.5 min-w-[18px] h-[18px]' : 'top-2 right-2 w-4 h-4'}
-                    shadow-lg ring-2 ring-[#274f87]
+                    absolute flex items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white 
+                    ${sidebarOpen ? 'right-4 px-2 min-w-[20px] h-[20px]' : 'top-2 right-2 w-5 h-5'}
+                    shadow-[0_0_12px_rgba(220,38,38,0.5)] ring-2 ring-white/20
                   `}>
                     {item.badge}
                   </span>
@@ -139,8 +140,8 @@ export default function AdminSidebar({
              </div>
              <div className="space-y-1">
                 {counts.reviews > 0 && <p className="text-[10px] text-white/90 font-medium">• {counts.reviews} Reviews Pending</p>}
-                {counts.inquiries > 0 && <p className="text-[10px] text-white/90 font-medium">• {counts.inquiries} New Inquiries</p>}
-                {counts.reviews === 0 && counts.inquiries === 0 && <p className="text-[10px] text-white/40 italic font-medium">All caught up!</p>}
+                {counts.emails > 0 && <p className="text-[10px] text-white/90 font-medium">• {counts.emails} New Emails</p>}
+                {counts.reviews === 0 && counts.emails === 0 && <p className="text-[10px] text-white/40 italic font-medium">All caught up!</p>}
              </div>
           </div>
         )}

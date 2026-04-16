@@ -168,9 +168,11 @@ def sanitize_media_for_response(service_doc: dict) -> dict:
     if not service_doc:
         return service_doc
 
-    image_url = str(service_doc.get("image_url") or "").strip()
-    if image_url and not _local_upload_exists(image_url):
-        service_doc["image_url"] = ""
+    # BUG #6 FIX: sanitize both image_url AND cover_image (cover was previously skipped)
+    for field in ("image_url", "cover_image"):
+        url = str(service_doc.get(field) or "").strip()
+        if url and not _local_upload_exists(url):
+            service_doc[field] = ""
 
     gallery = service_doc.get("gallery")
     if isinstance(gallery, list):
@@ -333,7 +335,9 @@ async def update_service(id: str, service_data: ServiceUpdate, admin: dict = Dep
     if not existing_service:
         raise HTTPException(status_code=404, detail="Service not found")
         
-    update_data = {k: v for k, v in service_data.model_dump().items() if v is not None}
+    # BUG #2 FIX: use exclude_unset=True so falsy values (False, "", 0) are NOT silently dropped.
+    # The old `if v is not None` filter would strip valid updates like featured=False or price=0.
+    update_data = service_data.model_dump(exclude_unset=True)
 
     if "country" in update_data:
         update_data["country"] = normalize_country(update_data["country"])

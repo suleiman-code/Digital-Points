@@ -195,20 +195,25 @@ export default function AdminFeedbackPage() {
                         if (!review.viewed) {
                           try {
                             await servicesAPI.markReviewViewed(String(review._id));
+                            // Force local update if possible, but no blue dot needed anymore
+                            review.viewed = true;
                             window.dispatchEvent(new CustomEvent('refresh-admin-counts'));
                           } catch (err) {
                             console.error('Failed to mark review viewed', err);
                           }
                         }
                       }}
-                      className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60 hover:border-slate-300 transition-colors cursor-pointer group"
+                      className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60 hover:border-slate-300 transition-colors cursor-pointer group relative overflow-hidden"
                     >
                       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
-                          <InfoBlock label="Name" value={review.user_name || 'Unknown'} />
-                          <InfoBlock label="Email" value={review.user_email || 'Not provided'} />
-                          <InfoBlock label="Date" value={new Date(review.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
-                          <InfoBlock label="Rating" value={`${Number(review.rating || 0).toFixed(1)} / 5`} />
+                        <div className="flex items-center gap-3">
+                           {/* Blue dot removed as requested */}
+                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+                             <InfoBlock label="Name" value={review.user_name || 'Unknown'} />
+                             <InfoBlock label="Email" value={review.user_email || 'Not provided'} />
+                             <InfoBlock label="Date" value={new Date(review.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
+                             <InfoBlock label="Rating" value={`${Number(review.rating || 0).toFixed(1)} / 5`} />
+                           </div>
                         </div>
                         <span className={`inline-flex self-start px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${badgeClass}`}>
                           {status}

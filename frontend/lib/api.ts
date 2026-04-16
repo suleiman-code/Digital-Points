@@ -60,7 +60,10 @@ const STORAGE_KEYS = {
 
 const DEFAULT_ADMIN = {
   email: 'admin@example.com',
-  password: 'admin123',
+  // BUG #13 FIX: password no longer hardcoded in client bundle.
+  // In local (no-backend) mode, the user must register first via /api/auth/signup.
+  // The password is stored only after the first login, never shipped as a literal.
+  password: '',
 };
 
 const DEFAULT_SERVICES = [
@@ -241,7 +244,8 @@ export const servicesAPI = {
   getById: (id: string) => {
     if (api) return api.get(`/services/${id}`);
     const service = getServices().find((item) => item._id === id);
-    if (!service) makeApiError('Service not found', 404);
+    // BUG #3 FIX: makeApiError throws — must `return` it so control flow is clear
+    if (!service) return makeApiError('Service not found', 404);
     return makeResponse(service);
   },
   create: (data: any) => {
@@ -264,7 +268,7 @@ export const servicesAPI = {
 
     const services = getServices();
     const index = services.findIndex((item) => item._id === id);
-    if (index === -1) makeApiError('Service not found', 404);
+    if (index === -1) return makeApiError('Service not found', 404); // BUG #3 FIX
 
     const updated = {
       ...services[index],
@@ -344,7 +348,7 @@ export const servicesAPI = {
 
     const reviews = getStoredReviews();
     const index = reviews.findIndex((r: any) => r._id === reviewId);
-    if (index === -1) makeApiError('Review not found', 404);
+    if (index === -1) return makeApiError('Review not found', 404); // BUG #3 FIX
     reviews[index] = { ...reviews[index], status: newStatus };
     setStoredReviews(reviews);
     return makeResponse(reviews[index]);
@@ -354,9 +358,9 @@ export const servicesAPI = {
 
     const reviews = getStoredReviews();
     const review = reviews.find((r: any) => r._id === reviewId);
-    if (!review) makeApiError('Review not found', 404);
+    if (!review) return makeApiError('Review not found', 404); // BUG #3 FIX
     if (String(review.status || 'pending').toLowerCase() !== 'rejected') {
-      makeApiError('Only rejected reviews can be permanently deleted', 400);
+      return makeApiError('Only rejected reviews can be permanently deleted', 400); // BUG #3 FIX
     }
     const next = reviews.filter((r: any) => r._id !== reviewId);
     setStoredReviews(next);
@@ -455,7 +459,7 @@ export const inquiriesAPI = {
 
     const bookings = getBookings();
     const index = bookings.findIndex((item: any) => item._id === id);
-    if (index === -1) makeApiError('Booking not found', 404);
+    if (index === -1) return makeApiError('Booking not found', 404); // BUG #3 FIX
     bookings[index] = { ...bookings[index], status: newStatus };
     setBookings(bookings);
     return makeResponse(bookings[index]);
@@ -467,7 +471,7 @@ export const inquiriesAPI = {
 
     const bookings = getBookings();
     const index = bookings.findIndex((item: any) => item._id === id);
-    if (index === -1) makeApiError('Booking not found', 404);
+    if (index === -1) return makeApiError('Booking not found', 404); // BUG #3 FIX
     const updated = { ...bookings[index], ...data };
     bookings[index] = updated;
     setBookings(bookings);
@@ -492,7 +496,8 @@ export const inquiriesAPI = {
     return makeResponse({ success: true });
   },
   sendReply: (id: string, message: string) => {
-    if (api) return api.post(`/bookings/${id}/reply`, null, { params: { reply_msg: message } });
+    // BUG #7 FIX companion: backend now expects { message } in body, not query param
+    if (api) return api.post(`/bookings/${id}/reply`, { message });
     return makeResponse({ message: 'Mock reply sent' });
   },
 };
@@ -545,7 +550,8 @@ export const contactAPI = {
     return makeResponse({ success: true });
   },
   sendReply: (id: string, message: string) => {
-    if (api) return api.post(`/contact/${id}/reply`, null, { params: { reply_msg: message } });
+    // BUG #7 FIX companion: backend now expects { message } in body, not query param
+    if (api) return api.post(`/contact/${id}/reply`, { message });
     return makeResponse({ message: 'Reply sent' });
   },
 };
@@ -573,10 +579,10 @@ export const authAPI = {
     }
 
     const admin = getAdmin();
-    const isValid = data.email === admin.email && data.password === admin.password;
+    const isValid = data.email === admin?.email && data.password && data.password === admin?.password;
 
     if (!isValid) {
-      makeApiError('Invalid credentials. Use admin@example.com / admin123', 401);
+      return makeApiError('Invalid credentials. Please register first or connect the backend.', 401); // BUG #3 FIX
     }
 
     return makeResponse({ access_token: uid('token'), token_type: 'bearer' });
@@ -598,12 +604,14 @@ export const authAPI = {
   resetPassword: (data: { token: string; new_password: string }) => {
     if (api) return api.post('/auth/reset-password', data);
 
+    // BUG #13 FIX: Removed hardcoded 'admin123' password from reset mock path.
+    // In local mode, write the new password to storage so future logins work.
     const savedToken = localStorage.getItem(STORAGE_KEYS.adminResetToken);
     if (!savedToken || savedToken !== data.token) {
-      makeApiError('Invalid or expired reset token', 400);
+      return makeApiError('Invalid or expired reset token', 400); // BUG #3 FIX
     }
 
-    const admin = getAdmin();
+    const admin = getAdmin() ?? { email: DEFAULT_ADMIN.email, password: '' };
     writeStorage(STORAGE_KEYS.admin, { ...admin, password: data.new_password });
     localStorage.removeItem(STORAGE_KEYS.adminResetToken);
     return makeResponse({ message: 'Password updated successfully.' });
@@ -611,7 +619,7 @@ export const authAPI = {
   me: () => {
     if (api) return api.get('/auth/me');
     const token = isBrowser() ? localStorage.getItem('authToken') : null;
-    if (!token) makeApiError('Could not validate credentials', 401);
+    if (!token) return makeApiError('Could not validate credentials', 401); // BUG #3 FIX
     return makeResponse({
       email: 'admin@example.com',
       first_name: 'Admin',

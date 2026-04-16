@@ -56,24 +56,27 @@ app.include_router(service_router)
 app.include_router(booking_router)
 app.include_router(contact_router)
 
-# CORS Settings
-origins = settings.cors_origins()
-allow_credentials = "*" not in origins
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=allow_credentials,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Middleware order matters: Starlette applies middleware LIFO (last-added = outermost).
+# We want: CORSMiddleware outermost → TrustedHost → SlowAPI innermost.
+# This ensures CORS headers are always present, even on 429 rate-limit responses.
+app.add_middleware(SlowAPIMiddleware)  # innermost — applied last
 
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["*", "localhost", "127.0.0.1"],
 )
 
-app.add_middleware(SlowAPIMiddleware)
+# CORS Settings
+origins = settings.cors_origins()
+allow_credentials = "*" not in origins
+
+app.add_middleware(  # outermost — applied first, so all responses get CORS headers
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=allow_credentials,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.middleware("http")
