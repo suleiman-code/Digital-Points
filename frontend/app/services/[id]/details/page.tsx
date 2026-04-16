@@ -18,7 +18,7 @@ const isVideoUrl = (url: string) => {
 function GalleryItem({ img, i, setActiveImage }: { img: string, i: number, setActiveImage: (img: string) => void }) {
   const [error, setError] = React.useState(false);
   const isVideo = isVideoUrl(img);
-  
+
   return (
     <motion.button
       type="button"
@@ -27,24 +27,24 @@ function GalleryItem({ img, i, setActiveImage }: { img: string, i: number, setAc
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.35, delay: i * 0.03, ease: 'easeOut' }}
-      className="group relative rounded-2xl overflow-hidden cursor-pointer bg-slate-100/60 shadow-sm border border-slate-200/60 transform transition-all duration-500 hover:-translate-y-1 hover:shadow-xl aspect-square flex items-center justify-center p-2 md:p-3"
+      className="group relative rounded-2xl overflow-hidden cursor-pointer bg-slate-100/60 shadow-sm border border-slate-200/60 transform transition-all duration-500 hover:-translate-y-1 hover:shadow-xl aspect-[16/10] flex items-center justify-center p-2 md:p-3"
     >
       <div className="relative w-full h-full">
         {isVideo ? (
-          <video 
-            src={img} 
+          <video
+            src={img}
             className="w-full h-full object-cover rounded-xl"
             autoPlay
             loop
-            muted 
+            muted
             playsInline
           />
         ) : (
-          <Image 
-            src={error ? DEFAULT_PLACEHOLDER : img} 
+          <Image
+            src={error ? DEFAULT_PLACEHOLDER : img}
             fill
-            className={`object-contain rounded-xl transition-transform duration-700 group-hover:scale-105 ${error ? 'opacity-30 grayscale' : ''}`} 
-            alt={`Portfolio item ${i + 1}`} 
+            className={`object-contain rounded-xl transition-transform duration-700 group-hover:scale-105 ${error ? 'opacity-30 grayscale' : ''}`}
+            alt={`Portfolio item ${i + 1}`}
             onError={() => setError(true)}
           />
         )}
@@ -53,9 +53,9 @@ function GalleryItem({ img, i, setActiveImage }: { img: string, i: number, setAc
         <div className="p-4 w-full flex justify-end">
           <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30">
             {isVideo ? (
-               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.841z"/></svg>
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.841z" /></svg>
             ) : (
-               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
             )}
           </div>
         </div>
@@ -77,7 +77,7 @@ function ProfessionalVideoPlayer({ src }: { src: string }) {
         if (entry.isIntersecting) {
           video.currentTime = 0; // Har bar shuru se start hogi
           video.muted = true;    // Har bar silent hogi
-          video.play().catch(() => {});
+          video.play().catch(() => { });
         } else {
           video.pause();
         }
@@ -97,7 +97,7 @@ function ProfessionalVideoPlayer({ src }: { src: string }) {
   const handleVideoClick = () => {
     const video = videoRef.current;
     if (!video) return;
-    
+
     video.currentTime = 0;
     video.muted = false;
     video.play();
@@ -107,21 +107,21 @@ function ProfessionalVideoPlayer({ src }: { src: string }) {
   return (
     <div ref={containerRef} className="relative w-full rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-black border-[8px] md:border-[12px] border-white shadow-2xl group/video cursor-pointer">
       <div className="aspect-video w-full relative">
-        <video 
+        <video
           ref={videoRef}
-          src={src} 
+          src={src}
           className="w-full h-full object-cover"
           muted
           loop
           playsInline
           onClick={handleVideoClick}
         />
-        
+
         {/* Overlay instructions that disappear when video is unmuted/controls are shown */}
         <div className="absolute inset-x-0 bottom-10 flex justify-center pointer-events-none group-hover/video:opacity-100 opacity-0 transition-opacity">
-           <span className="bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.3em] px-6 py-3 rounded-full border border-white/20">
-              Click to Play with Sound
-           </span>
+          <span className="bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.3em] px-6 py-3 rounded-full border border-white/20">
+            Click to Play with Sound
+          </span>
         </div>
       </div>
     </div>
@@ -172,7 +172,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
   const allMedia = Array.from(new Set([service.image_url || service.image, ...(service.gallery || [])].filter(Boolean)));
   const imagesOnly = allMedia.filter(url => !isVideoUrl(String(url)));
   const videosOnly = allMedia.filter(url => isVideoUrl(String(url)));
-  
+
   // Also include the primary resolved video_url if it exists
   const finalVideo = service.video_url || (videosOnly.length > 0 ? videosOnly[0] : null);
 
@@ -194,7 +194,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
           {/* Decorative Background Elements - Cleaned Up */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-sky-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-200/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
-          
+
           <div className="container-max relative z-10 max-w-5xl mx-auto">
             {/* GO BACK BUTTON REMOVED (Now in Header) */}
 
@@ -216,8 +216,8 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             </div>
 
             {imagesOnly.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {imagesOnly.map((img, i) => {
+              <div className="max-w-4xl mx-auto grid grid-cols-2 gap-4 md:gap-8 justify-center">
+                {imagesOnly.slice(0, 4).map((img, i) => {
                   return (
                     <GalleryItem key={i} img={img} i={i} setActiveImage={setActiveImage} />
                   );
@@ -234,17 +234,17 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
           {finalVideo ? (
             <section id="business-video" className="pt-2">
               <div className="flex flex-col items-center gap-2 mb-10 text-center">
-                 <h2 className="text-4xl font-black text-slate-800 tracking-tight">Business Video</h2>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Official Cinematic Presentation</p>
+                <h2 className="text-4xl font-black text-slate-800 tracking-tight">Business Video</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Official Cinematic Presentation</p>
               </div>
-              
+
               <ProfessionalVideoPlayer src={finalVideo} />
             </section>
           ) : (
             <section id="business-video" className="pt-2">
               <div className="flex flex-col items-center gap-2 mb-8 text-center opacity-50">
-                 <h2 className="text-4xl font-black text-slate-800 tracking-tight grayscale">Business Video</h2>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Cinematic Experience</p>
+                <h2 className="text-4xl font-black text-slate-800 tracking-tight grayscale">Business Video</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Cinematic Experience</p>
               </div>
               <div className="bg-white/40 border-2 border-dashed border-slate-200 rounded-[2.5rem] md:rounded-[4rem] p-12 md:p-24 text-center">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
@@ -272,27 +272,27 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                   {service.service_details ? (
                     <div className="relative">
                       <div className="absolute top-0 right-0 opacity-[0.05] pointer-events-none">
-                         <svg className="w-40 h-40 text-blue-900" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        <svg className="w-40 h-40 text-blue-900" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       </div>
 
                       <div className="relative z-10 prose-lg prose-slate">
-                         <FormattedDescription 
-                           text={service.service_details} 
-                           className="text-slate-600 font-medium text-base sm:text-lg leading-[2] space-y-6 text-left 
+                        <FormattedDescription
+                          text={service.service_details}
+                          className="text-slate-600 font-medium text-base sm:text-lg leading-[2] space-y-6 text-left 
                            [&_p]:relative [&_p]:pl-10 
                            [&_p]:before:content-[''] [&_p]:before:absolute [&_p]:before:left-0 [&_p]:before:top-1.5 
                            [&_p]:before:w-6 [&_p]:before:h-6 [&_p]:before:bg-blue-600/10 [&_p]:before:rounded-lg 
                            [&_p]:after:content-['✓'] [&_p]:after:absolute [&_p]:after:left-[5px] [&_p]:after:top-[2px] 
-                           [&_p]:after:text-blue-600 [&_p]:after:font-black [&_p]:after:text-xs" 
-                         />
+                           [&_p]:after:text-blue-600 [&_p]:after:font-black [&_p]:after:text-xs"
+                        />
                       </div>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-                       <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                          <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                       </div>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Awaiting details from owner</p>
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      </div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Awaiting details from owner</p>
                     </div>
                   )}
                 </div>
@@ -307,7 +307,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             <div className="flex items-center justify-between gap-4 mb-10">
               <h2 className="text-3xl font-black text-slate-800">Let&apos;s Connect</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {phoneHref && (
                 <a href={phoneHref} className="flex items-start gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
@@ -336,7 +336,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               {service.website_url && (
                 <a href={service.website_url} target="_blank" rel="noopener noreferrer" className="flex items-start gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-200 hover:-translate-y-1 transition-all duration-300 group">
                   <div className="w-14 h-14 bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" /></svg>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" /></svg>
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Official Website</p>
@@ -348,10 +348,10 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               {addressString && (
                 <div className="flex items-start gap-5 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group md:col-span-2 lg:col-span-1">
                   <div className="w-14 h-14 bg-gradient-to-br from-rose-100 to-rose-50 text-rose-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                     </svg>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Headquarters</p>
@@ -362,10 +362,10 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             </div>
 
             {!rawContactPhone && !service.contact_email && !service.website_url && !addressString && (
-               <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 border-dashed">
-                 <p className="text-5xl mb-4 opacity-50">📞</p>
-                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No contact info provided</p>
-               </div>
+              <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 border-dashed">
+                <p className="text-5xl mb-4 opacity-50">📞</p>
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No contact info provided</p>
+              </div>
             )}
 
 
@@ -379,10 +379,10 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
       {/* FULL SCREEN IMAGE VIEWER MODAL */}
       <AnimatePresence>
         {activeImage && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[200] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-4 md:p-10"
             onClick={() => setActiveImage(null)}
@@ -399,7 +399,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
               ) : (
                 <img src={activeImage || ''} className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl" alt="Fullscreen View" />
               )}
-              
+
               {/* Controls */}
               {imagesOnly.length > 1 && (
                 <>
@@ -432,7 +432,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                 </>
               )}
 
-              <button 
+              <button
                 onClick={() => setActiveImage(null)}
                 className="absolute -top-12 right-0 md:-right-12 md:-top-10 bg-white/10 hover:bg-rose-500 hover:text-white text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-colors border border-white/10"
                 aria-label="Close modal"

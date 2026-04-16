@@ -399,8 +399,8 @@ export default function AddListing() {
     const files = Array.from(e.target.files || []);
     const currentTotal = existingGalleryUrls.length + newGalleryItems.length;
 
-    if (currentTotal + files.length > 8) {
-      toast.error("Max 8 gallery items allowed.");
+    if (currentTotal + files.length > 4) {
+      toast.error("Max 4 gallery images allowed.");
       return;
     }
 
