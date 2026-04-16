@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import FormattedDescription from '@/components/FormattedDescription';
 import { resolveMediaUrl, servicesAPI, DEFAULT_PLACEHOLDER } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -60,6 +61,70 @@ function GalleryItem({ img, i, setActiveImage }: { img: string, i: number, setAc
         </div>
       </div>
     </motion.button>
+  );
+}
+
+function ProfessionalVideoPlayer({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.currentTime = 0; // Har bar shuru se start hogi
+          video.muted = true;    // Har bar silent hogi
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const handleVideoClick = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    video.currentTime = 0;
+    video.muted = false;
+    video.play();
+    video.controls = true; // Show controls after first intentional click
+  };
+
+  return (
+    <div ref={containerRef} className="relative w-full rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-black border-[8px] md:border-[12px] border-white shadow-2xl group/video cursor-pointer">
+      <div className="aspect-video w-full relative">
+        <video 
+          ref={videoRef}
+          src={src} 
+          className="w-full h-full object-cover"
+          muted
+          loop
+          playsInline
+          onClick={handleVideoClick}
+        />
+        
+        {/* Overlay instructions that disappear when video is unmuted/controls are shown */}
+        <div className="absolute inset-x-0 bottom-10 flex justify-center pointer-events-none group-hover/video:opacity-100 opacity-0 transition-opacity">
+           <span className="bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.3em] px-6 py-3 rounded-full border border-white/20">
+              Click to Play with Sound
+           </span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -173,16 +238,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Official Cinematic Presentation</p>
               </div>
               
-              <div className="relative w-full rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-black border-[8px] md:border-[12px] border-white shadow-2xl group/video">
-                <div className="aspect-video w-full relative">
-                  <video 
-                    src={finalVideo} 
-                    className="w-full h-full object-cover"
-                    controls
-                    playsInline
-                  />
-                </div>
-              </div>
+              <ProfessionalVideoPlayer src={finalVideo} />
             </section>
           )}
 
