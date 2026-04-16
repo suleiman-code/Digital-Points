@@ -149,9 +149,18 @@ export default function AdminSidebar({
         <div className="absolute bottom-4 left-4 right-4">
           <button
             onClick={logout}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-900/20 active:scale-95"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white shadow-xl shadow-red-900/40 transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 group relative mb-2"
           >
-            {sidebarOpen ? 'Logout' : '🚪'}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            {sidebarOpen && <span>Logout</span>}
+            
+            {!sidebarOpen && (
+              <div className="absolute left-full ml-3 px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg">
+                Logout Session
+              </div>
+            )}
           </button>
         </div>
       </div>
