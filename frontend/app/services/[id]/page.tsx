@@ -451,64 +451,6 @@ function ServiceDetailContent({ params }: { params: any }) {
             </div>
           </div>
 
-          {/* BROAD CINEMA VIDEO SECTION */}
-          {service.video_url && (
-            <div className="max-w-6xl mx-auto mt-20 mb-20 space-y-8">
-              <div className="flex flex-col items-center text-center gap-2 mb-10">
-                 <div className="w-16 h-16 rounded-[2rem] bg-indigo-50 text-indigo-500 flex items-center justify-center text-2xl shadow-inner border border-indigo-100/50 mb-3 hover:scale-110 transition-transform">🎥</div>
-                 <h2 className="text-4xl font-black text-slate-800 tracking-tight">Experience Our Business</h2>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Watch a high-definition presentation of our excellence</p>
-              </div>
-
-              <div 
-                  className="relative w-full rounded-[4rem] overflow-hidden bg-slate-900 border-[12px] border-white shadow-[0_50px_120px_rgba(15,23,42,0.25)] group/video cursor-pointer"
-                  onMouseEnter={(e) => {
-                    const video = e.currentTarget.querySelector('video');
-                    if (video) video.play().catch(() => {});
-                  }}
-                  onMouseLeave={(e) => {
-                    const video = e.currentTarget.querySelector('video');
-                    if (video) video.pause();
-                  }}
-              >
-                <div className="aspect-[21/9] sm:aspect-[16/7] w-full relative">
-                  <video 
-                    src={resolveMediaUrl(service.video_url)} 
-                    className="w-full h-full object-cover brightness-90 group-hover/video:brightness-105 transition-all duration-1000"
-                    muted 
-                    loop 
-                    playsInline
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 group-hover/video:opacity-0 transition-opacity duration-700 pointer-events-none" />
-                  
-                  <div className="absolute inset-0 flex items-center justify-center group-hover/video:opacity-0 transition-all duration-500">
-                    <div className="flex flex-col items-center gap-6">
-                      <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center animate-pulse shadow-2xl">
-                        <svg className="w-10 h-10 text-white fill-current translate-x-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                      </div>
-                      <span className="text-[10px] font-black text-white uppercase tracking-[0.5em] drop-shadow-lg">Hover to expand view</span>
-                    </div>
-                  </div>
-
-                  <div className="absolute top-10 left-10 right-10 flex justify-between items-start opacity-0 group-hover/video:opacity-100 transition-all duration-700">
-                      <div className="flex items-center gap-3 bg-black/50 backdrop-blur-2xl border border-white/10 px-6 py-3 rounded-full shadow-2xl">
-                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-                        <span className="text-[11px] font-black text-white uppercase tracking-widest whitespace-nowrap">Cinematic Presentation Active</span>
-                      </div>
-                      <div className="bg-white/20 backdrop-blur-2xl border border-white/20 p-3 rounded-2xl">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                      </div>
-                  </div>
-
-                  <div className="absolute bottom-10 left-10 opacity-0 group-hover/video:opacity-100 transition-all duration-700 translate-y-4 group-hover/video:translate-y-0">
-                     <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1 italic">Exclusive Preview</p>
-                     <h4 className="text-white text-3xl font-black tracking-tight drop-shadow-md">{service.title}</h4>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* REVIEWS SECTION */}
           <section className="space-y-12 pt-16 border-t border-slate-100">
             <div className="flex flex-col items-center text-center gap-4">

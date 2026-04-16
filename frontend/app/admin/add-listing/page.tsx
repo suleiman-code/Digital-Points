@@ -187,6 +187,9 @@ export default function AddListing() {
     video_url: '',
   });
 
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
+
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
 
@@ -361,6 +364,26 @@ export default function AddListing() {
         openImageEditor('cover', src);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit suggestion
+        toast.error("Video file is too large. Max 50MB recommended.");
+        return;
+      }
+      setIsVideoUploading(true);
+      try {
+        const res = await servicesAPI.uploadImage(file); // Backend upload handles both
+        setFormData(prev => ({ ...prev, video_url: res.url }));
+        toast.success("Video uploaded successfully!");
+      } catch (err) {
+        toast.error("Failed to upload video.");
+      } finally {
+        setIsVideoUploading(false);
+      }
     }
   };
 
@@ -676,20 +699,34 @@ export default function AddListing() {
 
               <div className="mt-8 bg-blue-50/50 p-6 rounded-3xl border border-blue-100/50">
                  <label className="block text-sm font-black text-[#0f2340] mb-2 uppercase tracking-widest">Business Presentation Video</label>
-                 <p className="text-[10px] text-slate-500 font-bold mb-4 uppercase tracking-widest">Provide a direct MP4/WebM URL or upload a video file to our server via the button above.</p>
-                 <div className="flex gap-4">
-                   <div className="flex-grow">
+                 <p className="text-[10px] text-slate-500 font-bold mb-4 uppercase tracking-widest">Provide a direct MP4/WebM URL or upload a video file to our server.</p>
+                 <div className="space-y-4">
+                   <div className="flex flex-col sm:flex-row gap-4 items-center">
                      <input 
                        name="video_url" 
                        value={formData.video_url} 
                        onChange={handleChange} 
-                       placeholder="e.g. https://example.com/video.mp4"
+                       placeholder="Enter Video URL"
                        className="w-full bg-white border border-slate-200 rounded-2xl p-4 font-medium text-sm focus:ring-4 focus:ring-blue-100 outline-none transition-all" 
                      />
+                     <span className="text-slate-400 font-bold text-xs">OR</span>
+                     <label className={`flex-shrink-0 flex items-center gap-2 px-6 py-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${isVideoUploading ? 'bg-slate-100 border-slate-300' : 'bg-white border-blue-200 hover:border-blue-400 hover:bg-blue-50'}`}>
+                       {isVideoUploading ? (
+                         <span className="text-xs font-black text-slate-400 animate-pulse">Uploading...</span>
+                       ) : (
+                         <>
+                           <span className="text-xl">📁</span>
+                           <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Upload Video File</span>
+                         </>
+                       )}
+                       <input type="file" accept="video/*" onChange={handleVideoFileChange} className="hidden" disabled={isVideoUploading} />
+                     </label>
                    </div>
-                   <div className="flex-shrink-0 flex items-center gap-2">
-                     <span className="text-xl">📹</span>
-                   </div>
+                   {formData.video_url && (
+                     <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg inline-block">
+                        ✓ Video source set successfully
+                     </div>
+                   )}
                  </div>
               </div>
             </section>

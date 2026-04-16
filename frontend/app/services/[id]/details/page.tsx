@@ -87,6 +87,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
         gallery: Array.isArray(res.data?.gallery)
           ? res.data.gallery.map((img: any) => resolveMediaUrl(String(img || ''))).filter(Boolean)
           : [],
+        video_url: res.data?.video_url ? resolveMediaUrl(res.data.video_url) : '',
         contact_email: String(res.data?.contact_email || '').trim(),
         website_url: String(res.data?.website_url || '').trim(),
         contact_phone: String(res.data?.contact_phone || '').trim(),
@@ -107,10 +108,8 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
   const imagesOnly = allMedia.filter(url => !isVideoUrl(String(url)));
   const videosOnly = allMedia.filter(url => isVideoUrl(String(url)));
   
-  // Also include the primary video_url field if it exists and isn't already in the list
-  if (service.video_url && !videosOnly.includes(service.video_url)) {
-    videosOnly.push(service.video_url);
-  }
+  // Also include the primary resolved video_url if it exists
+  const finalVideo = service.video_url || (videosOnly.length > 0 ? videosOnly[0] : null);
 
   const addressString = `${service.address || ''} ${service.city || ''} ${service.state || ''} ${service.postal_code || ''} ${service.country || ''}`.trim();
   const rawContactPhone = String(service.contact_phone || '').trim();
@@ -166,27 +165,23 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             )}
           </section>
 
-          {/* BROAD BUSINESS VIDEO SECTION */}
-          {videosOnly.length > 0 && (
-            <section id="business-video" className="pt-10">
+          {/* BROAD BUSINESS VIDEO SECTION - JUST ONE VIDEO */}
+          {finalVideo && (
+            <section id="business-video" className="pt-2">
               <div className="flex flex-col items-center gap-2 mb-10 text-center">
                  <h2 className="text-4xl font-black text-slate-800 tracking-tight">Business Video</h2>
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Official Cinematic Presentation</p>
               </div>
               
-              <div className="space-y-12">
-                {videosOnly.map((videoUrl, idx) => (
-                  <div key={idx} className="relative w-full rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-black border-[8px] md:border-[12px] border-white shadow-2xl group/video">
-                    <div className="aspect-video w-full relative">
-                      <video 
-                        src={resolveMediaUrl(videoUrl)} 
-                        className="w-full h-full object-cover"
-                        controls
-                        playsInline
-                      />
-                    </div>
-                  </div>
-                ))}
+              <div className="relative w-full rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-black border-[8px] md:border-[12px] border-white shadow-2xl group/video">
+                <div className="aspect-video w-full relative">
+                  <video 
+                    src={finalVideo} 
+                    className="w-full h-full object-cover"
+                    controls
+                    playsInline
+                  />
+                </div>
               </div>
             </section>
           )}
