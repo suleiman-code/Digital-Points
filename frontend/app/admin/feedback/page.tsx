@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { servicesAPI } from '@/lib/api';
 import AdminSidebar from '@/components/AdminSidebar';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminFeedbackPage() {
   const { isAuthenticated, isLoading, logout } = useAuth();
@@ -176,98 +177,16 @@ export default function AdminFeedbackPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {reviews.map((review: any) => {
-                  const status = String(review.status || 'pending').toLowerCase();
-                  const badgeClass = status === 'approved'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : status === 'rejected'
-                      ? 'bg-rose-100 text-rose-700'
-                      : 'bg-amber-100 text-amber-700';
-                  
-                  // Use populated service_name from model if available, fallback to serviceMap
-                  const displayServiceName = review.service_name || serviceMap[String(review.service_id || '')]?.title || 'Unknown Listing';
-                  const serviceLink = `/services/${review.service_id}`;
-
-                  return (
-                    <div 
-                      key={review._id} 
-                      onClick={async () => {
-                        if (!review.viewed) {
-                          try {
-                            await servicesAPI.markReviewViewed(String(review._id));
-                            // Force local update if possible, but no blue dot needed anymore
-                            review.viewed = true;
-                            window.dispatchEvent(new CustomEvent('refresh-admin-counts'));
-                          } catch (err) {
-                            console.error('Failed to mark review viewed', err);
-                          }
-                        }
-                      }}
-                      className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60 hover:border-slate-300 transition-colors cursor-pointer group relative overflow-hidden"
-                    >
-                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                           {/* Blue dot removed as requested */}
-                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
-                             <InfoBlock label="Name" value={review.user_name || 'Unknown'} />
-                             <InfoBlock label="Email" value={review.user_email || 'Not provided'} />
-                             <InfoBlock label="Date" value={new Date(review.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
-                             <InfoBlock label="Rating" value={`${Number(review.rating || 0).toFixed(1)} / 5`} />
-                           </div>
-                        </div>
-                        <span className={`inline-flex self-start px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${badgeClass}`}>
-                          {status}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <Link href={serviceLink} target="_blank" className="group rounded-xl bg-white border border-slate-200 px-3 py-2 hover:shadow-sm transition-all block">
-                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Business (Click to view)</p>
-                          <p className="text-sm font-bold text-slate-800 mt-1 group-hover:text-blue-600 truncate">{displayServiceName}</p>
-                          <p className="text-[9px] text-slate-400 font-mono mt-0.5">{review.service_id}</p>
-                        </Link>
-                        <div className="rounded-xl bg-white border border-slate-200 px-3 py-2">
-                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Feedback</p>
-                          <p className="text-sm text-slate-700 mt-1 leading-relaxed">{review.comment || 'No message'}</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        {status === 'pending' && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleReviewStatusUpdate(String(review._id), 'approved')}
-                              disabled={reviewActionId === String(review._id)}
-                              className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-emerald-500 disabled:opacity-60"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleReviewStatusUpdate(String(review._id), 'rejected')}
-                              disabled={reviewActionId === String(review._id)}
-                              className="px-3 py-2 rounded-lg bg-rose-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-rose-500 disabled:opacity-60"
-                            >
-                              Decline
-                            </button>
-                          </>
-                        )}
-
-                        {status === 'rejected' && (
-                          <button
-                            type="button"
-                            onClick={() => handlePermanentDelete(String(review._id))}
-                            disabled={reviewActionId === String(review._id)}
-                            className="px-3 py-2 rounded-lg bg-slate-900 text-white text-[11px] font-black uppercase tracking-wider hover:bg-slate-800 disabled:opacity-60"
-                          >
-                            Delete Permanently
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                {reviews.map((review: any) => (
+                  <ReviewRow 
+                    key={review._id || review.id} 
+                    review={review} 
+                    serviceMap={serviceMap} 
+                    handleReviewStatusUpdate={handleReviewStatusUpdate} 
+                    handlePermanentDelete={handlePermanentDelete} 
+                    reviewActionId={reviewActionId} 
+                  />
+                ))}
               </div>
             )}
           </section>
@@ -297,6 +216,133 @@ function InfoBlock({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl bg-white border border-slate-200 px-3 py-2">
       <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
       <p className="text-sm font-bold text-slate-800 mt-1 truncate">{value}</p>
+    </div>
+  );
+}
+
+const SESSION_VIEWED_KEY = 'admin_viewed_reviews';
+
+function getSessionViewed(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(SESSION_VIEWED_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+
+function addSessionViewed(id: string) {
+  try {
+    const existing = getSessionViewed();
+    existing.add(id);
+    sessionStorage.setItem(SESSION_VIEWED_KEY, JSON.stringify([...existing]));
+  } catch {}
+}
+
+function ReviewRow({ review, serviceMap, handleReviewStatusUpdate, handlePermanentDelete, reviewActionId }: any) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const reviewId = String(review._id || review.id || '');
+  // viewed = backend says viewed OR already seen this session
+  const [viewed, setViewed] = useState(
+    review.viewed === true || getSessionViewed().has(reviewId)
+  );
+  
+  const status = String(review.status || 'pending').toLowerCase();
+  const badgeClass = status === 'approved'
+    ? 'bg-emerald-100 text-emerald-700'
+    : status === 'rejected'
+      ? 'bg-rose-100 text-rose-700'
+      : 'bg-amber-100 text-amber-700';
+
+  const displayServiceName = review.service_name || serviceMap[String(review.service_id || '')]?.title || 'Unknown Listing';
+  const serviceLink = `/services/${review.service_id}`;
+  const dateStr = new Date(review.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const handleExpand = async () => {
+    setIsExpanded(prev => !prev);
+    if (!viewed) {
+      setViewed(true); // Disappear immediately
+      addSessionViewed(reviewId); // Persist across navigation in this session
+      try {
+        await servicesAPI.markReviewViewed(reviewId);
+        window.dispatchEvent(new CustomEvent('refresh-admin-counts'));
+      } catch (err) {
+        console.error('Failed to mark review viewed', err);
+      }
+    }
+  };
+
+  return (
+    <div className={`bg-white rounded-3xl border transition-all ${isExpanded ? 'border-blue-500 shadow-xl' : 'border-slate-100 shadow-sm'}`}>
+      <div onClick={handleExpand} className="p-5 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          {!viewed && <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse shrink-0" />}
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">{review.user_name || 'Anonymous User'}</h3>
+              <span className={`inline-flex self-start px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${badgeClass}`}>
+                {status}
+              </span>
+            </div>
+             <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest mt-1">
+              ★ {Number(review.rating || 0).toFixed(1)} / 5 &nbsp;•&nbsp; {displayServiceName}
+            </p>
+          </div>
+        </div>
+        <p className="text-[10px] text-slate-400 font-bold whitespace-nowrap self-start sm:self-auto">{dateStr}</p>
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-slate-50">
+            <div className="p-5 sm:p-6 bg-slate-50/50">
+              {/* Compact business chip */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Business:</span>
+                <Link
+                  href={serviceLink}
+                  target="_blank"
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[11px] font-black hover:bg-blue-100 transition-colors truncate max-w-xs"
+                >
+                  🏢 {displayServiceName}
+                  <svg className="w-3 h-3 shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                </Link>
+              </div>
+
+              {/* Feedback text */}
+              <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Review Feedback</p>
+                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{review.comment || 'No message provided'}</p>
+              </div>
+
+              {/* Email provided? Keep it available inside the expanded view safely */}
+              {review.user_email && (
+                 <div className="mt-3 bg-white border border-slate-100 rounded-xl p-3 px-4 shadow-sm inline-block">
+                   <p className="text-[9px] font-black uppercase text-slate-400">Contact Email</p>
+                   <p className="text-xs font-bold text-slate-800">{review.user_email}</p>
+                 </div>
+              )}
+
+              <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-200/60 pt-5">
+                {status === 'pending' && (
+                  <>
+                    <button type="button" onClick={() => handleReviewStatusUpdate(String(review._id), 'approved')} disabled={reviewActionId === String(review._id)} className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-emerald-500 disabled:opacity-60 transition-colors shadow-sm">
+                      Approve Review
+                    </button>
+                    <button type="button" onClick={() => handleReviewStatusUpdate(String(review._id), 'rejected')} disabled={reviewActionId === String(review._id)} className="px-5 py-2.5 rounded-xl bg-white border border-rose-200 text-rose-600 text-[11px] font-black uppercase tracking-wider hover:bg-rose-50 disabled:opacity-60 transition-colors shadow-sm">
+                      Decline Review
+                    </button>
+                  </>
+                )}
+                {status === 'rejected' && (
+                  <button type="button" onClick={() => handlePermanentDelete(String(review._id))} disabled={reviewActionId === String(review._id)} className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-[11px] font-black uppercase tracking-wider hover:bg-slate-800 disabled:opacity-60 transition-colors shadow-sm">
+                    Delete Permanently
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

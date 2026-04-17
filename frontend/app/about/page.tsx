@@ -11,7 +11,7 @@ export default function AboutPage() {
         <section className="bg-gradient-to-br from-[#0f2340] via-blue-900 to-indigo-900 text-white pt-44 pb-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -mr-32 -mt-32 mix-blend-screen"></div>
           <div className="container-max relative z-10 text-center">
-            <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight drop-shadow-md bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">About Digital Point</h1>
+            <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight drop-shadow-md bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 uppercase">About DIGITALPOINT</h1>
             <p className="text-blue-100/90 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed">
               Helping local U.S. businesses get found online with accurate local citations.
             </p>
@@ -24,7 +24,7 @@ export default function AboutPage() {
             <div className="card">
               <h2 className="text-3xl font-bold mb-4">About Us</h2>
               <p className="text-gray-700 mb-4 leading-relaxed">
-                Digital Point LLC helps local American businesses get found online.
+                DIGITALPOINT LLC helps local American businesses get found online.
               </p>
               <p className="text-gray-700 mb-4 leading-relaxed">
                 If you own a business in the U.S., we make sure your customers can find your correct address, phone number, and website on the internet.

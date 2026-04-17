@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Manrope, Sora, Outfit } from "next/font/google";
+import { Manrope, Sora, Outfit, Orbitron } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import IgnoreExtensionErrors from "@/components/IgnoreExtensionErrors";
+
+const logoFont = Orbitron({
+  subsets: ["latin"],
+  variable: "--font-logo",
+  weight: ["800", "900"],
+});
 
 const headingFont = Sora({
   subsets: ["latin"],
@@ -26,8 +32,8 @@ const bodyFont = Manrope({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Digital Point | Find & Book Trusted Local Services",
-    template: "%s | Digital Point",
+    default: "DIGITALPOINT",
+    template: "%s | DIGITALPOINT",
   },
   description: "Discover trusted local service providers and book services instantly across major US cities.",
   alternates: {
@@ -44,6 +50,10 @@ export const metadata: Metadata = {
       maxVideoPreview: -1,
     },
   },
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export const viewport = {
@@ -58,7 +68,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${bodyFont.variable} ${headingFont.variable} ${outfitFont.variable} bg-white`}>
+      <body className={`${bodyFont.variable} ${headingFont.variable} ${outfitFont.variable} ${logoFont.variable} bg-white`}>
         <IgnoreExtensionErrors />
         {children}
         <Toaster position="top-center" />

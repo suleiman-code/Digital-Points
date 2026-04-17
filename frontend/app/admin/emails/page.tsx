@@ -100,13 +100,12 @@ function EmailRow({ item }: { item: any }) {
   const handleExpand = async () => {
     setIsExpanded(!isExpanded);
     if (!viewed) {
+      setViewed(true); // Optimistic immediate removal of blue dot
       try {
         await contactAPI.markViewed(item._id || item.id);
-        setViewed(true); // Persist locally after successful backend call
         window.dispatchEvent(new CustomEvent('refresh-admin-counts'));
       } catch (e) {
         console.error("Failed to mark email as viewed", e);
-        // Note: we don't set viewed=true here if the API fails, so user can try again
       }
     }
   };

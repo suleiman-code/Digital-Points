@@ -56,13 +56,15 @@ export default function AdminSidebar({
       href: '/admin/emails', 
       icon: '✉️', 
       label: 'Emails', 
-      badge: counts.emails > 0 ? counts.emails : null 
+      badge: counts.emails > 0 ? counts.emails : null,
+      badgeLabel: 'Mail'
     },
     { 
       href: '/admin/feedback', 
       icon: '💬', 
       label: 'Feedback', 
-      badge: counts.reviews > 0 ? counts.reviews : null 
+      badge: counts.reviews > 0 ? counts.reviews : null,
+      badgeLabel: 'Feed'
     },
   ];
 
@@ -87,8 +89,21 @@ export default function AdminSidebar({
         } md:translate-x-0`}
       >
         <div className="p-4 border-b border-white/10">
-          <Link href="/admin/dashboard" className="text-2xl font-black tracking-tight truncate flex items-center gap-2">
-            <span>{sidebarOpen ? 'SH Admin' : 'SA'}</span>
+          <Link href="/admin/dashboard" className="flex items-center gap-2 group">
+            <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="min-w-[32px]">
+              {/* Bold D - Admin Sidebar (White) */}
+              <path d="M45 25C27 25 13 36 13 50C13 64 27 75 45 75" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" />
+              
+              {/* Bold P - Admin Sidebar (Original Blue) */}
+              <path d="M55 25V80" stroke="#2563EB" stroke-width="18" stroke-linecap="round" />
+              <path d="M55 25C73 25 86 36 86 50C86 64 73 75 55 75" stroke="#2563EB" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+              
+              {/* Center dot in Admin Sidebar (Original Blue) */}
+              <circle cx="50" cy="50" r="11" fill="#2563EB" />
+            </svg>
+            <span className="text-xl font-black tracking-tighter truncate" style={{ fontFamily: 'var(--font-logo), sans-serif' }}>
+              {sidebarOpen ? 'DP Admin' : ''}
+            </span>
           </Link>
           {sidebarOpen && <p className="text-[10px] text-blue-100/80 uppercase tracking-[0.2em] mt-1 font-bold">Control Panel</p>}
         </div>
@@ -109,14 +124,16 @@ export default function AdminSidebar({
                 <span className="text-xl leading-none">{item.icon}</span>
                 {sidebarOpen && <span className="font-bold text-sm">{item.label}</span>}
                 
-                {/* Badge */}
+                {/* Enhanced Pill Badge */}
                 {item.badge && (
                   <span className={`
-                    absolute flex items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white 
-                    ${sidebarOpen ? 'right-4 px-2 min-w-[20px] h-[20px]' : 'top-2 right-2 w-5 h-5'}
-                    shadow-[0_0_12px_rgba(220,38,38,0.5)] ring-2 ring-white/20
+                    absolute flex items-center justify-center bg-red-600 text-[10px] font-black text-white 
+                    ${sidebarOpen 
+                      ? 'right-4 px-2.5 py-0.5 min-w-[32px] h-[20px] rounded-full' 
+                      : 'top-2 right-2 w-5 h-5 rounded-full'}
+                    shadow-[0_0_15px_rgba(220,38,38,0.6)] ring-2 ring-white/20 transition-all duration-300
                   `}>
-                    {item.badge}
+                    {sidebarOpen ? `${item.badge} ${item.badgeLabel}` : item.badge}
                   </span>
                 )}
 

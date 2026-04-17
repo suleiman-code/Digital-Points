@@ -100,6 +100,13 @@ textarea:focus-visible {
   box-shadow: var(--shadow-soft);
 }
 
+.btn-primary-sm {
+  @apply px-4 py-2 text-white font-bold text-xs uppercase tracking-widest transition duration-200;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+}
+
 .btn-primary:hover {
   transform: translateY(-1px);
   filter: brightness(1.02);

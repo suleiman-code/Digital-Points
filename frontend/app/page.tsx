@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
@@ -20,6 +21,8 @@ export default function Home() {
   const [servicesLoading, setServicesLoading] = useState(true);
   const [selectedHomepageCategory, setSelectedHomepageCategory] = useState('');
   const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(8);
+  const [recentFeedback, setRecentFeedback] = useState<any[]>([]);
+  const [visibleFeedbackCount, setVisibleFeedbackCount] = useState(4);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -27,7 +30,7 @@ export default function Home() {
         setServicesLoading(true);
         const res = await servicesAPI.getAll();
         const data: any[] = res.data || [];
-        // Fetch all but initially show limited set
+        
         const normalized = data.map((s: any) => ({
           id: s._id || s.id,
           title: s.title || s.name,
@@ -39,7 +42,35 @@ export default function Home() {
           description: stripDescriptionFormatting(String(s.description || '')),
         })).filter((s: any) => Boolean(s.id))
           .sort((a: any, b: any) => Number(b.featured) - Number(a.featured));
+          
         setFeaturedServices(normalized);
+
+        // Fetch recent feedback efficiently for the top services
+        const topServiceIds = normalized.slice(0, 5).map(s => s.id);
+        const allReviews = await Promise.all(
+          topServiceIds.map(id => servicesAPI.getReviews(id).catch(() => ({ data: [] })))
+        );
+        
+        let flattenedReviews: any[] = [];
+        allReviews.forEach((reviewRes, index) => {
+          const serviceTitle = normalized[index].title;
+          const serviceImage = normalized[index].image;
+          const rData = reviewRes?.data || [];
+          const validReviews = Array.isArray(rData) ? rData : [];
+          
+          validReviews.forEach(r => {
+            flattenedReviews.push({
+               ...r,
+               serviceTitle,
+               serviceImage
+            });
+          });
+        });
+
+        // Sort by date (newest first)
+        flattenedReviews.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+        setRecentFeedback(flattenedReviews);
+
       } catch (err) {
         setFeaturedServices([]);
       } finally {
@@ -51,8 +82,7 @@ export default function Home() {
 
 
 
-  const heroBackground =
-    'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=2000&q=80';
+  const heroBackground = '/images/hero-bg.png';
 
   const featureCards = [
     {
@@ -81,17 +111,26 @@ export default function Home() {
 
       <main className="bg-[linear-gradient(180deg,_#eaf4ff_0%,_#f3f9ff_35%,_#f8fcff_100%)]">
         {/* Hero Section */}
-        <section
-          className="relative overflow-hidden text-white py-16 sm:py-24 min-h-[70vh] sm:min-h-[85vh] flex items-center"
-          style={{
-            backgroundImage: `linear-gradient(120deg, rgba(8, 47, 128, 0.95), rgba(16, 84, 196, 0.85), rgba(14, 116, 171, 0.8)), url('${heroBackground}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none mix-blend-overlay"></div>
-          <div className="absolute -top-32 -right-24 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-blue-400/30 blur-3xl animate-pulse" />
-          <div className="absolute -bottom-32 -left-10 w-[280px] h-[280px] sm:w-[500px] sm:h-[500px] rounded-full bg-cyan-400/20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <section className="relative overflow-hidden text-white py-16 sm:py-24 min-h-[70vh] sm:min-h-[85vh] flex items-center">
+          {/* Hero Background using Next.js Image for performance */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              src={heroBackground}
+              alt="Digital Services Background"
+              fill
+              priority
+              className="object-cover"
+              sizes="100vw"
+              quality={90}
+            />
+            {/* Simplied solid blue tint - No gradient as requested */}
+            <div className="absolute inset-0 bg-blue-600/75 mix-blend-multiply" />
+            <div className="absolute inset-0 bg-blue-700/10" />
+          </div>
+
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none mix-blend-overlay z-1" />
+          <div className="absolute -top-32 -right-24 w-64 h-64 sm:w-96 sm:h-96 rounded-full bg-blue-400/30 blur-3xl animate-pulse z-1" />
+          <div className="absolute -bottom-32 -left-10 w-[280px] h-[280px] sm:w-[500px] sm:h-[500px] rounded-full bg-cyan-400/20 blur-3xl animate-pulse z-1" style={{ animationDelay: '2s' }} />
 
           <div className="container-max relative z-10">
             <motion.div
@@ -105,7 +144,7 @@ export default function Home() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
-                <span className="inline-block py-2 px-5 rounded-full bg-white/10 backdrop-blur-xl border border-white/30 text-white font-bold text-xs sm:text-sm mb-6 tracking-[0.15em] uppercase shadow-xl">
+                <span className="inline-block py-2 px-5 rounded-full bg-blue-600/35 backdrop-blur-xl border border-white/40 text-white font-bold text-xs sm:text-sm mb-6 tracking-[0.18em] uppercase shadow-2xl">
                   ✦ Discover Premium Services
                 </span>
               </motion.div>
@@ -118,8 +157,6 @@ export default function Home() {
               <p className="text-base sm:text-xl md:text-2xl text-white/90 mb-8 sm:mb-10 max-w-3xl mx-auto font-light leading-relaxed px-1">
                 We bridge the gap between customers and businesses, making it easier than ever to find exactly what you're looking for.
               </p>
-
-
 
               <motion.div
                 initial={false}
@@ -148,18 +185,20 @@ export default function Home() {
                   { metric: '24/7', label: 'Customer Support' },
                 ].map((item, i) => (
                   <motion.div
-                    whileHover={{ y: -5, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                    whileHover={{ y: -8, backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: 'rgba(255, 255, 255, 0.4)' }}
                     key={item.label}
-                    className="rounded-xl sm:rounded-2xl px-3 py-4 sm:px-4 sm:py-5 bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl transition-all"
+                    className="rounded-2xl px-3 py-4 sm:px-4 sm:py-5 bg-blue-600/25 border border-white/30 backdrop-blur-2xl shadow-2xl transition-all duration-300"
                   >
                     <p className="text-xl sm:text-2xl md:text-3xl font-black text-white drop-shadow-md mb-1">{item.metric}</p>
-                    <p className="text-white/80 text-[9px] sm:text-xs md:text-sm font-medium uppercase tracking-wider">{item.label}</p>
+                    <p className="text-white/90 text-[9px] sm:text-xs md:text-sm font-bold uppercase tracking-widest">{item.label}</p>
                   </motion.div>
                 ))}
               </motion.div>
             </motion.div>
           </div>
         </section>
+
+        {/* Live Community Feedback section moved below listings */}
 
         {/* Featured Services */}
         <section className="py-24 bg-[#eef6ff] relative">
@@ -200,7 +239,7 @@ export default function Home() {
                 ))
               ) : (
                 featuredServices.slice(0, visibleCount).map((service, index) => (
-                  <ServiceCard key={service.id} {...service} index={index} />
+                  <ServiceCard key={service.id} {...service} index={index} priority={index < 4} />
                 ))
               )}
             </div>
@@ -223,6 +262,65 @@ export default function Home() {
             )}
           </div>
         </section>
+
+        {/* Live Community Feedback Grid (Moved Below Listings) */}
+        {recentFeedback.length > 0 && (
+          <section className="py-24 bg-white border-b border-slate-100">
+            <div className="container-max">
+              <div className="mb-14 text-center flex flex-col items-center">
+                <span className="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border border-emerald-100 shadow-sm">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                  Live Community Feedback
+                </span>
+                <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">Real Experiences</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {recentFeedback.slice(0, visibleFeedbackCount).map((review, i) => (
+                  <div key={i} className="bg-[#f8fafc] rounded-3xl p-7 border border-slate-200/60 shadow-sm flex flex-col hover:shadow-[0_10px_40px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1">
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-1 text-[#f59e0b]">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <svg key={star} className={`w-4 h-4 ${star <= (review.rating || 5) ? 'fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(review.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric'})}</span>
+                    </div>
+                    <p className="text-slate-600 text-sm font-medium leading-relaxed mb-6 italic flex-grow">"{review.comment}"</p>
+                    <div className="flex items-center justify-between border-t border-slate-200 pt-5 mt-auto">
+                      <div>
+                        <h4 className="font-bold text-slate-800 text-sm">{review.user_name || 'Verified Customer'}</h4>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 truncate max-w-[180px]">{review.serviceTitle || 'Premium Service'}</p>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-50 text-blue-600 border border-blue-200 flex items-center justify-center font-black text-sm shadow-sm">
+                        {(review.user_name || 'V').charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {recentFeedback.length > visibleFeedbackCount && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-12 text-center"
+                >
+                  <button 
+                    type="button"
+                    onClick={() => setVisibleFeedbackCount(prev => prev + 4)}
+                    className="px-8 py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold tracking-wide rounded-xl hover:bg-slate-50 transition-all duration-300 shadow-sm"
+                  >
+                    View More Feedback
+                  </button>
+                </motion.div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Popular Categories */}
         <section className="py-24 bg-[#f6faff]">
@@ -314,7 +412,7 @@ export default function Home() {
               className="text-center mb-16"
             >
               <span className="text-cyan-400 font-bold tracking-widest uppercase text-sm mb-2 block">Our Guarantee</span>
-              <h2 className="text-4xl md:text-5xl font-black mb-6">Why Choose Digital Point?</h2>
+              <h2 className="text-4xl md:text-5xl font-black mb-6">Why Choose DIGITALPOINT?</h2>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -343,7 +441,7 @@ export default function Home() {
 
 
         {/* CTA Section */}
-        <section className="py-20 bg-gradient-to-br from-blue-600 to-indigo-700 text-white text-center">
+        <section className="py-20 bg-blue-600/90 text-white text-center border-t border-white/10">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -351,7 +449,7 @@ export default function Home() {
             className="container-max max-w-4xl"
           >
             <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">Ready to Experience Premium Service?</h2>
-            <p className="text-xl mb-10 text-blue-100 leading-relaxed">Join thousands of satisfied customers who trust Digital Points for their everyday needs.</p>
+            <p className="text-xl mb-10 text-blue-100 leading-relaxed">Join thousands of satisfied customers who trust DIGITALPOINT for their everyday needs.</p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link href="/services" className="btn-light text-lg px-8 py-4 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.2)] hover:scale-105 transition-transform">
                 Start Browsing Now

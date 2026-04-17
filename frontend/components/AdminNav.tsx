@@ -25,7 +25,7 @@ export default function AdminNavbar() {
         {/* Logo */}
         <div className="p-4 border-b border-gray-700">
           <Link href="/admin/dashboard" className="text-2xl font-bold">
-            {sidebarOpen ? 'SH Admin' : 'SA'}
+            {sidebarOpen ? 'DP Admin' : 'DP'}
           </Link>
         </div>
 

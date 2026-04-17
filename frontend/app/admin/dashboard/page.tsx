@@ -216,9 +216,8 @@ export default function AdminDashboard() {
           </header>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8">
             <StatCard icon="🛠️" label="Active Listings" value={stats.activeListings} />
-            <StatCard icon="✉️" label="Total Emails" value={stats.totalEmails} />
             <StatCard icon="📁" label="Categories" value={stats.activeCategories} />
           </div>
 

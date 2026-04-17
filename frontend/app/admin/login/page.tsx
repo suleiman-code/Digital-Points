@@ -42,7 +42,9 @@ export default function AdminLoginPage() {
       <div className="bg-white rounded-[2rem] shadow-2xl p-8 max-w-md w-full border border-blue-100">
         <div className="mb-6 text-center">
           <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 border border-blue-100">Admin Panel</span>
-          <h1 className="mt-4 text-3xl font-black text-center text-slate-900">Digital Point Admin</h1>
+          <h1 className="mt-4 text-3xl font-black text-center text-slate-900 uppercase tracking-tighter" style={{ fontFamily: 'var(--font-logo), sans-serif' }}>
+            DIGITAL<span className="text-blue-700">POINT</span> Admin
+          </h1>
           <p className="text-center text-slate-500 mt-2">Login to your admin panel</p>
         </div>
 

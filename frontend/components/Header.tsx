@@ -28,8 +28,28 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-[80] bg-white shadow-[0_6px_20px_rgba(15,23,42,0.08)] transition-all duration-300">
       <nav className="container-max flex justify-between items-center py-4 sm:py-5">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700 tracking-tight hover:opacity-80 transition-opacity">
-            Digital Point
+          <Link href="/" className="flex items-center gap-3 group transition-all duration-300">
+            <div className="flex items-center justify-center relative">
+              <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/15 rounded-full blur-2xl transition-all duration-700 scale-0 group-hover:scale-150" />
+              
+              <svg width="52" height="52" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 md:w-13 md:h-13 relative z-10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-2">
+                {/* Bold D - segment restored to Black (#000000) */}
+                <path d="M45 21C27 21 13 34 13 50C13 66 27 79 45 79" stroke="#000000" stroke-width="18" stroke-linecap="round" />
+                
+                {/* Bold P - segment with original Blue (#2563EB) */}
+                <path d="M55 21V88" stroke="#2563EB" stroke-width="18" stroke-linecap="round" />
+                <path d="M55 21C73 21 86 34 86 50C86 66 73 79 55 79" stroke="#2563EB" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+                
+                {/* Center dot in original Blue */}
+                <circle cx="50" cy="50" r="11" fill="#2563EB" className="transition-all duration-500 group-hover:fill-blue-500" />
+              </svg>
+            </div>
+            
+            <div className="flex flex-col">
+              <span className="text-lg md:text-xl font-black uppercase tracking-[-0.04em] text-slate-900 group-hover:text-[#2563EB] transition-all duration-300 leading-none font-logo" style={{ fontFamily: 'var(--font-logo), sans-serif' }}>
+                DIGITAL<span className="text-[#2563EB]">POINT</span>
+              </span>
+            </div>
           </Link>
         </div>
 
@@ -51,7 +71,7 @@ export default function Header() {
 
         {/* Admin Link */}
         <div className="hidden md:flex gap-4">
-          <Link href="/admin/login" className="btn-primary">
+          <Link href="/admin/login" className="btn-primary-sm">
             Admin Login
           </Link>
         </div>
@@ -90,30 +110,37 @@ export default function Header() {
         </div>
       )}
       {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div id="mobile-menu" className="md:hidden bg-gray-50 p-4 space-y-3 border-t border-blue-100">
+      <div 
+        id="mobile-menu" 
+        className={`md:hidden fixed inset-x-0 top-[72px] bg-white/95 backdrop-blur-lg border-b border-slate-100 shadow-2xl transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-4 invisible'
+        }`}
+      >
+        <div className="p-5 space-y-4">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
-              className={`block rounded-lg px-3 py-2 transition ${isActive(item.href)
-                  ? 'bg-blue-50 text-blue-700 font-semibold'
-                  : 'hover:text-blue-700 hover:bg-blue-100/50'
+              className={`block rounded-xl px-4 py-3.5 text-base font-bold transition-all ${isActive(item.href)
+                  ? 'bg-blue-50 text-blue-700 shadow-sm'
+                  : 'text-slate-700 hover:text-blue-700 hover:bg-slate-50'
                 }`}
             >
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/admin/login"
-            className="block btn-primary"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Admin Login
-          </Link>
+          <div className="pt-2 border-t border-slate-100">
+            <Link
+              href="/admin/login"
+              className="block w-full btn-primary-sm text-center py-4 rounded-xl shadow-lg shadow-blue-200"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Admin Login
+            </Link>
+          </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }

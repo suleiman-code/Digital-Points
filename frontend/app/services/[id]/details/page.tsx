@@ -67,6 +67,7 @@ function GalleryItem({ img, i, setActiveImage }: { img: string, i: number, setAc
 function ProfessionalVideoPlayer({ src }: { src: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -75,8 +76,8 @@ function ProfessionalVideoPlayer({ src }: { src: string }) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          video.currentTime = 0; // Har bar shuru se start hogi
-          video.muted = true;    // Har bar silent hogi
+          video.currentTime = 0;
+          video.muted = isMuted; 
           video.play().catch(() => { });
         } else {
           video.pause();
@@ -92,16 +93,27 @@ function ProfessionalVideoPlayer({ src }: { src: string }) {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [isMuted]);
 
-  const handleVideoClick = () => {
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const video = videoRef.current;
     if (!video) return;
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+    if (!video.muted) {
+      video.play();
+    }
+  };
 
-    video.currentTime = 0;
-    video.muted = false;
-    video.play();
-    video.controls = true; // Show controls after first intentional click
+  const handleDoubleClick = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.requestFullscreen) {
+      video.requestFullscreen();
+    } else if ((video as any).webkitRequestFullscreen) {
+      (video as any).webkitRequestFullscreen();
+    }
   };
 
   return (
@@ -111,17 +123,21 @@ function ProfessionalVideoPlayer({ src }: { src: string }) {
           ref={videoRef}
           src={src}
           className="w-full h-full object-cover"
+          autoPlay
           muted
           loop
           playsInline
-          onClick={handleVideoClick}
+          onDoubleClick={handleDoubleClick}
         />
 
-        {/* Overlay instructions that disappear when video is unmuted/controls are shown */}
-        <div className="absolute inset-x-0 bottom-10 flex justify-center pointer-events-none group-hover/video:opacity-100 opacity-0 transition-opacity">
-          <span className="bg-black/40 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.3em] px-6 py-3 rounded-full border border-white/20">
-            Click to Play with Sound
-          </span>
+        {/* Elegant hover overlay for fullscreen instruction */}
+        <div className="absolute inset-x-0 bottom-6 flex justify-center opacity-0 group-hover/video:opacity-100 transition-opacity duration-300 pointer-events-none z-20">
+          <div className="px-6 py-2.5 bg-black/50 backdrop-blur-md rounded-full border border-white/20 shadow-lg transform translate-y-2 group-hover/video:translate-y-0 transition-transform duration-300">
+            <p className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+              Double Click for Full Screen
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -216,7 +232,7 @@ function ServiceAdditionalDetailsContent({ params }: { params: any }) {
             </div>
 
             {imagesOnly.length > 0 ? (
-              <div className="max-w-4xl mx-auto grid grid-cols-2 gap-4 md:gap-8 justify-center">
+              <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8 justify-center">
                 {imagesOnly.slice(0, 4).map((img, i) => {
                   return (
                     <GalleryItem key={i} img={img} i={i} setActiveImage={setActiveImage} />
