@@ -123,9 +123,9 @@ export default function Home() {
               sizes="100vw"
               quality={90}
             />
-            {/* Simplied solid blue tint - No gradient as requested */}
-            <div className="absolute inset-0 bg-blue-600/75 mix-blend-multiply" />
-            <div className="absolute inset-0 bg-blue-700/10" />
+            {/* Near-maximum tint for ultra-high contrast header */}
+            <div className="absolute inset-0 bg-blue-600/98 mix-blend-multiply" />
+            <div className="absolute inset-0 bg-blue-700/50" />
           </div>
 
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none mix-blend-overlay z-1" />
