@@ -147,7 +147,7 @@ const DEFAULT_SERVICES = [
 
 const api = isBackendEnabled
   ? axios.create({
-    baseURL: `${API_URL}/api`,
+    baseURL: API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`,
     headers: {
       'Content-Type': 'application/json',
     },
