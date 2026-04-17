@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const FORCE_LOCAL_MODE = process.env.NEXT_PUBLIC_FORCE_LOCAL_MODE === '1';
 // Frontend API base URL - Set NEXT_PUBLIC_API_URL in Vercel settings
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').trim().replace(/\/$/, '');
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://digitalpointllc.online/api').trim().replace(/\/$/, '');
 const isBackendEnabled = !FORCE_LOCAL_MODE && API_URL.length > 0;
 
 export const DEFAULT_PLACEHOLDER = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80";

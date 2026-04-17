@@ -63,7 +63,7 @@ app.add_middleware(SlowAPIMiddleware)  # innermost — applied last
 
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["*", "localhost", "127.0.0.1"],
+    allowed_hosts=["digitalpointllc.online", "www.digitalpointllc.online", "digitalpoints.vercel.app", "localhost", "127.0.0.1", "*"],
 )
 
 # CORS Settings

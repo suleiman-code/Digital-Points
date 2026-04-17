@@ -7,7 +7,7 @@ const computeSiteUrl = () => {
   const vercel = (process.env.VERCEL_URL || '').trim();
   if (vercel) return normalizeUrl(`https://${vercel}`);
 
-  return 'http://localhost:3000';
+  return 'https://digitalpointllc.online';
 };
 
 export const SITE_URL = computeSiteUrl();
