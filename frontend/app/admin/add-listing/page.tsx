@@ -187,6 +187,8 @@ export default function AddListing() {
     video_url: '',
   });
 
+  const [availableCategories, setAvailableCategories] = useState<string[]>(BUSINESS_CATEGORIES);
+
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [isVideoUploading, setIsVideoUploading] = useState(false);
 
@@ -254,6 +256,22 @@ export default function AddListing() {
     };
 
     checkAdmin();
+    
+    // Fetch permanent categories from DB
+    const fetchCategories = async () => {
+      try {
+        const { categoriesAPI } = await import('@/lib/api');
+        const res = await categoriesAPI.getAll();
+        const dbCats = res.data.map((c: any) => c.name);
+        
+        // Merge with static list, remove duplicates
+        const merged = Array.from(new Set([...BUSINESS_CATEGORIES, ...dbCats])).sort((a,b) => a.localeCompare(b));
+        setAvailableCategories(merged);
+      } catch (err) {
+        console.error('Failed to fetch categories');
+      }
+    };
+    fetchCategories();
   }, [router]);
 
   useEffect(() => {
@@ -632,7 +650,7 @@ export default function AddListing() {
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Category *</label>
                   <select name="category" value={formData.category} onChange={handleChange} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4">
-                    {BUSINESS_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {availableCategories.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
 

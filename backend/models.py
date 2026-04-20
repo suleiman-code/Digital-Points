@@ -166,3 +166,22 @@ class ReviewResponse(ReviewBase):
     service_name: Optional[str] = None
     status: str = "pending"  # pending, approved, rejected
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# --- Category Models ---
+class CategoryBase(BaseModel):
+    name: str = Field(..., min_length=2, max_length=120)
+    description: Optional[str] = Field(default=None, max_length=500)
+    icon: Optional[str] = Field(default=None, max_length=50)
+
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryResponse(CategoryBase):
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CategoryStats(BaseModel):
+    total_categories: int
+    active_categories: int

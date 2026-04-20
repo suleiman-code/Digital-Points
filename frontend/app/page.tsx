@@ -10,7 +10,7 @@ import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 import { stripDescriptionFormatting } from '@/components/FormattedDescription';
 import { motion } from 'framer-motion';
-import { formatUsd, resolveMediaUrl, servicesAPI } from '@/lib/api';
+import { formatUsd, resolveMediaUrl, servicesAPI, categoriesAPI } from '@/lib/api';
 import { BUSINESS_CATEGORIES } from '@/lib/businessCategories';
 
 export default function Home() {
@@ -23,6 +23,7 @@ export default function Home() {
   const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(8);
   const [recentFeedback, setRecentFeedback] = useState<any[]>([]);
   const [visibleFeedbackCount, setVisibleFeedbackCount] = useState(4);
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -78,6 +79,17 @@ export default function Home() {
       }
     };
     fetchServices();
+
+    const fetchCategories = async () => {
+      try {
+        const res = await categoriesAPI.getAll();
+        const cats = res.data?.map((c: any) => c.name) || [];
+        setDynamicCategories(cats);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCategories();
   }, []);
 
 
@@ -102,7 +114,7 @@ export default function Home() {
     },
   ];
 
-  const categories = BUSINESS_CATEGORIES;
+  const categories = Array.from(new Set([...BUSINESS_CATEGORIES, ...dynamicCategories])).sort((a, b) => a.localeCompare(b));
   const visibleCategories = categories.slice(0, visibleCategoriesCount);
 
   return (

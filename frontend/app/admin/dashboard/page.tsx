@@ -12,14 +12,14 @@ import AdminSidebar from '@/components/AdminSidebar';
 
 export default function AdminDashboard() {
   const REFRESH_INTERVAL_MS = 5000;
-  const { isAuthenticated, isLoading, logout } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   // State for metrics and data
   const [services, setServices] = useState<any[]>([]);
   const [stats, setStats] = useState({
     activeListings: 0,
-    activeCategories: 0,
+    totalCategories: 0,
     avgRating: 0,
     totalEmails: 0,
     pendingEmails: 0,
@@ -39,8 +39,6 @@ export default function AdminDashboard() {
 
   const fetchStats = useCallback(async () => {
     try {
-      // BUG #10 FIX: use the lightweight /dashboard/stats endpoint for numeric cards
-      // instead of fetching the full services + contacts list every 5 seconds.
       const statsRes = await servicesAPI.getStats();
       const s = statsRes?.data;
 
@@ -48,7 +46,6 @@ export default function AdminDashboard() {
         const newPendingEmails = s?.pending_contacts || 0;
         const newPendingReviews = s?.pending_reviews || 0;
 
-        // Trigger toast notifications if counts INCREASE
         if (newPendingEmails > prev.pendingEmails) {
           toast('New Email Received!', { icon: '✉️', style: { borderRadius: '10px', background: '#3b82f6', color: '#fff' }});
         }
@@ -59,6 +56,7 @@ export default function AdminDashboard() {
         return {
           ...prev,
           activeListings: s?.total_services ?? prev.activeListings,
+          totalCategories: s?.total_categories ?? prev.totalCategories,
           totalEmails: (s?.total_contacts || 0),
           pendingEmails: newPendingEmails,
           pendingReviews: newPendingReviews
@@ -70,7 +68,6 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  // Fetch full services ONCE (or on demand) for category breakdown + avg rating
   const fetchServices = useCallback(async () => {
     try {
       const { contactAPI } = await import('@/lib/api');
@@ -95,12 +92,11 @@ export default function AdminDashboard() {
       setStats((prev) => ({
         ...prev,
         activeListings: fetchedServices.length,
-        activeCategories,
+        totalCategories: activeCategories,
         avgRating: Number(avg.toFixed(1)),
         totalEmails: emails.length || 0,
       }));
 
-      // Merge and Set recent emails (limit to 5)
       const merged = [
         ...emails.map((c: any) => ({ ...c, _type: 'general' }))
       ].sort((a, b) => {
@@ -118,20 +114,11 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-
-    // Full data on mount — for category breakdown and avg rating
     fetchServices();
-
-    // Lightweight stats poll every 5s — only hits the /dashboard/stats endpoint
     fetchStats();
     const interval = setInterval(fetchStats, REFRESH_INTERVAL_MS);
-
-    const handleFocus = () => {
-      fetchStats();
-    };
-
+    const handleFocus = () => fetchStats();
     window.addEventListener('focus', handleFocus);
-
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
@@ -175,9 +162,7 @@ export default function AdminDashboard() {
         setMobileMenuOpen={setMobileMenuOpen}
       />
 
-      {/* Main Content */}
       <div className={`w-full transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'} ml-0`}>
-        {/* Top Bar */}
         <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 p-3 sm:p-4 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center gap-2">
             <button onClick={() => setMobileMenuOpen(true)} className="text-2xl text-gray-700 md:hidden" aria-label="Open menu">☰</button>
@@ -186,7 +171,6 @@ export default function AdminDashboard() {
           <div className="text-slate-500 font-bold uppercase tracking-[0.18em] text-[10px] hidden sm:block">Dashboard Control Center</div>
         </div>
 
-        {/* Dashboard Content */}
         <div className="p-4 sm:p-6 md:p-8">
           <header className="mb-10">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">Welcome to Admin Dashboard</h1>
@@ -215,13 +199,12 @@ export default function AdminDashboard() {
             </div>
           </header>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
             <StatCard icon="🛠️" label="Active Listings" value={stats.activeListings} />
-            <StatCard icon="📁" label="Categories" value={stats.activeCategories} />
+            <StatCard icon="📁" label="Total Categories" value={stats.totalCategories} />
+            <StatCard icon="⭐" label="Avg. Rating" value={stats.avgRating} />
           </div>
 
-          {/* Quick Actions */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="bg-white rounded-[2rem] shadow-xl p-6 sm:p-8 border border-slate-100 lg:col-span-2">
               <h2 className="text-2xl font-black mb-6 tracking-tight">Main Controls</h2>
@@ -233,6 +216,10 @@ export default function AdminDashboard() {
                 <Link href="/admin/services" className="w-full py-3 px-5 bg-[linear-gradient(135deg,_#1f5aa0,_#2f74c8)] text-white border border-[#2f74c8] font-bold text-xs uppercase tracking-[0.16em] rounded-xl hover:brightness-105 transition-all active:scale-95 inline-flex items-center justify-center gap-2 shadow-[0_10px_24px_rgba(47,116,200,0.18)]">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                   Manage Listings
+                </Link>
+                <Link href="/admin/categories" className="w-full py-3 px-5 bg-white text-blue-600 border-2 border-blue-600 font-bold text-xs uppercase tracking-[0.16em] rounded-xl hover:bg-blue-50 transition-all active:scale-95 inline-flex items-center justify-center gap-2 shadow-sm">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                  Manage Categories
                 </Link>
               </div>
             </div>

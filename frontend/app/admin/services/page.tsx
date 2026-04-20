@@ -31,6 +31,7 @@ function AdminServicesContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [previewService, setPreviewService] = useState<any | null>(null);
+  const [permanentCategories, setPermanentCategories] = useState<string[]>([]);
 
   // Initialize filter from URL on mount
   useEffect(() => {
@@ -49,8 +50,19 @@ function AdminServicesContent() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchServices();
+      fetchPermanentCategories();
     }
   }, [isAuthenticated, categoryFilter]);
+
+  const fetchPermanentCategories = async () => {
+    try {
+      const { categoriesAPI } = await import('@/lib/api');
+      const res = await categoriesAPI.getAll();
+      setPermanentCategories(res.data.map((c: any) => c.name));
+    } catch (err) {
+      console.error('Failed to fetch permanent categories');
+    }
+  };
 
   const fetchServices = async () => {
     try {
@@ -116,14 +128,14 @@ function AdminServicesContent() {
   }
 
   // Keep master category order, then append any legacy categories already present in data.
-  const dynamicCategories = Array.from(
+  const dynamicCategoriesFromServices = Array.from(
     new Set(
       allServices
         .map((s: any) => String(s.category || '').trim())
-        .filter((c: string) => c && !BUSINESS_CATEGORIES.includes(c))
+        .filter((c: string) => c && !BUSINESS_CATEGORIES.includes(c) && !permanentCategories.includes(c))
     )
   ).sort((a, b) => a.localeCompare(b));
-  const uniqueCategories = [...BUSINESS_CATEGORIES, ...dynamicCategories];
+  const uniqueCategories = Array.from(new Set([...BUSINESS_CATEGORIES, ...permanentCategories, ...dynamicCategoriesFromServices])).sort((a,b) => a.localeCompare(b));
 
   return (
     <div className="flex min-h-screen bg-[linear-gradient(180deg,_#f4f9ff_0%,_#edf5ff_100%)] text-slate-900">

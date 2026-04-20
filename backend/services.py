@@ -388,16 +388,21 @@ async def delete_service(id: str, admin: dict = Depends(get_admin_user)):
 async def get_dashboard_stats(admin: dict = Depends(get_admin_user)):
     total_services = await db.db["services"].count_documents({})
     total_bookings = await db.db["bookings"].count_documents({})
+    total_categories = await db.db["categories"].count_documents({})
     
     # Notifications/Badges counts (only count items that are NOT viewed)
-    # We now count 'contact_messages' instead of 'bookings' for the Admin Inquiry badge
-    pending_bookings = await db.db["contact_messages"].count_documents({"viewed": {"$ne": True}})
+    # We now count 'contact_messages' for the Admin Inquiry badge
+    pending_contacts = await db.db["contact_messages"].count_documents({"viewed": {"$ne": True}})
+    total_contacts = await db.db["contact_messages"].count_documents({})
     pending_reviews = await db.db["reviews"].count_documents({"status": "pending", "viewed": {"$ne": True}})
     
     return {
         "total_services": total_services,
         "total_bookings": total_bookings,
-        "pending_bookings": pending_bookings,
+        "total_categories": total_categories,
+        "total_contacts": total_contacts,
+        "pending_contacts": pending_contacts,
+        "pending_bookings": pending_contacts, # Alias for inquiries
         "pending_reviews": pending_reviews
     }
 

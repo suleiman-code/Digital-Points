@@ -59,6 +59,7 @@ const STORAGE_KEYS = {
   reviews: 'dp_reviews',
   bookings: 'dp_bookings',
   contact: 'dp_contact_messages',
+  categories: 'dp_categories',
   admin: 'dp_admin_user',
   adminResetToken: 'dp_admin_reset_token',
 };
@@ -243,6 +244,38 @@ const getBookings = () => readStorage<any[]>(STORAGE_KEYS.bookings, []);
 const setBookings = (bookings: any[]) => writeStorage(STORAGE_KEYS.bookings, bookings);
 
 const getAdmin = () => readStorage(STORAGE_KEYS.admin, DEFAULT_ADMIN);
+
+export const categoriesAPI = {
+  getAll: () => {
+    if (api) return api.get('/categories/');
+    return makeResponse(readStorage<any[]>(STORAGE_KEYS.categories, []));
+  },
+  getStats: () => {
+    if (api) return api.get('/categories/stats');
+    const categories = readStorage<any[]>(STORAGE_KEYS.categories, []);
+    const services = getServices();
+    const usedCategories = new Set(services.map(s => s.category));
+    return makeResponse({
+      total_categories: categories.length,
+      active_categories: usedCategories.size
+    });
+  },
+  create: (data: any) => {
+    if (api) return api.post('/categories/', data);
+    const categories = readStorage<any[]>(STORAGE_KEYS.categories, []);
+    const newCategory = { ...data, _id: uid('cat'), created_at: new Date().toISOString() };
+    categories.push(newCategory);
+    writeStorage(STORAGE_KEYS.categories, categories);
+    return makeResponse(newCategory, 201);
+  },
+  delete: (id: string) => {
+    if (api) return api.delete(`/categories/${id}`);
+    const categories = readStorage<any[]>(STORAGE_KEYS.categories, []);
+    const next = categories.filter((c: any) => c._id !== id);
+    writeStorage(STORAGE_KEYS.categories, next);
+    return makeResponse({ success: true });
+  },
+};
 
 export const servicesAPI = {
   getAll: (filters?: any) => (api ? api.get('/services/', { params: filters }) : makeResponse(getServices())),

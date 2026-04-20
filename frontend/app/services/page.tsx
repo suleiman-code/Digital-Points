@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import ServiceCard from '@/components/ServiceCard';
 import { stripDescriptionFormatting } from '@/components/FormattedDescription';
 import ServiceCardSkeleton from '@/components/ServiceCardSkeleton';
-import { resolveMediaUrl, servicesAPI } from '@/lib/api';
+import { resolveMediaUrl, servicesAPI, categoriesAPI } from '@/lib/api';
 import { ALL_CATEGORIES_WITH_DEFAULT, normalizeCategory } from '@/lib/businessCategories';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,14 +21,30 @@ function ServicesList() {
   const [minRating, setMinRating] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([]);
 
-  const categories = ALL_CATEGORIES_WITH_DEFAULT;
+  const categories = Array.from(new Set([...ALL_CATEGORIES_WITH_DEFAULT, ...dynamicCategories])).sort((a,b) => {
+    if (a === 'All Categories') return -1;
+    if (b === 'All Categories') return 1;
+    return a.localeCompare(b);
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setSearchTerm(params.get('q') || '');
     setLocationSearch(params.get('l') || '');
     setSelectedCategory(normalizeCategory(params.get('category') || ''));
+    
+    const fetchCats = async () => {
+      try {
+        const res = await categoriesAPI.getAll();
+        const cats = res.data?.map((c: any) => c.name) || [];
+        setDynamicCategories(cats);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+    fetchCats();
     setInitialized(true);
   }, []);
 

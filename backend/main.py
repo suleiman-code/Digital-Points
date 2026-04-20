@@ -14,6 +14,7 @@ from services import router as service_router
 from bookings import router as booking_router
 from auth import router as auth_router
 from contact import router as contact_router
+from categories import router as categories_router
 from contextlib import asynccontextmanager
 import logging
 import uvicorn
@@ -55,6 +56,7 @@ app.include_router(auth_router)
 app.include_router(service_router)
 app.include_router(booking_router)
 app.include_router(contact_router)
+app.include_router(categories_router)
 
 # Middleware order matters: Starlette applies middleware LIFO (last-added = outermost).
 # We want: CORSMiddleware outermost → TrustedHost → SlowAPI innermost.
