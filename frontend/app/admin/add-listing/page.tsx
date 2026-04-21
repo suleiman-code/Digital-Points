@@ -360,8 +360,8 @@ export default function AddListing() {
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1 * 1024 * 1024) {
-        toast.error("Image is too large. Max 1MB allowed.");
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image is too large. Max 2MB allowed.");
         return;
       }
       setMainImage(file);
@@ -378,8 +378,8 @@ export default function AddListing() {
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1 * 1024 * 1024) {
-        toast.error("Cover image is too large. Max 1MB allowed.");
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Cover image is too large. Max 2MB allowed.");
         return;
       }
       setCoverImage(file);
@@ -426,8 +426,8 @@ export default function AddListing() {
 
     // BUG #8 FIX: keep file and preview together so index removal is always correct
     files.forEach((file) => {
-      if (file.size > 1 * 1024 * 1024) {
-        toast.error(`File "${file.name}" is too large (> 1MB).`);
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error(`File "${file.name}" is too large (> 2MB).`);
         return;
       }
       const reader = new FileReader();

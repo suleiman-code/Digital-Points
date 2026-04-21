@@ -34,11 +34,11 @@ export default function Header() {
               
               <svg width="52" height="52" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 md:w-13 md:h-13 relative z-10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-2">
                 {/* Bold D - segment restored to Black (#000000) */}
-                <path d="M45 21C27 21 13 34 13 50C13 66 27 79 45 79" stroke="#000000" stroke-width="18" stroke-linecap="round" />
+                <path d="M45 21C27 21 13 34 13 50C13 66 27 79 45 79" stroke="#000000" strokeWidth="18" strokeLinecap="round" />
                 
                 {/* Bold P - segment with original Blue (#2563EB) */}
-                <path d="M55 21V88" stroke="#2563EB" stroke-width="18" stroke-linecap="round" />
-                <path d="M55 21C73 21 86 34 86 50C86 66 73 79 55 79" stroke="#2563EB" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M55 21V88" stroke="#2563EB" strokeWidth="18" strokeLinecap="round" />
+                <path d="M55 21C73 21 86 34 86 50C86 66 73 79 55 79" stroke="#2563EB" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
                 
                 {/* Center dot in original Blue */}
                 <circle cx="50" cy="50" r="11" fill="#2563EB" className="transition-all duration-500 group-hover:fill-blue-500" />

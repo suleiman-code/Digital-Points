@@ -92,11 +92,11 @@ export default function AdminSidebar({
           <Link href="/admin/dashboard" className="flex items-center gap-2 group">
             <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="min-w-[32px]">
               {/* Bold D - Admin Sidebar (White) */}
-              <path d="M45 25C27 25 13 36 13 50C13 64 27 75 45 75" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" />
+              <path d="M45 25C27 25 13 36 13 50C13 64 27 75 45 75" stroke="#FFFFFF" strokeWidth="18" strokeLinecap="round" />
               
               {/* Bold P - Admin Sidebar (Original Blue) */}
-              <path d="M55 25V80" stroke="#2563EB" stroke-width="18" stroke-linecap="round" />
-              <path d="M55 25C73 25 86 36 86 50C86 64 73 75 55 75" stroke="#2563EB" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M55 25V80" stroke="#2563EB" strokeWidth="18" strokeLinecap="round" />
+              <path d="M55 25C73 25 86 36 86 50C86 64 73 75 55 75" stroke="#2563EB" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
               
               {/* Center dot in Admin Sidebar (Original Blue) */}
               <circle cx="50" cy="50" r="11" fill="#2563EB" />

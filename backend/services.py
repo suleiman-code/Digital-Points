@@ -555,8 +555,8 @@ async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_a
     if file_extension not in allowed_extensions:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"File type '.{file_extension}' not allowed.")
 
-    # Convert sizes to bytes: 1MB = 1024*1024, 15MB = 15*1024*1024
-    image_limit = 1 * 1024 * 1024
+    # Convert sizes to bytes: 2MB = 2*1024*1024, 15MB = 15*1024*1024
+    image_limit = 2 * 1024 * 1024
     video_limit = 15 * 1024 * 1024
 
     # Get file size
@@ -565,7 +565,7 @@ async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_a
     file.file.seek(0) # IMPORTANT: reset pointer after measuring size
 
     if file_extension in allowed_image_ext and file_size > image_limit:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Image size exceeds 1MB limit.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Image size exceeds 2MB limit.")
     
     if file_extension in allowed_video_ext and file_size > video_limit:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video size exceeds 15MB limit.")

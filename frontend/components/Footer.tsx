@@ -13,11 +13,11 @@ export default function Footer() {
               <div className="flex items-center justify-center">
                 <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 md:w-11 md:h-11">
                   {/* Bold D - Footer (White) */}
-                  <path d="M45 25C27 25 13 36 13 50C13 64 27 75 45 75" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" />
+                  <path d="M45 25C27 25 13 36 13 50C13 64 27 75 45 75" stroke="#FFFFFF" strokeWidth="18" strokeLinecap="round" />
                   
                   {/* Bold P - Footer (Original Blue) */}
-                  <path d="M55 25V80" stroke="#2563EB" stroke-width="18" stroke-linecap="round" />
-                  <path d="M55 25C73 25 86 36 86 50C86 64 73 75 55 75" stroke="#2563EB" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M55 25V80" stroke="#2563EB" strokeWidth="18" strokeLinecap="round" />
+                  <path d="M55 25C73 25 86 36 86 50C86 64 73 75 55 75" stroke="#2563EB" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
                   
                   {/* Center dot in Original Blue */}
                   <circle cx="50" cy="50" r="11" fill="#2563EB" />
