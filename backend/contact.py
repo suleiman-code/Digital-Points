@@ -90,6 +90,7 @@ async def get_all_inquiries(
     return messages
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_CONTACT)
 async def submit_contact_form(request: Request, form: ContactForm, background_tasks: BackgroundTasks):
     form_dict = form.model_dump()
     form_dict["created_at"] = datetime.now(timezone.utc)

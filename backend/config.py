@@ -19,12 +19,12 @@ class Settings:
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
     CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "")
 
-    RATE_LIMIT_DEFAULT: str = os.getenv("RATE_LIMIT_DEFAULT", "1000/minute")
-    RATE_LIMIT_LOGIN: str = os.getenv("RATE_LIMIT_LOGIN", "50/minute")
-    RATE_LIMIT_FORGOT_PASSWORD: str = os.getenv("RATE_LIMIT_FORGOT_PASSWORD", "20/minute")
-    RATE_LIMIT_RESET_PASSWORD: str = os.getenv("RATE_LIMIT_RESET_PASSWORD", "20/minute")
-    RATE_LIMIT_CONTACT: str = os.getenv("RATE_LIMIT_CONTACT", "100/minute")
-    RATE_LIMIT_BOOKING: str = os.getenv("RATE_LIMIT_BOOKING", "100/minute")
+    RATE_LIMIT_DEFAULT: str = os.getenv("RATE_LIMIT_DEFAULT", "100/minute")
+    RATE_LIMIT_LOGIN: str = os.getenv("RATE_LIMIT_LOGIN", "5/minute")
+    RATE_LIMIT_FORGOT_PASSWORD: str = os.getenv("RATE_LIMIT_FORGOT_PASSWORD", "3/minute")
+    RATE_LIMIT_RESET_PASSWORD: str = os.getenv("RATE_LIMIT_RESET_PASSWORD", "3/minute")
+    RATE_LIMIT_CONTACT: str = os.getenv("RATE_LIMIT_CONTACT", "3/minute")
+    RATE_LIMIT_BOOKING: str = os.getenv("RATE_LIMIT_BOOKING", "5/minute")
     
     # --- Email Settings (Resend) ---
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")

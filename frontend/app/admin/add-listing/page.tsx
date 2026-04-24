@@ -515,7 +515,7 @@ export default function AddListing() {
         gallery: mergedGalleryUrls,
         business_hours: hours,
         service_details: serviceDetailsInput.trim(),
-        price: Number.isFinite(parsedPrice) ? parsedPrice : null,
+        price: Number.isFinite(parsedPrice) ? Math.max(0, parsedPrice) : null,
       };
 
       if (editingId) {
@@ -656,7 +656,7 @@ export default function AddListing() {
 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Starting Price ($)</label>
-                  <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
+                  <input type="number" name="price" min="0" value={formData.price} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4" />
                 </div>
 
                 <div className="md:col-span-2">

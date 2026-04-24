@@ -176,6 +176,7 @@ async def signup(request: Request, user: UserCreate):
 
 # 2. LOGIN
 @router.post("/login")
+@limiter.limit(settings.RATE_LIMIT_LOGIN)
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     users_collection = get_users_collection()
     user = await users_collection.find_one({"email": form_data.username})
@@ -194,6 +195,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
 
 
 @router.post("/forgot-password")
+@limiter.limit(settings.RATE_LIMIT_FORGOT_PASSWORD)
 async def forgot_password(request: Request, payload: ForgotPasswordRequest, background_tasks: BackgroundTasks):
     users_collection = get_users_collection()
     user = await users_collection.find_one({"email": payload.email})
@@ -212,6 +214,7 @@ async def forgot_password(request: Request, payload: ForgotPasswordRequest, back
 
 
 @router.post("/reset-password")
+@limiter.limit(settings.RATE_LIMIT_RESET_PASSWORD)
 async def reset_password(request: Request, payload: ResetPasswordRequest):
     normalized_token = payload.token.strip().replace(" ", "")
     try:

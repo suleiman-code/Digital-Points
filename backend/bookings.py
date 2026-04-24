@@ -146,6 +146,7 @@ async def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: 
 
 # 1. POST /api/bookings (Public - User submits a booking/inquiry)
 @router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_BOOKING)
 async def create_booking(request: Request, booking: BookingCreate, background_tasks: BackgroundTasks):
     try:
         service_id_obj = ObjectId(booking.service_id)
