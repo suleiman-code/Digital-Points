@@ -50,7 +50,7 @@ class UserResponse(UserBase):
 # --- Service (Listings) Models ---
 class ServiceBase(BaseModel):
     title: str = Field(..., min_length=2, max_length=120)
-    description: str = Field(..., min_length=10, max_length=2000)
+    description: str = Field(..., min_length=10, max_length=4000)
     category: str = Field(..., min_length=2, max_length=120)
     price: Optional[float] = Field(default=0.0, ge=0)
     city: str = Field(..., min_length=1, max_length=120)
@@ -87,7 +87,7 @@ class ServiceCreate(ServiceBase):
 
 class ServiceUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=2, max_length=120)
-    description: Optional[str] = Field(default=None, min_length=10, max_length=2000)
+    description: Optional[str] = Field(default=None, min_length=10, max_length=4000)
     category: Optional[str] = Field(default=None, min_length=2, max_length=120)
     price: Optional[float] = None
     city: Optional[str] = Field(default=None, min_length=1, max_length=120)
