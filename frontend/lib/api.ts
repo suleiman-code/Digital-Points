@@ -362,7 +362,7 @@ export const servicesAPI = {
   getAllReviewsAdmin: (filters?: { status?: string; days?: number }) => {
     if (api) return api.get('/services/reviews/moderation/all', { params: filters });
     let reviews = getStoredReviews();
-    
+
     if (filters) {
       if (filters.status) {
         const targetStatus = filters.status.toLowerCase();
@@ -464,13 +464,13 @@ export const inquiriesAPI = {
         if (!error?.response) {
           let bookings = getBookings();
           if (filters) {
-             if (filters.status) {
-               bookings = bookings.filter(b => String(b.status || '').toLowerCase() === filters.status?.toLowerCase());
-             }
-             if (filters.days) {
-                const cutoff = Date.now() - (filters.days * 24 * 60 * 60 * 1000);
-                bookings = bookings.filter(b => new Date(b.created_at || b.createdAt || 0).getTime() >= cutoff);
-             }
+            if (filters.status) {
+              bookings = bookings.filter(b => String(b.status || '').toLowerCase() === filters.status?.toLowerCase());
+            }
+            if (filters.days) {
+              const cutoff = Date.now() - (filters.days * 24 * 60 * 60 * 1000);
+              bookings = bookings.filter(b => new Date(b.created_at || b.createdAt || 0).getTime() >= cutoff);
+            }
           }
           return makeResponse(bookings);
         }
@@ -479,13 +479,13 @@ export const inquiriesAPI = {
     }
     let bookings = getBookings();
     if (filters) {
-       if (filters.status) {
-         bookings = bookings.filter(b => String(b.status || '').toLowerCase() === filters.status?.toLowerCase());
-       }
-       if (filters.days) {
-          const cutoff = Date.now() - (filters.days * 24 * 60 * 60 * 1000);
-          bookings = bookings.filter(b => new Date(b.created_at || b.createdAt || 0).getTime() >= cutoff);
-       }
+      if (filters.status) {
+        bookings = bookings.filter(b => String(b.status || '').toLowerCase() === filters.status?.toLowerCase());
+      }
+      if (filters.days) {
+        const cutoff = Date.now() - (filters.days * 24 * 60 * 60 * 1000);
+        bookings = bookings.filter(b => new Date(b.created_at || b.createdAt || 0).getTime() >= cutoff);
+      }
     }
     return makeResponse(bookings);
   },
@@ -560,9 +560,9 @@ export const contactAPI = {
         if (!error?.response) {
           const messages = readStorage<any[]>(STORAGE_KEYS.contact, []);
           if (filters && filters.days) {
-             const days = filters.days;
-             const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
-             return makeResponse(messages.filter(m => new Date(m.createdAt || m.created_at || 0).getTime() >= cutoff));
+            const days = filters.days;
+            const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+            return makeResponse(messages.filter(m => new Date(m.createdAt || m.created_at || 0).getTime() >= cutoff));
           }
           return makeResponse(messages);
         }
@@ -571,9 +571,9 @@ export const contactAPI = {
     }
     const messages = readStorage<any[]>(STORAGE_KEYS.contact, []);
     if (filters && filters.days) {
-       const days = filters.days;
-       const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
-       return makeResponse(messages.filter(m => new Date(m.createdAt || m.created_at || 0).getTime() >= cutoff));
+      const days = filters.days;
+      const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+      return makeResponse(messages.filter(m => new Date(m.createdAt || m.created_at || 0).getTime() >= cutoff));
     }
     return makeResponse(messages);
   },
