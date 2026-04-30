@@ -192,7 +192,7 @@ function ServiceDetailContent({ params }: { params: any }) {
       'SD': 'America/Chicago', 'TN': 'America/Chicago', 'TX': 'America/Chicago', 'UT': 'America/Denver',
       'VT': 'America/New_York', 'VA': 'America/New_York', 'WA': 'America/Los_Angeles', 'WV': 'America/New_York',
       'WI': 'America/Chicago', 'WY': 'America/Denver', 'DC': 'America/New_York',
-      
+
       // --- CANADA PROVINCES ---
       'ON': 'America/Toronto', 'QC': 'America/Toronto', 'NS': 'America/Halifax', 'NB': 'America/Moncton',
       'MB': 'America/Winnipeg', 'BC': 'America/Vancouver', 'PE': 'America/Halifax', 'SK': 'America/Regina',
@@ -264,16 +264,16 @@ function ServiceDetailContent({ params }: { params: any }) {
       <Header />
 
       <main className="flex-grow pt-[8rem] pb-20">
-        
+
         {/* --- PROFESSIONAL COVER PHOTO SECTION --- */}
         <div className="w-full h-[300px] sm:h-[400px] md:h-[450px] relative overflow-hidden">
           {service.cover_image ? (
             <div className="w-full h-full relative">
-              <Image 
-                src={resolveMediaUrl(service.cover_image)} 
+              <Image
+                src={resolveMediaUrl(service.cover_image)}
                 fill
-                className="object-cover" 
-                style={{ 
+                className="object-cover"
+                style={{
                   transform: `scale(${service.cover_zoom / 100})`,
                   objectPosition: service.cover_position || 'center'
                 }}
@@ -296,15 +296,15 @@ function ServiceDetailContent({ params }: { params: any }) {
                 <div className="bg-white aspect-square w-full rounded-3xl border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center transform transition-transform group-hover:scale-[1.02]">
                   {logoImage ? (
                     <div className="w-full h-full relative">
-                      <Image 
-                        src={logoImage} 
+                      <Image
+                        src={logoImage}
                         fill
-                        className="object-cover" 
-                        style={{ 
+                        className="object-cover"
+                        style={{
                           transform: `scale(${service.image_zoom / 100})`,
                           objectPosition: service.image_position || 'center'
                         }}
-                        alt={service.title} 
+                        alt={service.title}
                       />
                     </div>
                   ) : (
@@ -319,8 +319,8 @@ function ServiceDetailContent({ params }: { params: any }) {
               </div>
               <div className="pb-2 md:pb-4">
                 <div className="flex flex-wrap items-center gap-3 mb-4">
-                   <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-500/30">Verified Business</span>
-                   <span className="px-4 py-1.5 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-full">{service.category}</span>
+                  <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-500/30">Verified Business</span>
+                  <span className="px-4 py-1.5 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-full">{service.category}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-5 leading-[1.1] tracking-tight">{service.title}</h1>
                 <div className="flex flex-wrap items-center gap-6 mb-8 mt-2">

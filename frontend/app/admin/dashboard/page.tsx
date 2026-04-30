@@ -47,10 +47,10 @@ export default function AdminDashboard() {
         const newPendingReviews = s?.pending_reviews || 0;
 
         if (newPendingEmails > prev.pendingEmails) {
-          toast('New Email Received!', { icon: '✉️', style: { borderRadius: '10px', background: '#3b82f6', color: '#fff' }});
+          toast('New Email Received!', { icon: '✉️', style: { borderRadius: '10px', background: '#3b82f6', color: '#fff' } });
         }
         if (newPendingReviews > prev.pendingReviews) {
-          toast('New Feedback Received!', { icon: '💬', style: { borderRadius: '10px', background: '#eab308', color: '#fff' }});
+          toast('New Feedback Received!', { icon: '💬', style: { borderRadius: '10px', background: '#eab308', color: '#fff' } });
         }
 
         return {
