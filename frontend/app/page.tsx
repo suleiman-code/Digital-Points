@@ -123,7 +123,7 @@ export default function Home() {
 
       <main className="bg-[linear-gradient(180deg,_#eaf4ff_0%,_#f3f9ff_35%,_#f8fcff_100%)]">
         {/* Hero Section */}
-        <section className="relative overflow-hidden text-white pt-32 pb-16 sm:pt-40 sm:pb-24 min-h-[70vh] flex flex-col justify-center">
+        <section className="relative overflow-hidden text-white pt-28 pb-16 sm:pt-36 sm:pb-24 min-h-[65vh] flex flex-col justify-center">
           {/* Hero Background using Next.js Image for performance */}
           <div className="absolute inset-0 z-0">
             <Image
@@ -155,7 +155,7 @@ export default function Home() {
                 initial={false}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="mt-6 sm:mt-8"
+                className="mt-4 sm:mt-6"
               >
                 <span className="inline-block py-2 px-5 rounded-full bg-blue-600/35 backdrop-blur-xl border border-white/40 text-white font-bold text-xs sm:text-sm mb-6 tracking-[0.18em] uppercase shadow-2xl">
                   ✦ Discover Premium Services

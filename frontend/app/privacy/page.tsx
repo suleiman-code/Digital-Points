@@ -7,7 +7,7 @@ export default function PrivacyPage() {
       <Header />
 
       <main className="min-h-screen bg-gray-50">
-        <section className="bg-white border-b border-blue-100 pt-28 pb-10">
+        <section className="bg-white border-b border-blue-100 pt-24 pb-10">
           <div className="container-max">
             <h1 className="text-4xl font-bold mb-2">Privacy Policy</h1>
             <p className="text-slate-600">How we collect, use, and protect your information.</p>
