@@ -256,7 +256,7 @@ def category_variants_for_query(category: str) -> list[str]:
     return unique
 
 # 1. GET ALL SERVICES (Public)
-@router.get("/", response_model=List[ServiceResponse])
+@router.get("", response_model=List[ServiceResponse])
 async def get_all_services(
     category: Optional[str] = None, 
     city: Optional[str] = None,
@@ -304,7 +304,7 @@ async def get_service(id: str):
     return normalize_service_for_response(service)
 
 # 3. CREATE SERVICE (Admin Only)
-@router.post("/", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
 async def create_service(service: ServiceCreate, admin: dict = Depends(get_admin_user)):
     normalized_country = normalize_country(service.country)
     if normalized_country not in ALLOWED_COUNTRIES:
@@ -543,8 +543,9 @@ async def mark_review_viewed(review_id: str, admin: dict = Depends(get_admin_use
     return {"message": "Review marked as viewed"}
 
 # 12. UPLOAD MEDIA (Admin Only — Images & Videos)
-@router.post("/upload/", status_code=status.HTTP_201_CREATED)
+@router.post("/upload", status_code=status.HTTP_201_CREATED)
 async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_admin_user)):
+    
     allowed_image_ext = {"jpg", "jpeg", "png", "webp", "gif"}
     allowed_video_ext = {"mp4", "webm", "mov", "ogg"}
     allowed_extensions = allowed_image_ext | allowed_video_ext
@@ -553,36 +554,46 @@ async def upload_image(file: UploadFile = File(...), admin: dict = Depends(get_a
     file_extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
     if file_extension not in allowed_extensions:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"File type '.{file_extension}' not allowed.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=f"File type '.{file_extension}' not allowed."
+        )
 
-    # Convert sizes to bytes: 2MB = 2*1024*1024, 15MB = 15*1024*1024
-    image_limit = 2 * 1024 * 1024
-    video_limit = 15 * 1024 * 1024
+    # File size check
+    image_limit = 2 * 1024 * 1024      # 2MB
+    video_limit = 15 * 1024 * 1024     # 15MB
 
-    # Get file size
     file.file.seek(0, os.SEEK_END)
     file_size = file.file.tell()
-    file.file.seek(0) # IMPORTANT: reset pointer after measuring size
+    file.file.seek(0)
 
     if file_extension in allowed_image_ext and file_size > image_limit:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Image size exceeds 2MB limit.")
+        raise HTTPException(status_code=400, detail="Image size exceeds 2MB limit.")
     
     if file_extension in allowed_video_ext and file_size > video_limit:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Video size exceeds 15MB limit.")
+        raise HTTPException(status_code=400, detail="Video size exceeds 15MB limit.")
 
-    if file.content_type:
-        is_image = file.content_type.startswith("image/")
-        is_video = file.content_type.startswith("video/")
-        if not is_image and not is_video:
-            raise HTTPException(status_code=400, detail="Only image or video files are allowed")
+    # Detect if running in a container with a volume mounted at /app
+    if os.path.exists("/app"):
+        UPLOAD_DIR = "/app/static/uploads"
+    else:
+        UPLOAD_DIR = os.path.join(os.getcwd(), "static", "uploads")
+        
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
 
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
-    upload_dir = os.path.join("static", "uploads")
-    os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, unique_filename)
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
         
-    base_url = settings.BACKEND_PUBLIC_URL.rstrip("/")
-    return {"url": f"{base_url}/static/uploads/{unique_filename}"}
+        base_url = settings.BACKEND_PUBLIC_URL.rstrip("/")
+        file_url = f"{base_url}/static/uploads/{unique_filename}"
+
+        return {"url": file_url}
+
+    except Exception as e:
+        if os.path.exists(file_path):
+            os.unlink(file_path)
+        raise HTTPException(status_code=500, detail="Failed to save file")

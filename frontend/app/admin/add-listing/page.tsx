@@ -479,6 +479,14 @@ export default function AddListing() {
       toast.error('Description must be at least 10 characters long.');
       return;
     }
+    if (!formData.postal_code || formData.postal_code.trim().length < 2) {
+      toast.error('Please enter a valid postal code (at least 2 characters).');
+      return;
+    }
+    if (!formData.category) {
+      toast.error('Please select a business category.');
+      return;
+    }
 
     setLoading(true);
 

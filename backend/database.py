@@ -25,10 +25,10 @@ async def connect_to_mongo():
                 dns.resolver.default_resolver = resolver
                 logging.info(f"Using custom DNS servers for MongoDB SRV lookup: {dns_servers}")
 
-        # Set a 5-second timeout so the server doesn't hang forever
+        # Set a 10-second timeout so the server doesn't hang forever
         db.client = AsyncIOMotorClient(
             settings.MONGODB_URL, 
-            serverSelectionTimeoutMS=5000
+            serverSelectionTimeoutMS=10000
         )
         db.db = db.client[settings.DATABASE_NAME]
         # Trigger an actual connection check

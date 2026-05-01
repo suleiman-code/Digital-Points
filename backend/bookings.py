@@ -145,7 +145,7 @@ async def send_listing_owner_inquiry_email(booking_data: dict, recipient_email: 
         logger.error(f"Failed to trigger listing inquiry email: {e}", exc_info=True)
 
 # 1. POST /api/bookings (Public - User submits a booking/inquiry)
-@router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit(settings.RATE_LIMIT_BOOKING)
 async def create_booking(request: Request, booking: BookingCreate, background_tasks: BackgroundTasks):
     try:
@@ -202,7 +202,7 @@ async def create_booking(request: Request, booking: BookingCreate, background_ta
     return normalize_booking_document(created_booking)
 
 # 2. GET /api/bookings (Admin Only)
-@router.get("/", response_model=List[BookingResponse])
+@router.get("", response_model=List[BookingResponse])
 async def get_all_bookings(
     status: Optional[str] = None,
     days: Optional[int] = None,

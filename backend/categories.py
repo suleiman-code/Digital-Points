@@ -27,12 +27,12 @@ async def get_categories_stats(admin: dict = Depends(get_admin_user)):
         "active_categories": active_categories
     }
 
-@router.get("/", response_model=List[CategoryResponse])
+@router.get("", response_model=List[CategoryResponse])
 async def get_categories():
     categories = await db.db["categories"].find().sort("name", 1).to_list(1000)
     return categories
 
-@router.post("/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
 async def create_category(category: CategoryCreate, admin: dict = Depends(get_admin_user)):
     # Check if category already exists
     existing = await db.db["categories"].find_one({"name": {"$regex": f"^{category.name}$", "$options": "i"}})

@@ -247,7 +247,7 @@ const getAdmin = () => readStorage(STORAGE_KEYS.admin, DEFAULT_ADMIN);
 
 export const categoriesAPI = {
   getAll: () => {
-    if (api) return api.get('/categories/');
+    if (api) return api.get('/categories');
     return makeResponse(readStorage<any[]>(STORAGE_KEYS.categories, []));
   },
   getStats: () => {
@@ -261,7 +261,7 @@ export const categoriesAPI = {
     });
   },
   create: (data: any) => {
-    if (api) return api.post('/categories/', data);
+    if (api) return api.post('/categories', data);
     const categories = readStorage<any[]>(STORAGE_KEYS.categories, []);
     const newCategory = { ...data, _id: uid('cat'), created_at: new Date().toISOString() };
     categories.push(newCategory);
@@ -278,7 +278,7 @@ export const categoriesAPI = {
 };
 
 export const servicesAPI = {
-  getAll: (filters?: any) => (api ? api.get('/services/', { params: filters }) : makeResponse(getServices())),
+  getAll: (filters?: any) => (api ? api.get('/services', { params: filters }) : makeResponse(getServices())),
   getById: (id: string) => {
     if (api) return api.get(`/services/${id}`);
     const service = getServices().find((item) => item._id === id);
@@ -287,7 +287,7 @@ export const servicesAPI = {
     return makeResponse(service);
   },
   create: (data: any) => {
-    if (api) return api.post('/services/', data);
+    if (api) return api.post('/services', data);
 
     const now = new Date().toISOString();
     const newService = {
@@ -408,7 +408,7 @@ export const servicesAPI = {
     if (!api) throw new Error("Backend not enabled for local uploads");
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post('/services/upload/', formData, {
+    const response = await api.post('/services/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
