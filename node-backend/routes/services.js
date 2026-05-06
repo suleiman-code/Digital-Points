@@ -13,6 +13,42 @@ const toPositiveInt = (value, fallback) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
+/** Max page size for GET /services (admin needs many rows). */
+const MAX_SERVICES_LIMIT = 500;
+
+const pickOptionalListingFields = (body) => {
+  if (!body || typeof body !== "object") return {};
+  const keys = [
+    "country",
+    "featured",
+    "image_url",
+    "image",
+    "cover_image",
+    "gallery",
+    "business_hours",
+    "service_details",
+    "address",
+    "contact_phone",
+    "contact_email",
+    "website_url",
+    "google_maps_url",
+    "postal_code",
+    "video_url",
+    "image_zoom",
+    "image_position",
+    "cover_zoom",
+    "cover_position"
+  ];
+  const out = {};
+  for (const key of keys) {
+    if (body[key] !== undefined) out[key] = body[key];
+  }
+  if (Array.isArray(out.gallery)) {
+    out.gallery = out.gallery.map((u) => String(u || "").trim()).filter(Boolean);
+  }
+  return out;
+};
+
 router.get("/", async (req, res) => {
   try {
     const { category, city, state, min_price, max_price, min_rating, page, limit } = req.query;
@@ -225,6 +261,8 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
       return res.status(400).json({ message: "title, description, category, city, and state are required" });
     }
 
+    const optional = pickOptionalListingFields(req.body);
+
     const service = await Service.create({
       title: String(title).trim(),
       description: String(description).trim(),
@@ -233,7 +271,8 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
       city: String(city).trim(),
       state: String(state).trim(),
       avg_rating: 0,
-      reviews_count: 0
+      reviews_count: 0,
+      ...optional
     });
 
     return res.status(201).json(service);
@@ -245,6 +284,9 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
 router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const updateData = { ...req.body, updated_at: new Date() };
+    if (Array.isArray(updateData.gallery)) {
+      updateData.gallery = updateData.gallery.map((u) => String(u || "").trim()).filter(Boolean);
+    }
     const service = await Service.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!service) {
       return res.status(404).json({ message: "Service not found" });

@@ -1,5 +1,15 @@
 import { Metadata } from 'next';
-import { servicesAPI } from '@/lib/api';
+
+/** Server-only: must not import `@/lib/api` here (large client bundle + storage side effects). */
+function getServerApiBase(): string {
+  let raw = (process.env.NEXT_PUBLIC_API_URL || 'https://digitalpointllc.online/api').trim().replace(/\/$/, '');
+  if (raw && !raw.startsWith('http')) {
+    raw = `https://${raw}`;
+  }
+  return raw.endsWith('/api') ? raw : `${raw}/api`;
+}
+
+const stripHtml = (s: string) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
 interface Props {
   params: { id: string };
@@ -7,19 +17,26 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const serviceId = decodeURIComponent(params.id);
-  
+
   try {
-    // Note: On the server, we need the full URL if we're fetching from our own API
-    // but here we can assume the API is reachable or have a fallback.
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/services/${serviceId}`);
-    
+    const res = await fetch(`${getServerApiBase()}/services/${serviceId}`, {
+      next: { revalidate: 120 },
+    });
+
     if (!res.ok) throw new Error('Failed to fetch service');
-    
+
     const service = await res.json();
     const title = `${service.title} | Digital Point`;
-    const description = service.description ? 
-      (service.description.length > 160 ? service.description.substring(0, 157) + '...' : service.description) : 
-      'Discover trusted local service providers on Digital Point.';
+    const plainDesc = stripHtml(String(service.description || ''));
+    const description =
+      plainDesc.length > 160 ? `${plainDesc.slice(0, 157)}...` : plainDesc || 'Discover trusted local service providers on Digital Point.';
+
+    const apiBase = getServerApiBase();
+    const origin = apiBase.replace(/\/api\/?$/, '');
+    const rawImg = service.image_url ? String(service.image_url).trim() : '';
+    const ogImage =
+      rawImg &&
+      (rawImg.startsWith('http') ? rawImg : `${origin}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`);
 
     return {
       title,
@@ -27,10 +44,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         title,
         description,
-        images: service.image_url ? [service.image_url] : [],
+        ...(ogImage ? { images: [ogImage] } : {}),
       },
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Service Detail | Digital Point',
       description: 'Discover trusted local service providers.',

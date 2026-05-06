@@ -22,4 +22,5 @@ Thumbs.db
 
 # Project Specific
 backend/static/uploads/
+node-backend/public/uploads/
 .vscode/

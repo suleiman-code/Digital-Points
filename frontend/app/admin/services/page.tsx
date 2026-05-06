@@ -67,7 +67,7 @@ function AdminServicesContent() {
   const fetchServices = async () => {
     try {
       setLoading(true);
-      const response = await servicesAPI.getAll();
+      const response = await servicesAPI.getAll({ limit: 500, page: 1 });
       const rawData = (response.data || []).map((s: any) => ({
         ...s,
         category: normalizeCategory(s.category || ''),
@@ -102,8 +102,9 @@ function AdminServicesContent() {
 
   const toggleFeatured = async (service: any) => {
     try {
-      await servicesAPI.update(service._id, { featured: !service.featured });
-      toast.success(service.featured ? 'Listing removed from top.' : 'Listing pinned to top.');
+      const next = !Boolean(service.featured);
+      await servicesAPI.update(service._id, { featured: next });
+      toast.success(next ? 'Listing pinned to top.' : 'Listing removed from top.');
       fetchServices();
     } catch (error) {
       toast.error('Error updating featured status');
