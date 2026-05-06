@@ -278,7 +278,24 @@ export const categoriesAPI = {
 };
 
 export const servicesAPI = {
-  getAll: (filters?: any) => (api ? api.get('/services', { params: filters }) : makeResponse(getServices())),
+  getAll: async (filters?: any) => {
+    if (!api) return makeResponse(getServices());
+    const response = await api.get('/services', { params: filters });
+    const payload = response?.data;
+    if (payload && Array.isArray(payload.items)) {
+      return {
+        ...response,
+        data: payload.items,
+        meta: {
+          total: payload.total,
+          page: payload.page,
+          limit: payload.limit,
+          has_more: payload.has_more,
+        },
+      };
+    }
+    return response;
+  },
   getById: (id: string) => {
     if (api) return api.get(`/services/${id}`);
     const service = getServices().find((item) => item._id === id);
@@ -339,8 +356,8 @@ export const servicesAPI = {
     setStoredReviews(reviews);
     return makeResponse(newReview, 201);
   },
-  getReviews: (id: string) => {
-    if (api) return api.get(`/services/${id}/reviews`);
+  getReviews: (id: string, params?: { limit?: number }) => {
+    if (api) return api.get(`/services/${id}/reviews`, { params });
     const reviews = getStoredReviews()
       .filter((r: any) => r.service_id === id && (r.status === 'approved' || !r.status))
       .sort((a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());

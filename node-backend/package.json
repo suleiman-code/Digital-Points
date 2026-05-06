@@ -1,0 +1,22 @@
+{
+  "name": "digital-points-node-backend",
+  "version": "1.0.0",
+  "description": "Node.js backend for Digital Points (cPanel optimized)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.5.0",
+    "fs-extra": "^11.3.4",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.6.2",
+    "multer": "^2.1.1",
+    "resend": "^6.12.2"
+  }
+}

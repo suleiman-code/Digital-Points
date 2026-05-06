@@ -29,7 +29,7 @@ export default function Home() {
     const fetchServices = async () => {
       try {
         setServicesLoading(true);
-        const res = await servicesAPI.getAll();
+        const res = await servicesAPI.getAll({ page: 1, limit: 20 });
         const data: any[] = res.data || [];
         
         const normalized = data.map((s: any) => ({
@@ -38,7 +38,7 @@ export default function Home() {
           category: s.category,
           featured: Boolean(s.featured),
           price: s.price ? `From ${formatUsd(s.price)}` : 'Contact Us',
-          rating: s.rating || 5.0,
+          rating: Number(s.avg_rating || s.rating || 5.0),
           image: resolveMediaUrl(s.image_url || s.image || (Array.isArray(s.gallery) ? s.gallery[0] : '') || ''),
           description: stripDescriptionFormatting(String(s.description || '')),
         })).filter((s: any) => Boolean(s.id))
@@ -47,9 +47,9 @@ export default function Home() {
         setFeaturedServices(normalized);
 
         // Fetch recent feedback efficiently for the top services
-        const topServiceIds = normalized.slice(0, 5).map(s => s.id);
+        const topServiceIds = normalized.slice(0, 3).map(s => s.id);
         const allReviews = await Promise.all(
-          topServiceIds.map(id => servicesAPI.getReviews(id).catch(() => ({ data: [] })))
+          topServiceIds.map(id => servicesAPI.getReviews(id, { limit: 3 }).catch(() => ({ data: [] })))
         );
         
         let flattenedReviews: any[] = [];
